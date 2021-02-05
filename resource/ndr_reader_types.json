@@ -1,0 +1,7 @@
+[
+        {
+                "type": ["intan", "RHD", "intanRHD"],
+		"classname": "ndr.ndr.intan"
+        }
+]
+
