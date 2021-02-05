@@ -5,7 +5,7 @@ Neuroscience Data Readers - A Matlab conglomerative package for reading neurosci
 ## About
 
 NDR-matlab is a package for reading neuroscience data files in a standard way. It includes some original code and some bundled code from
-other open source projects. It will eventually provide the file reading functionality for [NDI](http://ndi.vhlab.org) (Neuroscience Data Interface) but is available for use widely.
+other open source projects. It will eventually provide the file reading functionality for [NDI](http://ndi.vhlab.org) (Neuroscience Data Interface) as NDI scales up but is available for use widely in many projects.
 
 The package is focused around a central object called `ndr.ndr`. This object can be used to read file metadata (such as the channels
 that were turned on during the acquisition, the sampling rate, and other quantities) as well as file data.
@@ -22,9 +22,9 @@ This package is being developed with a companion Python package NDR-python. Some
 | Vendor/Format | Extension(s) | NDR Names | Support | Notes |
 | ----------- | ----------- | ---- | ---- | ---- | 
 | Intan RHD | `.rhd` | 'Intan', 'IntanRHD', 'RHD' | Native Matlab | |
-| CED Spike2/SMR | `.smr` | 'SMR', 'Spike2', 'CEDSpike2' | Native Matlab via SigTool (included) | |
+| CED Spike2/SMR | `.smr` | 'SMR', 'Spike2', 'CEDSpike2' | Native Matlab via [sigTOOL](http://sigtool.sourceforge.net/sigtool.html) (included) | |
 | SpikeGadgets | `.rec` | 'SpikeGadgets', 'SpikeGadgetsREC' | Native Matlab | |
-| Blackrock Microsystems | '.NEV', 'NS#' | 'BlackrockNEV', 'BlackrockNS4', 'BlackrockNS5' | Native Matlab via NPMK (from Blackrock Microsystems) | |
+| Blackrock Microsystems | '.NEV', 'NS#' | 'BlackrockNEV', 'BlackrockNS4', 'BlackrockNS5' | Native Matlab via NPMK (from Blackrock Microsystems) (included) | |
 
 
 ## Licenses from other software

@@ -1,9 +1,9 @@
 classdef clocktype
-% CLOCKTYPE - a class for specifying a clock type in the NDI framework
+% CLOCKTYPE - a class for specifying a clock type in the NDR framework
 %
 %
 	properties (SetAccess=protected, GetAccess=public)
-		type % the ndi_clock type; in this class, acceptable values are 'UTC', 'exp_global_time', and 'no_time'
+		type % the ndr_clock type; in this class, acceptable values are 'UTC', 'exp_global_time', and 'no_time'
 	end
 
 	methods
@@ -12,7 +12,7 @@ classdef clocktype
 			%
 			% OBJ = ndr.time.clocktype(TYPE)
 			%
-			% Creates a new ndi.time.clocktype object. TYPE can be
+			% Creates a new ndr.time.clocktype object. TYPE can be
 			% any of the following strings (with description):
 			%
 			% TYPE string               | Description
@@ -36,12 +36,12 @@ classdef clocktype
 				end
 		end % clocktype()
 		
-		function ndi_clocktype_obj = setclocktype(ndi_clocktype_obj, type)
-			% SETCLOCKTYPE - Set the type of an ndi.time.clocktype
+		function ndr_clocktype_obj = setclocktype(ndr_clocktype_obj, type)
+			% SETCLOCKTYPE - Set the type of an ndr.time.clocktype
 			%
-			% NDI_CLOCKTYPE_OBJ = SETCLOCKTYPE(NDI_CLOCKTYPE_OBJ, TYPE)
+			% NDR_CLOCKTYPE_OBJ = SETCLOCKTYPE(NDR_CLOCKTYPE_OBJ, TYPE)
 			%
-			% Sets the TYPE property of an ndi.time.clocktype object NDI_CLOCKTYPE_OBJ.
+			% Sets the TYPE property of an ndr.time.clocktype object NDR_CLOCKTYPE_OBJ.
 			% Valid values for the TYPE string are as follows:
 			%
 			% TYPE string               | Description
@@ -74,7 +74,7 @@ classdef clocktype
 						error(['Unknown clock type ' type '.']);
 				end
 
-				ndi_clocktype_obj.type = type;
+				ndr_clocktype_obj.type = type;
 		end % setclocktype() %
 
 		function [cost, mapping] = epochgraph_edge(clocktype_a, clocktype_b)
@@ -82,11 +82,11 @@ classdef clocktype
 			%
 			% [COST, MAPPING] = EPOCHGRAPH_EDGE(CLOCKTYPE_A, CLOCKTYPE_B)
 			%
-			% Returns the COST and ndi.time.timemapping object MAPPING that describes the
+			% Returns the COST and ndr.time.timemapping object MAPPING that describes the
 			% automatic mapping between epochs that have clock types CLOCKTYPE_A
 			% and CLOCKTYPE_B.
 			%
-                        % The following NDI_CLOCKTYPES, if they exist, are linked across epochs with
+                        % The following NDR_CLOCKTYPES, if they exist, are linked across epochs with
                         % a cost of 1 and a linear mapping rule with shift 1 and offset 0:
                         %   'utc' -> 'utc'
                         %   'utc' -> 'approx_utc'
@@ -100,7 +100,7 @@ classdef clocktype
 				cost = Inf;
 				mapping = [];
 
-				if strcmp(ndi_clocktype_a.type,'no_time') | strcmp(ndi_clocktype_b.type,'no_time'), 
+				if strcmp(ndr_clocktype_a.type,'no_time') | strcmp(ndr_clocktype_b.type,'no_time'), 
 					% stop the search if its trivial
 					return;
 				end
@@ -109,55 +109,55 @@ classdef clocktype
 				to_list = {'utc','approx_utc','exp_global_time','approx_exp_global_time',...
 					'dev_global_time','approx_dev_global_time'};
 
-				index = find(  strcmp(ndi_clocktype_a.type,from_list) & strcmp(ndi_clocktype_b.type,to_list) );
+				index = find(  strcmp(ndr_clocktype_a.type,from_list) & strcmp(ndr_clocktype_b.type,to_list) );
 				if ~isempty(index),
 					cost = 1;
-					mapping = ndi.time.timemapping([1 0]); % trivial mapping
+					mapping = ndr.time.timemapping([1 0]); % trivial mapping
 				end
 		end  % epochgraph_edge
 
-		function b = needsepoch(ndi_clocktype_obj)
+		function b = needsepoch(ndr_clocktype_obj)
 			% NEEDSEPOCH - does this clocktype need an epoch for full description?
 			%
-			% B = NEEDSEPOCH(NDI_CLOCKTYPE_OBJ)
+			% B = NEEDSEPOCH(NDR_CLOCKTYPE_OBJ)
 			%
-			% Does this ndi.time.clocktype object need an epoch in order to specify time?
+			% Does this ndr.time.clocktype object need an epoch in order to specify time?
 			%
 			% Returns 1 for 'dev_local_time', 0 otherwise.
 			%
-				b = strcmp(ndi_clocktype_obj,'dev_local_time');
+				b = strcmp(ndr_clocktype_obj,'dev_local_time');
 		end % needsepoch
 
-		function str = ndi_clocktype2char(ndi_clocktype_obj)
-			% NDI_CLOCKTYPE2CHAR - produce the NDI_CLOCKTOP's type as a string
+		function str = ndr_clocktype2char(ndr_clocktype_obj)
+			% NDR_CLOCKTYPE2CHAR - produce the NDR_CLOCKTOP's type as a string
 			%
-			% STR = NDI_CLOCKTYPE2CHAR(NDI_CLOCKTYPE_OBJ)
+			% STR = NDR_CLOCKTYPE2CHAR(NDR_CLOCKTYPE_OBJ)
 			%
-			% Return a string STR equal to the ndi.time.clocktype object's type parameter.
+			% Return a string STR equal to the ndr.time.clocktype object's type parameter.
 			%
-				str = ndi_clocktype_obj.type;
-		end % ndi_clocktype2char()
+				str = ndr_clocktype_obj.type;
+		end % ndr_clocktype2char()
 
-		function b = eq(ndi_clocktype_obj_a, ndi_clocktype_obj_b)
-			% EQ - are two ndi.time.clocktype objects equal?
+		function b = eq(ndr_clocktype_obj_a, ndr_clocktype_obj_b)
+			% EQ - are two ndr.time.clocktype objects equal?
 			%
-			% B = EQ(NDS_CLOCK_OBJ_A, NDI_CLOCKTYPE_OBJ_B)
+			% B = EQ(NDS_CLOCK_OBJ_A, NDR_CLOCKTYPE_OBJ_B)
 			%
-			% Compares two NDI_CLOCKTYPE_objects and returns 1 if they refer to the 
+			% Compares two NDR_CLOCKTYPE_objects and returns 1 if they refer to the 
 			% same clock type.
 			%
-			b = strcmp(ndi_clocktype_obj_a.type,ndi_clocktype_obj_b.type);
+			b = strcmp(ndr_clocktype_obj_a.type,ndr_clocktype_obj_b.type);
 		end % eq()
 
-		function b = ne(ndi_clocktype_obj_a, ndi_cock_obj_b)
-			% NE - are two ndi.time.clocktype objects not equal?
+		function b = ne(ndr_clocktype_obj_a, ndr_cock_obj_b)
+			% NE - are two ndr.time.clocktype objects not equal?
 			%
-			% B = EQ(NDS_CLOCK_OBJ_A, NDI_CLOCKTYPE_OBJ_B)
+			% B = EQ(NDS_CLOCK_OBJ_A, NDR_CLOCKTYPE_OBJ_B)
 			%
-			% Compares two NDI_CLOCKTYPE_objects and returns 0 if they refer to the 
+			% Compares two NDR_CLOCKTYPE_objects and returns 0 if they refer to the 
 			% same clock type.
 			%
-			b = ~eq(ndi_clocktype_obj_a.type,ndi_clocktype_obj_b.type);
+			b = ~eq(ndr_clocktype_obj_a.type,ndr_clocktype_obj_b.type);
 		end % ne()
 
 	end % methods
