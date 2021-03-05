@@ -7,10 +7,10 @@ Neuroscience Data Readers - A Matlab conglomerative package for reading neurosci
 NDR-matlab is a package for reading neuroscience data files in a standard way. It includes some original code and some bundled code from
 other open source projects. It will eventually provide the file reading functionality for [NDI](http://ndi.vhlab.org) (Neuroscience Data Interface) as NDI scales up but is available for use widely in many projects.
 
-The package is focused around a central object called `ndr.ndr`. This object can be used to read file metadata (such as the channels
+The package is focused around a central object called `ndr.reader`. This object can be used to read file metadata (such as the channels
 that were turned on during the acquisition, the sampling rate, and other quantities) as well as file data.
 
-The package is supported by a number of ndr.ndr.* class objects that actually perform the reading of different file types in neuroscience.
+The package is supported by a number of ndr.reader.* class objects that actually perform the reading of different file types in neuroscience.
 
 It is intended that this package will be self-sufficient and not require other open source Matlab packages, although it does require
 some Matlab toolboxes from The MathWorks.
