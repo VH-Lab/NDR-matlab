@@ -1,5 +1,5 @@
 function [data,total_samples,total_time,blockinfo,time] = read_SOMSMR_datafile(filename,header,channel_number,t0,t1, varargin)
-% ndr.format.ced.read_datafile READ_DATAFILE - Reads samples from a CED SOM/SMR file 
+% ndr.format.ced.read_datafile READ_SOMSMR_DATAFILE - Reads samples from a CED SOM/SMR file 
 %
 %  [DATA,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO,TIME] = ndr.format.ced.read_SOMSMR_datafile(FILENAME,
 %     HEADER, CHANNEL_NUMBER, T0, T1);
