@@ -1,8 +1,9 @@
 function [sampleinterval,total_samples,total_time,blockinfo] = read_SOMSMR_sampleinterval(filename,header,channel_number, varargin)
-% ndr.format.ced.read_SOMSMR_SAMPLEINTERVAL - Reads samples from a CED SOM/SMR file 
+% ndr.format.ced.read_SOMSMR_sampleinterval - Reads sample interval from a CED SOM/SMR file 
 %
-%  [DATA,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO] = ndr.format.ced.read_SOMSMR_DATAFILE(FILENAME,
-%     HEADER, CHANNEL_NUMBER);
+%  [SAMPLEINTERVAL,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO] = ndr.format.ced.read_SOMSMR_sampleinterval(FILENAME, ...
+%     HEADER, CHANNEL_NUMBER)
+%
 %
 %  Inputs:
 %  Reads the sampleinterval (in seconds) for a given channel from the
@@ -20,7 +21,7 @@ function [sampleinterval,total_samples,total_time,blockinfo] = read_SOMSMR_sampl
 %    TOTAL_TIME - An estimate of the total duration of the time series data in the
 %       recorded file, in seconds.
 %
-%  See also: ndr.format.ced.read_SOMSMR_DATAFILE, ndr.format.ced.read_SOMSMR_HEADER
+%  See also: ndr.format.ced.read_SOMSMR_datafile, ndr.format.ced.read_SOMSMR_header
 %
 
 if isempty(header),
