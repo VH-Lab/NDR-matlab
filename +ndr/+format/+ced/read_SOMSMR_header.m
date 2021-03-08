@@ -1,7 +1,7 @@
 function [header] = read_SOMSMR_header(filename);
-% READ_INTAN_RHD2000_HEADER - Read header information from a CED SOM or SMR file
+% ndr.format.intan.read_Intan_RHD2000_HEADER - Read header information from a CED SOM or SMR file
 %
-% HEADER = READ_SOMSMR_HEADER(FILENAME)
+% HEADER = ndr.format.ced.read_SOMSMR_HEADER(FILENAME)
 %
 % Returns a structure HEADER with all of the information fields that
 % are stored in the CED SOM/SMR file FILENAME.
@@ -19,7 +19,7 @@ function [header] = read_SOMSMR_header(filename);
 % fileinfo                |  Information about the file and its version
 % channelinfo             |  Information about the channels acquired in the file
 %
-% See also: READ_SOMSMR_DATAFILE, SONFILEHEADER (documents HEADER.fileinfo),
+% See also: ndr.format.ced.read_SOMSMR_DATAFILE, SONFILEHEADER (documents HEADER.fileinfo),
 %   SONCHANLIST (documents HEADER.channelinfo)
 
 [pathname filename2 extension] = fileparts(filename);
