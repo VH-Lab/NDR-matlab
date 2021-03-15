@@ -1,4 +1,4 @@
-classdef spikegadgets_rec < format.SpikeGadget.reader
+classdef spikegadgets_rec < ndr.ndr.reader
 
 % path --> epoch start&end 
 properties
@@ -13,117 +13,107 @@ end
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 			
-        	ndr_obj = obj@ndr.reader.SpikeGadget.reader(spikegadgets);
+        	ndr_obj = obj@ndr.ndr.reader.mfdaq(spikegadgets{:});
 
 		end; % READER()
         
         % extract times, spikes
 
 
-	function channels = getchannelsepoch(ndr_reader_mfdaq_spikegadgets_obj, epochfiles)
-		% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
-		%
-		% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
-		%
-		% Returns the channel list of acquired channels in this epoch
-		%
-		%
-		% CHANNELS is a structure list of all channels with fields:
-		% -------------------------------------------------------
-		% 'name'             | The name of the channel (e.g., 'ai1')
-		% 'type'             | The type of data stored in the channel
-		%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
-		%
-		%
+		function channels = getchannelsepoch(ndr_reader_mfdaq_spikegadgets_obj, epochfiles)
+			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
+			%
+			% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
+			%
+			% Returns the channel list of acquired channels in this epoch
+			%
+			%
+			% CHANNELS is a structure list of all channels with fields:
+			% -------------------------------------------------------
+			% 'name'             | The name of the channel (e.g., 'ai1')
+			% 'type'             | The type of data stored in the channel
+			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
+			%
+			%
 
-		recFiles = dir([epochfiles,'*.rec']);
-
-		recFileString = [];
-		recFileDates = [];
-		for i=1:length(recFiles)
-			recFileDates = [recFileDates;recFiles(i).datenum];
-		end
-		[s, sind] = sort(recFileDates);
-		for i=1:length(sind)
-			recFileString = [recFileString ' -rec ' recFiles(sind(i)).name];
-		end
-
+			filename = ndr.ndr.reader.mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+			fileconfig = [];
+			[fileconfig, channels] = read_rec_config(filename);
 		
 		
 		
-		
-		for k=1:length(channels)
-			number = 0;
-			name = '';
+			for k=1:length(channels)
+				number = 0;
+				name = '';
 			%Auxiliary
-			if strcmp(channels(k).name(1),'A')
-			%Input
-				if strcmp(channels(k).name(2),'i')
-					channels(k).type = 'auxiliary';
-					number = sscanf(channels(k).name, 'Ain%d'); 
-					name = strcat('axn',num2str(number));
-					channels(k).number = number;
-						%Output
-				else
-					channels(k).type = 'auxiliary';
-					number = sscanf(channels(k).name, 'Aout%d'); 
-					name = strcat('axo',num2str(number));
-					channels(k).number = number;
-				end
-
-					%Digital
-				elseif strcmp(channels(k).name(1),'D')
-					if strcmp(channels(k).name(2),'i') % Input
-						channels(k).type = 'digital_in';
-						number = sscanf(channels(k).name, 'Din%d'); 
-						name = strcat('di',num2str(number));
+				if strcmp(channels(k).name(1),'A')
+				%Input
+					if strcmp(channels(k).name(2),'i')
+						channels(k).type = 'auxiliary';
+						number = sscanf(channels(k).name, 'Ain%d'); 
+						name = strcat('axn',num2str(number));
 						channels(k).number = number;
-					else %Output
-						channels(k).type = 'digital_out';
-						number = sscanf(channels(k).name, 'Dout%d');
-						name = strcat('do',num2str(number));
+						%Output
+					else
+						channels(k).type = 'auxiliary';
+						number = sscanf(channels(k).name, 'Aout%d'); 
+						name = strcat('axo',num2str(number));
 						channels(k).number = number;
 					end
-				else	%MCU (digital inputs)
-					channels(k).type = 'digital_in';
-					number = sscanf(channels(k).name, 'MCU_Din%d');
-					number = number + 32; % +32 from previous non MCU inputs
-					name = strcat('di',num2str(number));
-					channels(k).number = number;
+	
+						%Digital
+					elseif strcmp(channels(k).name(1),'D')
+						if strcmp(channels(k).name(2),'i') % Input
+							channels(k).type = 'digital_in';
+							number = sscanf(channels(k).name, 'Din%d'); 
+							name = strcat('di',num2str(number));
+							channels(k).number = number;
+					else %Output
+							channels(k).type = 'digital_out';
+							number = sscanf(channels(k).name, 'Dout%d');
+							name = strcat('do',num2str(number));
+							channels(k).number = number;
+					end
+					else	%MCU (digital inputs)
+						channels(k).type = 'digital_in';
+						number = sscanf(channels(k).name, 'MCU_Din%d');
+						number = number + 32; % +32 from previous non MCU inputs
+						name = strcat('di',num2str(number));
+						channels(k).number = number;
+					end
+					channels(k).name = name;
 				end
-				channels(k).name = name;
-			end
 
 				%Adds all nTrodes to the list
-			for i=1:length(fileconfig.nTrodes)
-				for j=1:4 %argument for 4 channels, variable could be used later to deal with this in a more general way
-					channelNumber = fileconfig.nTrodes(i).channelInfo(j).packetLocation;
-					channels(end+1).name = strcat('ai',num2str(channelNumber+1));
-					channels(end).type = 'analog_in';
-					channels(end).number = channelNumber+1;
+				for i=1:length(fileconfig.nTrodes)
+					for j=1:4 %argument for 4 channels, variable could be used later to deal with this in a more general way
+						channelNumber = fileconfig.nTrodes(i).channelInfo(j).packetLocation;
+						channels(end+1).name = strcat('ai',num2str(channelNumber+1));
+						channels(end).type = 'analog_in';
+						channels(end).number = channelNumber+1;
+					end
 				end
+
+				channels = struct2table(channels);
+				channels = sortrows(channels,{'type','number'});
+				channels = table2struct(channels);
+			
+				remove = {'startbyte','bit','number'};
+				channels = rmfield(channels, remove);
 			end
 
-			channels = struct2table(channels);
-			channels = sortrows(channels,{'type','number'});
-			channels = table2struct(channels);
-			
-			remove = {'startbyte','bit','number'};
-			channels = rmfield(channels, remove);
-		end
 
-
-		function channels = getchannelsepochdetailed(ndi_daqreader_mfdaq_spikegadgets_obj, epochfiles)
+		function channels = getchannelsepochdetailed(ndr_reader_mfdaq_spikegadgets_obj, epochfiles)
 			% GETCHANNELSDETAILED - GET THE CHANNELS AVAILABLE FROM .REC FILE HEADER WITH EXTRA DETAILS
 			%
 			% CHANNELS = GETCHANNELSEPOCHDETAILED(NDI_DAQREADER_MFDAQ_SPIKEGADGETS_OBJ)
 			%
 			% CHANNELS is a STRUCT
 
-				filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+				filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 				fileconfig = [];
 
-				[fileconfig, channels] = read_SpikeGadgets_config(filename);
+				[fileconfig, channels] = read_rec_config(filename);
 
 				for k=1:length(channels)
 					number = 0;
@@ -188,7 +178,7 @@ end
 				channels = table2struct(channels);
 		end
 
-		function sr = samplerate(ndi_daqreader_mfdaq_spikegadgets_obj, epochfiles, channeltype, channel)
+		function sr = samplerate(ndr_reader_mfdaq_spikegadgets_obj, epochfiles, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC EPOCH AND CHANNEL
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
@@ -198,16 +188,16 @@ end
 			% CHANNELTYPE and CHANNEL not used in this case since it is the
 			% same for all channels in this device
 
-				filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+				filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				fileconfig = read_SpikeGadgets_config(filename);
+				fileconfig = read_rec_config(filename);
 
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
 				sr = str2num(fileconfig.samplingRate);
 		end
 
-		function t0t1 = t0_t1(ndi_daqreader_mfdaq_spikegadgets_obj, epochfiles)
+		function t0t1 = t0_t1(ndr_reader_mfdaq_spikegadgets_obj, epochfiles)
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
 			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
@@ -219,9 +209,9 @@ end
 			%
 			% See also: ndi.time.clocktype, EPOCHCLOCK
 			%
-				filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+				filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				[fileconfig, ~] = read_SpikeGadgets_config(filename);
+				[fileconfig, ~] = read_rec_config(filename);
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
@@ -244,12 +234,12 @@ end
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function epochprobemap = getepochprobemap(ndi_daqreader_mfdaq_spikegadgets_obj, epochmapfilename, epochfiles)
+		function epochprobemap = getepochprobemap(ndr_reader_mfdaq_spikegadgets_obj, epochmapfilename, epochfiles)
 		        % GETEPOCHPROBEMAP returns struct with probe information
 		        % name, reference, n-trode, channels
 		        %
-				filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles);
-				fileconfig = read_SpikeGadgets_config(filename);
+				filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles);
+				fileconfig = read_rec_config(filename);
 				nTrodes = fileconfig.nTrodes;
 				%List where epochprobemap objects will be stored
 				epochprobemap = [];
@@ -274,7 +264,7 @@ end
 				end
         	end
 
-		function data = readchannels_epochsamples(ndi_daqreader_mfdaq_spikegadgets_obj, channeltype, channels, epochfiles, s0, s1)
+		function data = readchannels_epochsamples(ndr_reader_mfdaq_spikegadgets_obj, channeltype, channels, epochfiles, s0, s1)
 			% FUNCTION READ_CHANNELS - read the data based on specified channels
 			%
 			% DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES ,S0, S1)
@@ -291,13 +281,13 @@ end
 			%
 			% DATA is the channel data (each column contains data from an indvidual channel)
 			%
-				filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+				filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				header = read_SpikeGadgets_config(filename);
+				header = read_rec_config(filename);
 
-				sr = ndi_daqreader_mfdaq_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
+				sr = ndr_reader_mfdaq_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
 
-				detailedchannels = ndi_daqreader_mfdaq_spikegadgets_obj.getchannelsepochdetailed(epochfiles);
+				detailedchannels = ndr_reader_mfdaq_spikegadgets_obj.getchannelsepochdetailed(epochfiles);
 
 				byteandbit = [];
                 
@@ -308,8 +298,8 @@ end
 				%Reads nTrodes
 				%WARNING channeltype hard coded, ask Steve
 				channeltype
-				if (strcmp(ndi.daq.system.mfdaq.mfdaq_type(channeltype{1}),'analog_in') || strcmp(ndi.daq.system.mfdaq.mfdaq_type(channeltype{1}), 'analog_out'))
-					data = read_SpikeGadgets_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+				if (strcmp(ndr.ndr.reader.mfdaq.mfdaq_type(channeltype{1}),'analog_in') || strcmp(ndr.ndr.reader.mfdaq.mfdaq_type(channeltype{1}), 'analog_out'))
+					data = read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
 
 				elseif (strcmp(channeltype,'auxiliary') || strcmp(channeltype,'aux')) %Reads analog inputs
 					%for every channel in device
@@ -323,7 +313,7 @@ end
 							end
 						end
 					end
-					data = read_SpikeGadgets_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
+					data = read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
 
 				elseif (strcmp(channeltype,'digital_in') || strcmp(channeltype, 'digital_out')), %Reads digital inputs
 					%for every channel in device
@@ -346,7 +336,7 @@ end
 				end
 		end % readchannels_epochsamples
 
-		function filename = filenamefromepochfiles(ndi_daqreader_mfdaq_spikegadgets_obj, filename)
+		function filename = filenamefromepochfiles(ndr_reader_mfdaq_spikegadgets_obj, filename)
 				s1 = ['.*\.rec\>']; % equivalent of *.ext on the command line
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename,'UseSubstituteString',0);
 				index = find(tf);
