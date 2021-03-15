@@ -1,32 +1,48 @@
-classdef SpikeGadgetsReader < format.SpikeGadget.reader
+classdef spikegadgets_rec < format.SpikeGadget.reader
 
 % path --> epoch start&end 
-
+properties
+end
+	
 
 	methods
-  	  	function ndr_obj = SpikeGadgetsReader(ndr_SpikeGadgets) % input = filename(?)
+  	  	function ndr_obj = spikegadgets_rec(spikegadgets) % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
 		%
 		% READER_OBJ = ndr.ndr.reader()
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 			
-        ndr_obj = format.SpikeGadget.reader(ndr_SpikeGadgets);
+        	ndr_obj = obj@ndr.reader.SpikeGadget.reader(spikegadgets);
 
 		end; % READER()
         
         % extract times, spikes
 
 
-	function channels = getchannelsepoch(ndi_daqreader_mfdaq_spikegadgets_obj, epochfiles)
-		% GETCHANNELSEPOCH - GET THE CHANNELS AVAILABLE FROM .REC FILE HEADER
+	function channels = getchannelsepoch(ndr_reader_mfdaq_spikegadgets_obj, epochfiles)
+		% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
 		%
-		% CHANNELS = GETCHANNELSEPOCH(NDI_DAQREADER_MFDAQ_SPIKEGADGETS_OBJ)
+		% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
 		%
-		% CHANNELS is a STRUCT
-		filename = ndi_daqreader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+		% Returns the channel list of acquired channels in this epoch
+		%
+		%
+		% CHANNELS is a structure list of all channels with fields:
+		% -------------------------------------------------------
+		% 'name'             | The name of the channel (e.g., 'ai1')
+		% 'type'             | The type of data stored in the channel
+		%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
+		%
+		%
+
+		filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 		fileconfig = [];
 		[fileconfig, channels] = read_SpikeGadgets_config(filename);
+		
+		
+		
+		
 		for k=1:length(channels)
 			number = 0;
 			name = '';
