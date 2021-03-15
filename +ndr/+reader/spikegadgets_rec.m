@@ -13,7 +13,7 @@ end
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 			
-        	ndr_obj = obj@ndr.ndr.reader.mfdaq(spikegadgets{:});
+        	ndr_obj = obj@ndr.reader.mfdaq(spikegadgets{:});
 
 		end; % READER()
         
@@ -36,7 +36,7 @@ end
 			%
 			%
 
-			filename = ndr.ndr.reader.mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+			filename = ndr.reader.mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 			fileconfig = [];
 			[fileconfig, channels] = read_rec_config(filename);
 		
