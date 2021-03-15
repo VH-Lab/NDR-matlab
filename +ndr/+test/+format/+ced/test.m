@@ -4,7 +4,7 @@ function test(varargin)
 %
 % 
 
-plotit = 0;
+plotit = 1;
 
 assign(varargin{:});
 
@@ -32,11 +32,14 @@ end
   % I got the list of inputs and outputs from the first line of ndr.format.ced.read_SOMSMR_datafile.m
   % let's read from time 0 to time 100 
   % by running 'help ndr.format.ced.read_SOMSMR_datafile' you can read the documentation
-[data,total_samples,total_time,blockinfo,time] = read_SOMSMR_datafile(filename,header,channel_number,t0,t1);
+[data,total_samples,total_time,blockinfo,time] = ndr.format.ced.read_SOMSMR_datafile(filename,h,21,0,100);
+
+%sample_rate = 1/ndr.format.ced.read_SOMSMR_sampleinterval(sampleinterval);
+sample_rate = 1/10;
 
 if plotit,
 	figure;
-	plot(time,data);
+	plot(time,data); 
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['CED test data']);
@@ -44,5 +47,3 @@ end;
 
 
  % here, Sophie, add a test of the sampleinterval 
-
-
