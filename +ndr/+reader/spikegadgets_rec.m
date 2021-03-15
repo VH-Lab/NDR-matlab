@@ -1,4 +1,4 @@
-classdef spikegadgets_rec < ndr.ndr.reader
+classdef spikegadgets_rec < ndr.reader
 
 % path --> epoch start&end 
 properties
