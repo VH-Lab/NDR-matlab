@@ -36,9 +36,18 @@ end
 		%
 		%
 
-		filename = ndr_reader_mfdaq_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
-		fileconfig = [];
-		[fileconfig, channels] = read_SpikeGadgets_config(filename);
+		recFiles = dir([epochfiles,'*.rec']);
+
+		recFileString = [];
+		recFileDates = [];
+		for i=1:length(recFiles)
+			recFileDates = [recFileDates;recFiles(i).datenum];
+		end
+		[s, sind] = sort(recFileDates);
+		for i=1:length(sind)
+			recFileString = [recFileString ' -rec ' recFiles(sind(i)).name];
+		end
+
 		
 		
 		
