@@ -6,14 +6,14 @@ end
 	
 
 	methods
-  	  	function ndr_obj = spikegadgets_rec(spikegadgets) % input = filename(?)
+  	  	function spikegadgets_obj = spikegadgets_rec(spikegadgets) % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
 		%
 		% READER_OBJ = ndr.ndr.reader()
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 			
-        	ndr_obj = obj@ndr.reader.mfdaq(spikegadgets{:});
+        	spikegadgets_obj = obj@ndr.reader.mfdaq(spikegadgets{:});
 
 		end; % READER()
         
