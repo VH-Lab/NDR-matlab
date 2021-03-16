@@ -34,8 +34,7 @@ end
   % by running 'help ndr.format.ced.read_SOMSMR_datafile' you can read the documentation
 [data,total_samples,total_time,blockinfo,time] = ndr.format.ced.read_SOMSMR_datafile(filename,h,21,0,100);
 
-%sample_rate = 1/ndr.format.ced.read_SOMSMR_sampleinterval(sampleinterval);
-sample_rate = 1/10;
+sample_rate = 1/ndr.format.ced.read_SOMSMR_sampleinterval(filename, h, 21)
 
 if plotit,
 	figure;
