@@ -2,6 +2,10 @@
         {
                 "type": ["intan", "RHD", "intanRHD"],
 		"classname": "ndr.reader.intan_rhd"
+        },
+        {
+                "type": ["ced-smr", "smr", "son"],
+		"classname": "ndr.reader.ced_smr"
         }
 ]
 

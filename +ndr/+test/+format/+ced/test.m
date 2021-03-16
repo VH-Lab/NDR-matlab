@@ -44,5 +44,3 @@ if plotit,
 	title(['CED test data']);
 end;
 
-
- % here, Sophie, add a test of the sampleinterval 

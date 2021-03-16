@@ -23,7 +23,7 @@ classdef ced_smr < ndr.reader.base
 			%
 		end; % ced_smr() creator
 
-		function channels = getchannelsepoch(ndr_ndr_reader_cedsmr_obj, epochfiles)
+		function channels = getchannelsepoch(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% GETCHANNELS - List the channels that are available on this device
 			%
 			%  CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
@@ -39,20 +39,19 @@ classdef ced_smr < ndr.reader.base
 
 				channels = vlt.data.emptystruct('name','type');
 
-				multifunctiondaq_channel_types = ndr.ndr.reader_channeltypes();
-
 				% open SMR files, and examine the headers for all channels present
 				%   for any new channel that hasn't been identified before,
 				%   add it to the list
-				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
+				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles)
 
-				header = read_CEDSMR_header(filename);
+				header = ndr.format.ced.read_SOMSMR_header(filename);
 
 				if isempty(header.channelinfo),
 					channels = struct('name','t1','type','time');
 				end;
 
 				for k=1:length(header.channelinfo),
+					% bug here, Sophie see if you can fix it
 					newchannel.type = ndr_ndr_reader_cedsmr_obj.cedsmrheadertype2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.ndr.reader_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
@@ -201,10 +200,10 @@ classdef ced_smr < ndr.reader.base
 				error(['Could not find any .smr file in the file list.']);
 		end
 
-		function channeltype = cedsmrheaderreaderchanneltype(cedsmrchanneltype)
-		% CEDSMRHEADERREADERCHANNELTYPE- Convert between Intan headers and the ndr.ndr.reader channel types 
+		function channeltype = cedsmrheader2readerchanneltype(cedsmrchanneltype)
+		% CEDSMRHEADER2READERCHANNELTYPE- Convert between Intan headers and the ndr.ndr.reader channel types 
 		%
-		% CHANNELTYPE = CEDSMRHEADERREADERCHANNELTYPE(CEDSMRCHANNELTYPE)
+		% CHANNELTYPE = CEDSMRHEADER2READERCHANNELTYPE(CEDSMRCHANNELTYPE)
 		% 
 		% Given an Intan header file type, returns the standard ndr.ndr.reader channel type
 

@@ -38,7 +38,11 @@ classdef reader
 			%
 			% CHANNELS = GETCHANNELSEPOCH(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
 			%
-			% Returns the channel list of acquired channels in this epoch
+			% Returns the channel list of acquired channels in this epoch.
+			% EPOCHSTREAMS should be a cell array of files or streams that comprise this epoch.
+			% EPOCH_SELECT indicates the epoch within the EPOCHSTREAMS files to select. The vast
+			%   majority of systems only allow one EPOCH per file, so EPOCH_SELECT is usually 1.
+			%   It defaults to 1 if it is not given.
 			%
 			%
 			% CHANNELS is a structure list of all channels with fields:
@@ -49,8 +53,10 @@ classdef reader
 			%
 			%
 			%
-				channels = struct('name',[],'type',[]);
-				channels = channels([]);
+				if nargin<3,
+					epoch_select = 1; % most devices have only a single epoch per file
+				end;
+				channels = ndr_reader_obj.ndr_reader_base.getchannelsepoch(epochstreams, epoch_select);
 		end; % getchannelsepoch()
 
 		function data = readchannels_epochsamples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
