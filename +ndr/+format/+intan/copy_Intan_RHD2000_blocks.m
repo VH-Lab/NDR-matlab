@@ -20,7 +20,7 @@ function status = copy_Intan_RHD2000_blocks(filename_in, b1, b2, filename_out)
 chunk_size = 100; % read at most 100 blocks per step, so we don't run out of memory
 
 status = 0;
-h = ndr.intan.read_Intan_RHD2000_header(filename_in);
+h = ndr.format.intan.read_Intan_RHD2000_header(filename_in);
 
 fid_i = fopen(filename_in,'r');
 fid_o = fopen(filename_out,'w');
@@ -28,7 +28,7 @@ if fid_o<0,
 	error(['Could not open the file ' filename_out ' for writing.']);
 end;
 
-[block_info,bytes_per_block,bytes_present,num_data_blocks] = ndr.intan.Intan_RHD2000_blockinfo(filename_in, h);
+[block_info,bytes_per_block,bytes_present,num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename_in, h);
 
 header_data = fread(fid_i,h.fileinfo.headersize,'uint8');
 try,
@@ -67,4 +67,3 @@ end;
 
 fclose(fid_i);
 fclose(fid_o);
-
