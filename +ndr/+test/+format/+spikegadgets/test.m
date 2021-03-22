@@ -31,7 +31,7 @@ h,
   
 % should I change channel name? 
   
-  [Data, times] = read_rec_trodeChannels(filename,fileconfig.numChannels, channels-1, sr, fileconfig.headsize,0,100)
+  [data, time] = read_rec_trodeChannels(filename,fileconfig.numChannels, channels-1, sr, fileconfig.headsize,0,100)
 
 if plotit,
 	figure;
