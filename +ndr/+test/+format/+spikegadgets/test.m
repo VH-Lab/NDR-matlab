@@ -28,10 +28,10 @@ h,
   
   sr = str2num(fileconfig.samplingRate); 
   
-  data = read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
-  data = read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1)
-  data = read_rec_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1)
   
+% should I change channel name? 
+  
+  [Data, times] = read_rec_trodeChannels(filename,fileconfig.numChannels, channels-1, sr, fileconfig.headsize,0,1)
 
 if plotit,
 	figure;
