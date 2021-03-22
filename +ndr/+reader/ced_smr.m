@@ -52,7 +52,7 @@ classdef ced_smr < ndr.reader.base
 
 				for k=1:length(header.channelinfo),
 					% bug here, Sophie see if you can fix it
-					newchannel.type = ndr_ndr_reader_cedsmr_obj.cedsmrheadertype2readerchanneltype(header.channelinfo(k).kind);
+					newchannel.type = ndr.reader.ced_smr.obj.cedsmrheadertype2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.ndr.reader_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
 				end
