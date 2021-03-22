@@ -61,10 +61,10 @@ force_single_channel_read = 0;
 assign(varargin{:});
 
 if isempty(header),
-	header = read_Intan_RHD2000_header([directoryname filesep 'info.rhd'] );
+	header = ndr.format.intan.read_Intan_RHD2000_header([directoryname filesep 'info.rhd'] );
 end;
 
-[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = Intan_RHD2000_blockinfo('', header);
+[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo('', header);
 
  % we need to look at files to see what the total time is
  % usually time should always be present
@@ -156,4 +156,3 @@ switch channel_type,
 	case 5,
 		error(['Do not know how to read temperature in this mode yet.']);
 end;
-
