@@ -30,7 +30,7 @@ h,
   
   data = read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
   data = read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1)
-  data = read_SpikeGadgets_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1)
+  data = read_rec_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1)
   
 
 if plotit,
