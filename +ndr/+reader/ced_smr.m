@@ -42,7 +42,7 @@ classdef ced_smr < ndr.reader.base
 				% open SMR files, and examine the headers for all channels present
 				%   for any new channel that hasn't been identified before,
 				%   add it to the list
-				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles)
+				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
@@ -51,9 +51,8 @@ classdef ced_smr < ndr.reader.base
 				end;
 
 				for k=1:length(header.channelinfo),
-					% bug here, Sophie see if you can fix it
-					newchannel.type = ndr_ndr_reader_cedsmr_obj.cedsmrheadertype2readerchanneltype(header.channelinfo(k).kind);
-					newchannel.name = [ ndr.ndr.reader_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
+					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
+					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
 				end
 		end % getchannels()

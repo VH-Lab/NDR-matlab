@@ -18,5 +18,9 @@ r = ndr.reader('smr'); % open an smr reader
 
 channels = r.getchannelsepoch({filename});
 
+for i=1:numel(channels),
+	disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
+end
 
 
+ % okay, here demonstrate use of r.readchannels_epochsamples by reading from channel ai1 and read samples 1 through 10000
