@@ -1,5 +1,5 @@
 function [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize,s0,s1)
-% [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize, configExists) )
+% [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize, s0, s1) )
 % Imports channel data in matlab from the raw data file
 %
 % INPUTS
@@ -10,6 +10,8 @@ function [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumCha
 % samplingRate-- the sampling rate of the recording, i.e 30000
 % headerSize--the size, in int16's, of the header block of the data
 % (contains DIO channels and aux analog channels). calculated from (MCUnumbytes + ECUnumbytes + 1) / 2 = 17
+% s0 - the first sample number to read
+% s1 - the last sample number to read
 %
 % OUTPUTS
 % timestamps--the system clock when each sample was taken

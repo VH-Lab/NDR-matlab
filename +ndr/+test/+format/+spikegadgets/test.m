@@ -1,4 +1,3 @@
-
 function test(varargin)
 % ndr.test.format.spikegadgets.test - test reading from SpikeGadgets format
 %
@@ -22,17 +21,11 @@ disp(['Read header file. Header entries are as follows:']);
 
 h,
 
-  % will drop word SpikeGadgets in future versions
-  
-  [fileconfig, channels] = ndr.format.spikegadgets.read_rec_config(filename,1,0,100) % not sure how to read first 100 seconds
-  
-  sr = str2num(fileconfig.samplingRate); 
-  
-  
-% should I change channel name and test for all three channels?
-  
-  [data, time] = read_rec_trodeChannels(filename,fileconfig.numChannels, channels, sr, fileconfig.headsize,0,100)
+t1 = 1 * eval(h.samplingRate);  % index number of sample at time 1 s after the first sample
 
+[data, time] = ndr.format.spikegadgets.read_rec_trodeChannels(filename,h.numChannels, 1, eval(h.samplingRate), h.headerSize,1,t1);
+  
+  
 if plotit,
 	figure;
 	plot(time,data);
