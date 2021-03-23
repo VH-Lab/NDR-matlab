@@ -145,4 +145,127 @@ classdef base
 		end;
 
 	end; % methods
+
+	methods (Static), % functions that don't need the object
+		function ct = mfdaq_channeltypes
+			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
+			%
+			%  CT = MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
+			%
+			%  Returns a cell array of strings of supported channels of the
+			%  ndi.daq.system.mfdaq class. These are the following:
+			%
+			%  Channel type:       | Description: 
+			%  -------------------------------------------------------------
+			%  analog_in           | Analog input channel
+			%  aux_in              | Auxiliary input
+			%  analog_out          | Analog output channel
+			%  digital_in          | Digital input channel
+			%  digital_out         | Digital output channel
+			%  marker              | 
+			%
+			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
+			ct = { 'analog_in', 'aux_in', 'analog_out', 'digital_in', 'digital_out', 'marker', 'event', 'time' };
+		end;
+
+		function prefix = mfdaq_prefix(channeltype)
+			% MFDAQ_PREFIX - Give the channel prefix for a channel type
+			%
+			%  PREFIX = MFDAQ_PREFIX(CHANNELTYPE)
+			%
+			%  Produces the channel name prefix for a given CHANNELTYPE.
+			% 
+			% Channel type:               | MFDAQ_PREFIX:
+			% ---------------------------------------------------------
+			% 'analog_in',       'ai'     | 'ai' 
+			% 'analog_out',      'ao'     | 'ao'
+			% 'digital_in',      'di'     | 'di'
+			% 'digital_out',     'do'     | 'do'
+			% 'time','timestamp','t'      | 't'
+			% 'auxiliary','aux','ax',     | 'ax'
+			%    'auxiliary_in'           | 
+			% 'mark', 'marker', or 'mk'   | 'mk'
+			% 'event' or 'e'              | 'e'
+			% 'metadata' or 'md'          | 'md'
+			% 'digital_in_event', 'de',   | 'dep'
+			% 'digital_in_event_pos','dep'| 
+			% 'digital_in_event_neg','den'| 'den'
+			% 'digital_in_mark','dimp',   | 'dimp'
+			% 'digital_in_mark_pos','dim' |
+			% 'digital_in_mark_neg','dimn'| 'dimn'
+			%
+			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
+			%
+				switch channeltype,
+					case {'analog_in','ai'},
+						prefix = 'ai';
+					case {'analog_out','ao'},
+						prefix = 'ao';
+					case {'digital_in','di'},
+						prefix = 'di';
+					case {'digital_out','do'},
+						prefix = 'do';
+					case {'digital_in_event','digital_in_event_pos','de','dep'},
+						prefix = 'dep';
+					case {'digital_in_event_neg','den'},
+						prefix = 'den';
+					case {'digital_in_mark', 'digital_in_mark_pos','dim','dimp'},
+						prefix = 'dimp';
+					case {'digital_in_mark_neg','dimn'},
+						prefix = 'dimn';
+					case {'time','timestamp','t'},
+						prefix = 't';
+					case {'auxiliary','aux','ax','auxiliary_in'},
+						prefix = 'ax';
+					case {'marker','mark','mk'},
+						prefix = 'mk';
+					case {'event','e'},
+						prefix = 'e';
+					case {'metadata','md'},
+						prefix = 'md';
+				end;
+		end % mfdaq_prefix()
+
+		function type = mfdaq_type(channeltype)
+			% MFDAQ_TYPE - Give the preferred long channel type for a channel type
+			%
+			%  TYPE = MFDAQ_TYPE(CHANNELTYPE)
+			%
+			%  Produces the preferred long channel type name for a given CHANNELTYPE.
+			% 
+			% Channel type:               | MFDAQ_TYPE:
+			% ---------------------------------------------------------
+			% 'analog_in',       'ai'     | 'analog_in' 
+			% 'analog_out',      'ao'     | 'analog_out'
+			% 'digital_in',      'di'     | 'digital_in'
+			% 'digital_out',     'do'     | 'digital_out'
+			% 'time','timestamp','t'      | 'time'
+			% 'auxiliary','aux','ax',     | 'auxiliary'
+			%    'auxiliary_in'           | 
+			% 'mark', 'marker', or 'mk'   | 'mark'
+			% 'event' or 'e'              | 'event'
+			%
+			% See also: ndi.daq.system.mfdaq/MFDAQ_PREFIX
+			%
+				switch channeltype,
+					case {'analog_in','ai'},
+						type = 'analog_in';
+					case {'analog_out','ao'},
+						type = 'analog_out';
+					case {'digital_in','di'},
+						type = 'digital_in';
+					case {'digital_out','do'},
+						type = 'digital_out';
+					case {'time','timestamp','t'},
+						type = 'time';
+					case {'auxiliary','aux','ax','auxiliary_in'},
+						type = 'ax';
+					case {'marker','mark','mk'},
+						type = 'mark';
+					case {'event','e'},
+						type = 'event';
+				end;
+		end;
+	
+	end % methods (Static)
 end % classdef
