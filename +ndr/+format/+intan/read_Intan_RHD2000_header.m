@@ -69,9 +69,9 @@ actual_impedance_test_frequency = fread(fid, 1, 'single');
 
 % Place notes in data strucure
 notes = struct( ...
-    'note1', ndr.intan.fread_QString(fid), ...
-    'note2', ndr.intan.fread_QString(fid), ...
-    'note3', ndr.intan.fread_QString(fid) );
+    'note1', ndr.format.intan.fread_QString(fid), ...
+    'note2', ndr.format.intan.fread_QString(fid), ...
+    'note3', ndr.format.intan.fread_QString(fid) );
     
 % If data file is from GUI v1.1 or later, see if temperature sensor data
 % was saved.
@@ -163,8 +163,8 @@ board_dig_out_index = 1;
 number_of_signal_groups = fread(fid, 1, 'int16');
 
 for signal_group = 1:number_of_signal_groups
-	signal_group_name = ndr.intan.fread_QString(fid);
-	signal_group_prefix = ndr.intan.fread_QString(fid);
+	signal_group_name = ndr.format.intan.fread_QString(fid);
+	signal_group_prefix = ndr.format.intan.fread_QString(fid);
 	signal_group_enabled = fread(fid, 1, 'int16');
 	signal_group_num_channels = fread(fid, 1, 'int16');
 	signal_group_num_amp_channels = fread(fid, 1, 'int16');
@@ -174,8 +174,8 @@ for signal_group = 1:number_of_signal_groups
 		new_channel(1).port_prefix = signal_group_prefix;
 		new_channel(1).port_number = signal_group;
 		for signal_channel = 1:signal_group_num_channels,
-			new_channel(1).native_channel_name = ndr.intan.fread_QString(fid);
-			new_channel(1).custom_channel_name = ndr.intan.fread_QString(fid);
+			new_channel(1).native_channel_name = ndr.format.intan.fread_QString(fid);
+			new_channel(1).custom_channel_name = ndr.format.intan.fread_QString(fid);
 			new_channel(1).native_order = fread(fid, 1, 'int16');
 			new_channel(1).custom_order = fread(fid, 1, 'int16');
 			signal_type = fread(fid, 1, 'int16');

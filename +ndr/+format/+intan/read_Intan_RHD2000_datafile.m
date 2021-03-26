@@ -55,10 +55,10 @@ force_single_channel_read = 0;
 assign(varargin{:});
 
 if isempty(header),
-	header = ndr.intan.read_Intan_RHD2000_header(filename);
+	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
 end;
 
-[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.intan.Intan_RHD2000_blockinfo(filename, header);
+[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 
 total_samples = 60 * num_data_blocks;
 total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
@@ -196,4 +196,3 @@ end;
 if blockinfo(c).scale ~= 1, 
 	data = double(data) * blockinfo(c).scale;
 end;
-

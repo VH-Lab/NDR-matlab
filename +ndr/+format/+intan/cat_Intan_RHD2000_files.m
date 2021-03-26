@@ -16,7 +16,7 @@ status = 0;
 h = {};
 
 for i=1:length(varargin),
-	h{i} = ndr.intan.read_Intan_RHD2000_header(varargin{i});
+	h{i} = ndr.format.intan.read_Intan_RHD2000_header(varargin{i});
 end;
 
 
@@ -75,4 +75,3 @@ for i=1:length(varargin),
 end;
 
 fclose(fid_o);
-

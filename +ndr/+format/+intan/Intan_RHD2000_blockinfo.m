@@ -24,9 +24,9 @@ function [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = Intan_RH
 % See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, CAT_INTAN_RHD2000_FILES
 
 if nargin<2,
-	header = ndr.intan.read_Intan_RHD2000_header(filename);
+	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
 elseif isempty(header),
-	header = ndr.intan.read_Intan_RHD2000_header(filename);
+	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
 end;
 
 num_amplifier_channels = length(header.amplifier_channels);
@@ -86,4 +86,3 @@ bytes_per_block = block_offset;
 % How many data blocks are in this file?
 bytes_present = header.fileinfo.filesize - header.fileinfo.headersize;
 num_data_blocks = bytes_present / bytes_per_block;
-

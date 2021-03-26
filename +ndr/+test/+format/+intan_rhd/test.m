@@ -4,7 +4,7 @@ function test(varargin)
 %
 % 
 
-plotit = 0;
+plotit = 1;
 
 assign(varargin{:});
 
@@ -22,8 +22,8 @@ disp(['Read header file. Header entries are as follows:']);
 h,
 
   % will drop word Intan in future versions
-t = ndr.format.intan.read_Intan_RHD2000_datafile(filename,'time',1,0,100); % read first 100 seconds
-d = ndr.format.intan.read_Intan_RHD2000_datafile(filename,'amp',1,0,100); % read first 100 seconds
+t = ndr.format.intan.read_Intan_RHD2000_datafile(filename,h,'time',1,0,100); % read first 100 seconds
+d = ndr.format.intan.read_Intan_RHD2000_datafile(filename,h,'amp',1,0,100); % read first 100 seconds
 
 if plotit,
 	figure;
@@ -32,4 +32,3 @@ if plotit,
 	ylabel('Data values');
 	title(['Intan RHD test data']);
 end;
-

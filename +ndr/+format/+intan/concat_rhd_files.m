@@ -18,12 +18,10 @@ for i =1:length(n),
 end;
 
 if ~isempty(d),
-	ndr.intan.cat_Intan_RHD2000_files(n{:});
+	ndr.format.intan.cat_Intan_RHD2000_files(n{:});
 end;
 
 for i=1:length(n),
 	[newpath,newname,newext] = fileparts(n{i});
 	movefile(n{i},fullfile(newpath,[newname '.rhd_original']));
 end;
- 
-
