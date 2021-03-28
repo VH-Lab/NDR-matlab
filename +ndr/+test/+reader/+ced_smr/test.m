@@ -22,6 +22,10 @@ for i=1:numel(channels),
 	disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 end
 
+ % here, use r.readchannel_epochsamples to create a variable d, and t
+ d = ndr.reader.ced_smr.readchannels_epochsamples(something, something, something, something, something);
+ t = ndr.reader.ced_smr.readchannels_epochsamples(something, something, something, something, something);
+
 if plotit,
 	figure (1);
 	plot(t,d);
