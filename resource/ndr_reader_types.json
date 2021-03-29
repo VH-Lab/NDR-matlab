@@ -1,15 +1,15 @@
 [
         {
-                "type": ["intan", "RHD", "intanRHD"],
+		"type": ["intan", "RHD", "intanRHD"],
 		"classname": "ndr.reader.intan_rhd"
         },
-        {
-                "type": ["ced-smr", "smr", "son"],
+	{
+		"type": ["ced-smr", "smr", "son"],
 		"classname": "ndr.reader.ced_smr"
         },
-        {
-                "type": ["SpikeGadgets", "SpikeGadgetsREC","rec"],
-            "classname": "ndr.reader.spikegadgets_rec"
+	{
+		"type": ["SpikeGadgets", "SpikeGadgetsREC","rec"],
+		"classname": "ndr.reader.spikegadgets_rec"
         }
 ]
 

@@ -15,9 +15,8 @@ example_dir = [ndr_globals.path.path filesep 'example_data'];
 
 filename = [example_dir filesep 'example.rec'];
 
-#r = ndr.reader('rec'); % open an rec reader
+r = ndr.reader('rec'); % open an rec reader
 
-r = ndr.reader.spikegadgets.spikegadgets_rec(filename);
 
 channels = ndr.reader.spikegadgets.spikegadgets_rec.getchannelsepoch(ndr_reader_base_spikegadgets_obj, epochfiles);
 
