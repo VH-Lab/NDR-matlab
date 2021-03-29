@@ -23,8 +23,10 @@ for i=1:numel(channels),
 end
 
  % here, use r.readchannel_epochsamples to create a variable d, and t
- d = ndr.reader.ced_smr.readchannels_epochsamples(filename,'time',1,1,10000);
- t = ndr.reader.ced_smr.readchannels_epochsamples(filename,'amp',1,1,10000);
+ epoch_select = 1; % which epoch in the file? For most file systems, there is just 1 epoch per file
+ channel = 21; % the waveform channel in our example file
+ d = r.readchannels_epochsamples('time',21,{filename},epoch_select,1,10000)
+ t = r.readchannels_epochsamples(filename,'ai',21,1,10000)
 
 if plotit,
 	figure (1);

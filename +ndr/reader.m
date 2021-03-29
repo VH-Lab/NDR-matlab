@@ -72,7 +72,7 @@ classdef reader
 			%
 			%  DATA will have one column per channel.
 			%
-				data = []; % abstract class
+				data = ndr_reader_obj.ndr_reader_base.readchannels_epochsamples(channeltype, channel, epochstreams, epoch_select, s0, s1);
 		end % readchannels_epochsamples()
 
 		function [data] = readevents_epochsamples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)

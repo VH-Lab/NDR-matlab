@@ -57,7 +57,7 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % getchannels()
 
-		function data = readchannels_epochsamples(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, s0, s1)
+		function data = readchannels_epochsamples(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, s0, s1)
 			%  FUNCTION READ_CHANNELS - read the data based on specified channels
 			%
 			%  DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES, S0, S1)
@@ -152,12 +152,12 @@ classdef ced_smr < ndr.reader.base
 					data = {};
 					for i=1:numel(channel),
 						data{i} = [];
-						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]=read_CEDSMR_datafile(filename, ...
+						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]=read_CEDSMR_datafile(filename, ... % this needs editing, right? No function with that name right now, needs to have the package name
 							'',channel(i),t0,t1);
 					end
 				else,
 					data = [];
-					[data(:,2),dummy,dummy,dummy,data(:,1)] = read_CEDSMR_datafile(filename,'',channel,t0,t1);
+					[data(:,2),dummy,dummy,dummy,data(:,1)] = read_CEDSMR_datafile(filename,'',channel,t0,t1); % this needs editing, right? No function with that name right now, needs to have the package name
 				end
 		end % readevents_epoch()
 
@@ -172,7 +172,7 @@ classdef ced_smr < ndr.reader.base
 
 				sr = [];
 				for i=1:numel(channel),
-					sr(i) = 1/read_CEDSMR_sampleinterval(filename,[],channel(i));
+					sr(i) = 1/read_CEDSMR_sampleinterval(filename,[],channel(i)); %   % this needs editing, right? No function with that name right now, needs to have the package name
 				end
 
 		end % samplerate()
