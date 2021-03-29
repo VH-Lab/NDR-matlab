@@ -1,4 +1,4 @@
-classdef spikegadgets_rec < ndr.reader
+classdef spikegadgets_rec < ndr.reader.base
 
 % path --> epoch start&end 
 properties
@@ -13,7 +13,6 @@ end
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 			
-        	spikegadgets_obj = obj@ndr.reader.base(spikegadgets{:});
 
 		end; % READER()
         
