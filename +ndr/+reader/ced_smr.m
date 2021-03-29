@@ -104,9 +104,9 @@ classdef ced_smr < ndr.reader.base
 
 				for i=1:length(channel), % can only read 1 channel at a time
 					if strcmpi(channeltype,'time'),
-						[dummy,dummy,dummy,dummy,data(:,i)] = read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
+						[dummy,dummy,dummy,dummy,data(:,i)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
 					else,
-						[data(:,i)] = read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
+						[data(:,i)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
 					end
 				end
 
