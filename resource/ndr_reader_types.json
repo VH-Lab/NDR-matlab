@@ -6,7 +6,7 @@
         {
                 "type": ["ced-smr", "smr", "son"],
 		"classname": "ndr.reader.ced_smr"
-        }
+        },
 	{
                 "type": ["SpikeGadgets", "SpikeGadgetsREC","rec"],
 		"classname": "ndr.reader.spikegadgets_rec"
