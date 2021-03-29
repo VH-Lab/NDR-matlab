@@ -1,4 +1,4 @@
-function test(varargin)
+function test(varargin) % not finished
 % ndr.test.reader.spikegadgets_rec.test- test reading using NDR reader with spikegadgets_rec format
 %
 %
