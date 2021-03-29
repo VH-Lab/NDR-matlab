@@ -1,4 +1,4 @@
-classdef spikegadgets_rec < ndr.reader
+classdef spikegadgets_rec < ndr.reader.base
 
 % path --> epoch start&end 
 properties
@@ -6,15 +6,12 @@ end
 	
 
 	methods
-  	  	function spikegadgets_obj = spikegadgets_rec(spikegadgets) % input = filename(?)
+  	  	function spikegadgets_obj = spikegadgets_rec() % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
 		%
 		% READER_OBJ = ndr.ndr.reader()
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
-			
-        	spikegadgets_obj = obj@ndr.reader.base(spikegadgets{:});
-
 		end; % READER()
         
         % extract times, spikes
