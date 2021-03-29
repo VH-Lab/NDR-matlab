@@ -11,7 +11,7 @@ assign(varargin{:});
 
 ndr.globals
 
-example_dir = [ndr_globals.path.path filesep 'example_data'];
+example_dir = [ndr_globals.path.path filesep 'example_data']; % Dot indexing is not supported for variables of this type
 
 filename = [example_dir filesep 'example.rec'];
 
