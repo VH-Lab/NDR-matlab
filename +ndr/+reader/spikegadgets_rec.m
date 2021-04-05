@@ -33,7 +33,7 @@ end
 			%
 			%
 
-			filename = ndr.reader.base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+			filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 			fileconfig = [];
 			[fileconfig, channels] = read_rec_config(filename);
 		
@@ -213,7 +213,7 @@ end
 
 				byteandbit = [];
                 
-                data = [];
+                	data = [];
                 
 				%read_SpikeGadgets_trodeChannels(filename,NumChannels, channels,samplingRate,headerSize, configExists)
 				%reading from channel 1 in list returned
