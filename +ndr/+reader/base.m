@@ -11,10 +11,34 @@ classdef base
 		end; % READER()
 
 		function ec = epochclock(ndr_reader_base_obj, epochstreams, epoch_select)
-			% EPOCHCLOCK - returns the types of time units available to this epoch of data
+			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
 			%
+			% EC = EPOCHCLOCK(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Return the clock types available for this epoch as a cell array
+			% of ndr.time.clocktype objects (or sub-class members).
+			%
+			% For the generic ndr.reader.base, this returns a single clock
+			% type 'dev_local'time';
+			%
+			% See also: ndr.time.clocktype
+			%
+				ec = {ndr.time.clocktype('dev_local_time')};
+		end % epochclock
 
-		end; % epochclock()
+		function t0t1 = t0_t1(ndr_reader_base_obj, epochstreams, epoch_select)
+			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
+			%
+			% T0T1 = T0_T1(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.
+			%
+			% The abstract class always returns {[NaN NaN]}.
+			%
+			% See also: ndr.time.clocktype, ndr.reader.base/epochclock
+			%
+				t0t1 = {[NaN NaN]};
+		end % t0_t1()
 
 		function channels = getchannelsepoch(ndr_reader_base_obj, epochstreams, epoch_select)
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch

@@ -77,45 +77,6 @@ classdef clocktype
 				ndr_clocktype_obj.type = type;
 		end % setclocktype() %
 
-		function [cost, mapping] = epochgraph_edge(clocktype_a, clocktype_b)
-			% EPOCHGRAPH_EDGE - provide epochgraph edge based purely on clock type
-			%
-			% [COST, MAPPING] = EPOCHGRAPH_EDGE(CLOCKTYPE_A, CLOCKTYPE_B)
-			%
-			% Returns the COST and ndr.time.timemapping object MAPPING that describes the
-			% automatic mapping between epochs that have clock types CLOCKTYPE_A
-			% and CLOCKTYPE_B.
-			%
-                        % The following NDR_CLOCKTYPES, if they exist, are linked across epochs with
-                        % a cost of 1 and a linear mapping rule with shift 1 and offset 0:
-                        %   'utc' -> 'utc'
-                        %   'utc' -> 'approx_utc'
-                        %   'exp_global_time' -> 'exp_global_time'
-                        %   'exp_global_time' -> 'approx_exp_global_time'
-                        %   'dev_global_time' -> 'dev_global_time'
-                        %   'dev_global_time' -> 'approx_dev_global_time'
-			%
-			% Otherwise, COST is Inf and MAPPING is empty.
-
-				cost = Inf;
-				mapping = [];
-
-				if strcmp(ndr_clocktype_a.type,'no_time') | strcmp(ndr_clocktype_b.type,'no_time'), 
-					% stop the search if its trivial
-					return;
-				end
-		
-				from_list = {'utc','utc','exp_global_time','exp_global_time','dev_global_time','dev_global_time'};
-				to_list = {'utc','approx_utc','exp_global_time','approx_exp_global_time',...
-					'dev_global_time','approx_dev_global_time'};
-
-				index = find(  strcmp(ndr_clocktype_a.type,from_list) & strcmp(ndr_clocktype_b.type,to_list) );
-				if ~isempty(index),
-					cost = 1;
-					mapping = ndr.time.timemapping([1 0]); % trivial mapping
-				end
-		end  % epochgraph_edge
-
 		function b = needsepoch(ndr_clocktype_obj)
 			% NEEDSEPOCH - does this clocktype need an epoch for full description?
 			%
@@ -162,5 +123,3 @@ classdef clocktype
 
 	end % methods
 end % ndr.time.clocktype class
-
-

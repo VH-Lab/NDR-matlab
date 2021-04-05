@@ -28,10 +28,43 @@ classdef reader
 		end; % reader()
 
 		function ec = epochclock(ndr_reader_obj, epochstreams, epoch_select)
-			% EPOCHCLOCK - returns the types of time units available to this epoch of data
+			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
 			%
+			% EC = EPOCHCLOCK(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Return the clock types available for this epoch as a cell array
+			% of ndr.time.clocktype objects (or sub-class members).
+			%
+			% This function calls the method of the ndr_reader_base class.
+			% 
+			% If EPOCH_SELECT is not provided, it is assumed to be 1.
+			%
+			% See also: ndr.time.clocktype
+			%       
+				if nargin<3,
+					epoch_select = 1;
+				end;
+				ec = ndr_reader_obj.ndr_reader_base.epochclock(epochstreams, epoch_select);
+		end % epochclock
 
-		end; % epochclock()
+		function t0t1 = t0_t1(ndr_reader_obj, epochstreams, epoch_select)
+			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
+			%
+			% T0T1 = T0_T1(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.
+			%
+			% This function calls the method of the ndr_reader_base class.
+			%
+			% If EPOCH_SELECT is not provided, it is assumed to be 1.
+			%
+			% See also: ndr.time.clocktype, ndr.reader.base/epochclock
+			%
+				if nargin<3,
+					epoch_select = 1;
+				end;
+				t0t1 = ndr_reader_obj.ndr_reader_base.t0_t1(epochstreams, epoch_select);
+		end % t0_t1()
 
 		function channels = getchannelsepoch(ndr_reader_obj, epochstreams, epoch_select)
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
