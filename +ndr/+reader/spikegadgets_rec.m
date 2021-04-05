@@ -100,7 +100,7 @@ end
 			end
 
 	
-		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochfiles, channeltype, channel)
+		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochstreams, epoch_select, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC EPOCH AND CHANNEL
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
@@ -119,7 +119,7 @@ end
 				sr = str2num(fileconfig.samplingRate);
 		end
 
-		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochfiles)
+		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochstreams, epoch_select)
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
 			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
@@ -156,7 +156,7 @@ end
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochfiles)
+		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochstreams, epoch_select)
 		        % GETEPOCHPROBEMAP returns struct with probe information
 		        % name, reference, n-trode, channels
 		        %
@@ -186,7 +186,7 @@ end
 				end
         	end
 
-		function data = readchannels_epochsamples(ndr_reader_base_spikegadgets_obj, channeltype, channels, epochfiles, s0, s1)
+		function data = readchannels_epochsamples(ndr_reader_base_spikegadgets_obj, channeltype, channels, epochstreams, epoch_select, s0, s1)
 			% FUNCTION READ_CHANNELS - read the data based on specified channels
 			%
 			% DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES ,S0, S1)
