@@ -6,7 +6,7 @@ end
 	
 
 	methods
-  	  	function spikegadgets_obj = spikegadgets_rec() % input = filename(?)
+  	  	function ndr_reader_base_spikegadgets_obj = spikegadgets_rec() % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
 		%
 		% READER_OBJ = ndr.ndr.reader()
