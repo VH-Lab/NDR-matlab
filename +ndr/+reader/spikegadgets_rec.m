@@ -1,4 +1,4 @@
-classdef spikegadgets_rec < ndr.reader
+classdef spikegadgets_rec < ndr.reader.base
 
 % path --> epoch start&end 
 properties
@@ -6,21 +6,18 @@ end
 	
 
 	methods
-  	  	function spikegadgets_obj = spikegadgets_rec(spikegadgets) % input = filename(?)
+  	  	function ndr_reader_base_spikegadgets_obj = spikegadgets_rec() % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
 		%
 		% READER_OBJ = ndr.ndr.reader()
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
-			
-        	spikegadgets_obj = obj@ndr.reader.base(spikegadgets{:});
-
 		end; % READER()
         
         % extract times, spikes
 
 
-		function channels = getchannelsepoch(ndr_reader_base_spikegadgets_obj, epochfiles)
+		function channels = getchannelsepoch(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select)
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
 			%
 			% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
@@ -36,9 +33,9 @@ end
 			%
 			%
 
-			filename = ndr.reader.base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
+			filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 			fileconfig = [];
-			[fileconfig, channels] = read_rec_config(filename);
+			[fileconfig, channels] = read_SpikeGadgets_config(filename);
 		
 		
 		
@@ -103,7 +100,7 @@ end
 			end
 
 	
-		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochfiles, channeltype, channel)
+		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC EPOCH AND CHANNEL
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
@@ -115,14 +112,14 @@ end
 
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				fileconfig = read_rec_config(filename);
+				fileconfig = read_SpikeGadgets_config(filename);
 
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
 				sr = str2num(fileconfig.samplingRate);
 		end
 
-		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochfiles)
+		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select)
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
 			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
@@ -136,7 +133,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				[fileconfig, ~] = read_rec_config(filename);
+				[fileconfig, ~] = read_SpikeGadgets_config(filename);
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
@@ -159,12 +156,12 @@ end
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochfiles)
+		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochfiles, epoch_select)
 		        % GETEPOCHPROBEMAP returns struct with probe information
 		        % name, reference, n-trode, channels
 		        %
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles);
-				fileconfig = read_rec_config(filename);
+				fileconfig = read_SpikeGadgets_config(filename);
 				nTrodes = fileconfig.nTrodes;
 				%List where epochprobemap objects will be stored
 				epochprobemap = [];
@@ -189,7 +186,7 @@ end
 				end
         	end
 
-		function data = readchannels_epochsamples(ndr_reader_base_spikegadgets_obj, channeltype, channels, epochfiles, s0, s1)
+		function data = readchannels_epochsamples(ndr_reader_base_spikegadgets_obj, channeltype, channels, epochfiles, epoch_select, s0, s1)
 			% FUNCTION READ_CHANNELS - read the data based on specified channels
 			%
 			% DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES ,S0, S1)
@@ -208,7 +205,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				header = read_rec_config(filename);
+				header = read_SpikeGadgets_config(filename);
 
 				sr = ndr_reader_base_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
 
@@ -216,7 +213,7 @@ end
 
 				byteandbit = [];
                 
-                data = [];
+                	data = [];
                 
 				%read_SpikeGadgets_trodeChannels(filename,NumChannels, channels,samplingRate,headerSize, configExists)
 				%reading from channel 1 in list returned
