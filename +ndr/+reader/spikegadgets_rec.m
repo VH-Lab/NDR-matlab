@@ -35,7 +35,7 @@ end
 
 			filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 			fileconfig = [];
-			[fileconfig, channels] = read_rec_config(filename);
+			[fileconfig, channels] = read_SpikeGadgets_config(filename);
 		
 		
 		
@@ -112,7 +112,7 @@ end
 
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				fileconfig = read_rec_config(filename);
+				fileconfig = read_SpikeGadgets_config(filename);
 
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
@@ -133,7 +133,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				[fileconfig, ~] = read_rec_config(filename);
+				[fileconfig, ~] = read_SpikeGadgets_config(filename);
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
@@ -161,7 +161,7 @@ end
 		        % name, reference, n-trode, channels
 		        %
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles);
-				fileconfig = read_rec_config(filename);
+				fileconfig = read_SpikeGadgets_config(filename);
 				nTrodes = fileconfig.nTrodes;
 				%List where epochprobemap objects will be stored
 				epochprobemap = [];
@@ -205,7 +205,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				header = read_rec_config(filename);
+				header = read_SpikeGadgets_config(filename);
 
 				sr = ndr_reader_base_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
 
