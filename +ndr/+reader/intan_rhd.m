@@ -87,7 +87,7 @@ classdef intan_rhd < ndr.reader.base
             % open .RHD files, and examine the headers for all channels present
             %   for any new channel that hasn't been identified before,
             %   add it to the list
-            
+
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
@@ -248,8 +248,8 @@ classdef intan_rhd < ndr.reader.base
         %  one is an .RHD data file. If the 1-file-per-channel mode is used, then PARENTDIR is the name of the directory
         %  that holds the data files and ISDIRECTORY is 1.
         %
-            s1 = ['.*/.rhd\>']; % equivalent of *.ext on the command line
-            [tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
+            s1 = ['.*\.rhd\>']; % equivalent of *.ext on the command line
+            [tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0)
             parentdir = '';
             isdirectory = 0;
             
