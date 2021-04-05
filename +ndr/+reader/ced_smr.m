@@ -104,9 +104,9 @@ classdef ced_smr < ndr.reader.base
 
 				for i=1:length(channel), % can only read 1 channel at a time
 					if strcmpi(channeltype,'time'),
-						[dummy,dummy,dummy,dummy,data(:,i)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
+						[dummy,dummy,dummy,dummy,data(:,i)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
 					else,
-						[data(:,i)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
+						[data(:,i)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
 					end
 				end
 
@@ -152,12 +152,12 @@ classdef ced_smr < ndr.reader.base
 					data = {};
 					for i=1:numel(channel),
 						data{i} = [];
-						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]= ndr.format.ced.reader.read_CEDSMR_datafile(filename, ... % this needs editing, right? No function with that name right now, needs to have the package name
+						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]= ndr.format.ced.read_CEDSMR_datafile(filename, ... % this needs editing, right? No function with that name right now, needs to have the package name
 							'',channel(i),t0,t1);
 					end
 				else,
 					data = [];
-					[data(:,2),dummy,dummy,dummy,data(:,1)] = ndr.format.ced.reader.read_CEDSMR_datafile(filename,'',channel,t0,t1); % this needs editing, right? No function with that name right now, needs to have the package name
+					[data(:,2),dummy,dummy,dummy,data(:,1)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel,t0,t1); % this needs editing, right? No function with that name right now, needs to have the package name
 				end
 		end % readevents_epoch()
 
@@ -172,7 +172,7 @@ classdef ced_smr < ndr.reader.base
 
 				sr = [];
 				for i=1:numel(channel),
-					sr(i) = 1/ndr.test.format.read_CEDSMR_sampleinterval(filename,[],channel(i)); %   % this needs editing, right? No function with that name right now, needs to have the package name
+					sr(i) = 1/ndr.format.ced.read_SOMSMR_sampleinterval(filename,[],channel(i)); %   % this needs editing, right? No function with that name right now, needs to have the package name
 				end
 
 		end % samplerate()
