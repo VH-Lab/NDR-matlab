@@ -38,7 +38,7 @@ classdef intan_rhd < ndr.reader.base
         %
         %  See also: ndr.time.clocktype, EPOCHCLOCK
         %
-            [filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochfiles);
+            [filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
             if ~isdirectory,
@@ -82,13 +82,13 @@ classdef intan_rhd < ndr.reader.base
                 'board_dig_in_channels'
                 'board_dig_out_channels'};
             
-            multifunctiondaq_channel_types = ndr.system.mfdaq.mfdaq_channeltypes;
+            multifunctiondaq_channel_types = ndr.reader.base.mfdaq_channeltypes;
             
-            % open RHD files, and examine the headers for all channels present
+            % open .RHD files, and examine the headers for all channels present
             %   for any new channel that hasn't been identified before,
             %   add it to the list
             
-            filename = intan_rhd_obj.filenamefromepochfiles(epochfiles);
+            filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
             for k=1:length(intan_channel_types)
@@ -124,7 +124,7 @@ classdef intan_rhd < ndr.reader.base
         %
         %  DATA will have one column per channel.
         %
-            [filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochfiles);
+            [filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             
             uniquechannel = unique(channeltype);
             if numel(uniquechannel)~=1,
@@ -132,7 +132,7 @@ classdef intan_rhd < ndr.reader.base
             end
             intanchanneltype = intan_rhd_obj.mfdaqchanneltype2intanchanneltype(uniquechannel{1});
             
-            sr = intan_rhd_obj.samplerate(epochfiles, channeltype, channel);
+            sr = intan_rhd_obj.samplerate(epochstreams, channeltype, channel);
             sr_unique = unique(sr); % get all sample rates
             if numel(sr_unique)~=1,
                 error(['Do not know how to handle different sampling rates across channels.']);
@@ -179,11 +179,11 @@ classdef intan_rhd < ndr.reader.base
                 data = {};
                 for i=1:numel(channel),
                     % optimization speed opportunity
-                    srd = intan_rhd_obj.samplerate(epochfiles,{'di'},channel(i));
+                    srd = intan_rhd_obj.samplerate(epochstreams,{'di'},channel(i));
                     s0d = 1+round(srd*t0);
                     s1d = 1+round(srd*t1);
-                    data_here = intan_rhd_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochfiles,s0d,s1d);
-                    time_here = intan_rhd_obj.readchannels_epochsamples(repmate({'time'},1,numel(channel(i))),channel(i),epochfiles,s0d,s1d);
+                    data_here = intan_rhd_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochstreams,s0d,s1d);
+                    time_here = intan_rhd_obj.readchannels_epochsamples(repmate({'time'},1,numel(channel(i))),channel(i),epochstreams,s0d,s1d);
                     if any(strcmp(channeltype{i},{'dep','dimp'})), % look for 0 to 1 transitions
                         transitions_on_samples = find((data_here(1:end-1)==0) & (data_here(2:end)==1));
                         if strcmp(channeltype{i},'dimp'),
@@ -212,7 +212,7 @@ classdef intan_rhd < ndr.reader.base
                 end;
             else,
                 data = intan_rhd_obj.readevents_epochsamples_native(channeltype, ...
-                    channel, epochfiles, t0, t1); % abstract class
+                    channel, epochstreams, t0, t1); % abstract class
             end;
         end % ndr.reader.readevents_epochsamples
         
@@ -229,7 +229,7 @@ classdef intan_rhd < ndr.reader.base
         %  CHANNELTYPE applies to every entry of CHANNEL.
         %
             sr = [];
-            filename = intan_rhd_obj.filenamefromepochfiles(epochfiles);
+            filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             
             head = ndr.format.intan.read_Intan_RHD2000_header(filename);
             for i=1:numel(channel),
@@ -245,7 +245,7 @@ classdef intan_rhd < ndr.reader.base
         %  [FILENAME, PARENTDIR, ISDIRECTORY] = FILENAMEFROMEPOCHFILES(NDR_NDRREADER_INTANREADER_OBJ, FILENAME_ARRAY)
         %
         %  Examines the list of filenames in FILENAME_ARRAY (cell array of full path file strings) and determines which
-        %  one is an RHD data file. If the 1-file-per-channel mode is used, then PARENTDIR is the name of the directory
+        %  one is an .RHD data file. If the 1-file-per-channel mode is used, then PARENTDIR is the name of the directory
         %  that holds the data files and ISDIRECTORY is 1.
         %
             s1 = ['.*/.rhd\>']; % equivalent of *.ext on the command line
