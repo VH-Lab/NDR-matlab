@@ -1,8 +1,6 @@
-function test(varargin) % not finished
+function test(varargin)
 % ndr.test.reader.spikegadgets_rec.test- test reading using NDR reader with spikegadgets_rec format
 %
-%
-% 
 
 plotit = 1;
 
@@ -17,7 +15,6 @@ filename = [example_dir filesep 'example.rec'];
 
 r = ndr.reader('rec'); % open an rec reader
 
-
 channels = r.getchannelsepoch({filename});
 
 for i=1:numel(channels),
@@ -26,14 +23,15 @@ for i=1:numel(channels),
 
 end
 
-
 % okay, here demonstrate use of r.readchannels_epochsamples by reading from channel ai1 and read samples 1 through 10000
  
+ epoch_select = 1; 
+ % channel = 32 ?
  
- data = r.readchannels_epochsamples( {filename}, 21, channels, 1,10000)
- time = r.readchannels_epochsamples(filename,'ai',21,1,10000)
+ data = r.readchannels_epochsamples('time',channels,{filename},epoch_select,1,10000);
+ time = r.readchannels_epochsamples(filename,'ai',channels,1,10000);
 
-if plotit,
+if plotit, % empty plot shows 
 	figure (1);
 	plot(time,data);
 	xlabel('Time(s)');
