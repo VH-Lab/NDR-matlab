@@ -46,9 +46,9 @@ classdef mfdaq < ndr.system
 		end; % ndr.system.mfdaq
 
         function ec = epochclock(ndr_system_mfdaq_obj, epoch)
-            % EPOCHCLOCK - return the ndi.time.clocktype objects for an epoch
+            % EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
             %
-            % EC = EPOCHCLOCK(NDI_DAQSYSTEM_MFDAQ_OBJ, EPOCH)
+            % EC = EPOCHCLOCK(NDR_DAQSYSTEM_MFDAQ_OBJ, EPOCH)
             %
             % Return the clock types available for this epoch as a cell array
             % of ndr.time.clocktype objects (or sub-class members).
@@ -56,28 +56,28 @@ classdef mfdaq < ndr.system
 			% For the generic ndi.daq.system.mfdaq, this returns a single clock
 			% type 'dev_local'time';
 			%
-			% See also: ndi.time.clocktype
+			% See also: ndr.time.clocktype
                         %
-				epochfiles = ndi_system_mfdaq_obj.filenavigator.getepochfiles(epoch);
+				epochfiles = ndr_system_mfdaq_obj.filenavigator.getepochfiles(epoch);
                                 ec = ndr_system_mfdaq_obj.daqreader.epochclock(epochfiles);
                 end % epochclock()
 
 		function t0t1 = t0_t1(ndr_system_mfdaq_obj, epoch)
 			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
-			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCH_NUMBER)
+			% T0T1 = T0_T1(NDR_EPOCHSET_OBJ, EPOCH_NUMBER)
 			%
 			% Return the beginning (t0) and end (t1) times of the epoch EPOCH_NUMBER
-			% in the same units as the ndi.time.clocktype objects returned by EPOCHCLOCK.
+			% in the same units as the ndr.time.clocktype objects returned by EPOCHCLOCK.
 			%
 				epochfiles = ndr_system_mfdaq_obj.filenavigator.getepochfiles(epoch);
 				t0t1 = ndr_system_mfdaq_obj.daqreader.t0_t1(epochfiles);
 		end % t0_t1()
 
-		function channels = getchannels(ndi_daqsystem_mfdaq_obj)
+		function channels = getchannels(ndr_system_mfdaq_obj)
 			% FUNCTION GETCHANNELS - List the channels that are available on this device
 			%
-			%  CHANNELS = GETCHANNELS(NDI_DAQSYSTEM_MFDAQ_OBJ)
+			%  CHANNELS = GETCHANNELS(NDR_DAQSYSTEM_MFDAQ_OBJ)
 			%
 			%  Returns the channel list of acquired channels in this session
 			%
@@ -122,7 +122,7 @@ classdef mfdaq < ndr.system
 			%  DATA will have one column per channel.
 			%
 				epochfiles = getepochfiles(ndr_system_mfdaq_obj.filenavigator, epoch);
-				data = ndi_system_mfdaq_obj.daqreader.readchannels_epochsamples(channeltype, channel, epochfiles, s0, s1);
+				data = ndr_system_mfdaq_obj.daqreader.readchannels_epochsamples(channeltype, channel, epochfiles, s0, s1);
 		end % readchannels_epochsamples()
 
 		function data = readchannels(ndr_system_mfdaq_obj, channeltype, channel, timeref_or_epoch, t0, t1)
@@ -137,7 +137,7 @@ classdef mfdaq < ndr.system
 			%  
 			%  CHANNEL is a vector with the identity of the channels to be read.
 			%  
-			%  TIMEREF_OR_EPOCH is either an NDI_CLOCK object indicating the clock for T0, T1, or
+			%  TIMEREF_OR_EPOCH is either an NDR_CLOCK object indicating the clock for T0, T1, or
 			%  it can be a single number, which will indicate the data are to be read from that epoch.
 			%
 			%  DATA is the data collection for specific channels
@@ -147,9 +147,9 @@ classdef mfdaq < ndr.system
 			if isa(timeref_or_epoch,'ndi.time.timereference'),
 				exp = ndr_system_mfdaq_obj.session;
 				[t0,epoch0_timeref] = exp.syncgraph.timeconvert(timeref_or_epoch,t0,...
-					ndr_system_mfdaq_obj,ndi.time.clocktype('devlocal'));
+					ndr_system_mfdaq_obj,ndr.time.clocktype('devlocal'));
 				[t1,epoch1_timeref] = exp.syncgraph.timeconvert(timeref_or_epoch,t1,...
-					ndr_system_mfdaq_obj,ndi.time.clocktype('dev_local_time'));
+					ndr_system_mfdaq_obj,ndr.time.clocktype('dev_local_time'));
 				if epoch0_timeref.epoch~=epoch1_timeref.epoch,
 					error(['Do not know how to read across epochs yet; request spanned ' ...
 						 ndr_system_mfdaq_obj.filenavigator.epoch2str(epoch0_timeref.epoch) ...
@@ -179,7 +179,7 @@ classdef mfdaq < ndr.system
 			%  
 			%  CHANNEL is a vector with the identity of the channel(s) to be read.
 			%  
-			%  TIMEREF_OR_EPOCH is either an ndi.time.timereference object indicating the clock for T0, T1, or
+			%  TIMEREF_OR_EPOCH is either an ndr.time.timereference object indicating the clock for T0, T1, or
 			%  it can be a single number, which will indicate the data are to be read from that epoch.
 			%
 			%  DATA is a two-column-per-channel vector; the first column has the time of the event. The second
@@ -187,7 +187,7 @@ classdef mfdaq < ndr.system
 			%  is requested, DATA is returned as a cell array, one entry per channel.
 			%
 
-			if isa(timeref_or_epoch,'ndi.time.timereference'),
+			if isa(timeref_or_epoch,'ndr.time.timereference'),
 				tref = timeref_or_epoch;
 				error(['this function does not handle working with clocks yet.']);
 			else,
@@ -213,11 +213,11 @@ classdef mfdaq < ndr.system
 			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
 			%  is requested, DATA is returned as a cell array, one entry per channel.
 			%
-			%  TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.
+			%  TIMEREF is an ndr.time.timereference with the NDR_CLOCK of the device, referring to epoch N at time 0 as the reference.
 			%  
 				epochfiles = getepochfiles(ndr_system_mfdaq_obj.filenavigator, epoch);
 				epochclocks  = ndr_system_mfdaq_obj.epochclock(epoch);
-				timeref = ndi.time.timereference(ndr_system_mfdaq_obj, epochclocks{1}, epoch, 0);
+				timeref = ndr.time.timereference(ndr_system_mfdaq_obj, epochclocks{1}, epoch, 0);
 				data = ndr_system_mfdaq_obj.daqreader.readevents_epochsamples(channeltype, channel, epochfiles, t0, t1);
 		end; % readevents_epochsamples
 
@@ -241,12 +241,12 @@ classdef mfdaq < ndr.system
 
 	methods (Static), % functions that don't need the object
 		function ct = mfdaq_channeltypes
-			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
+			% MFDAQ_CHANNELTYPES - channel types for ndr.daq.system.mfdaq objects
 			%
 			%  CT = MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
 			%
 			%  Returns a cell array of strings of supported channels of the
-			%  ndi.daq.system.mfdaq class. These are the following:
+			%  ndr.system.mfdaq class. These are the following:
 			%
 			%  Channel type:       | Description: 
 			%  -------------------------------------------------------------
@@ -257,7 +257,7 @@ classdef mfdaq < ndr.system
 			%  digital_out         | Digital output channel
 			%  marker              | 
 			%
-			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
+			% See also: ndr.system.mfdaq/MFDAQ_TYPE
 			ct = { 'analog_in', 'aux_in', 'analog_out', 'digital_in', 'digital_out', 'marker', 'event', 'time' };
 		end;
 
@@ -287,7 +287,7 @@ classdef mfdaq < ndr.system
 			% 'digital_in_mark_pos','dim' |
 			% 'digital_in_mark_neg','dimn'| 'dimn'
 			%
-			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
+			% See also: ndr.system.mfdaq/MFDAQ_TYPE
 			%
 				switch channeltype,
 					case {'analog_in','ai'},
@@ -338,7 +338,7 @@ classdef mfdaq < ndr.system
 			% 'mark', 'marker', or 'mk'   | 'mark'
 			% 'event' or 'e'              | 'event'
 			%
-			% See also: ndi.daq.system.mfdaq/MFDAQ_PREFIX
+			% See also: ndr.system.mfdaq/MFDAQ_PREFIX
 			%
 				switch channeltype,
 					case {'analog_in','ai'},
