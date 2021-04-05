@@ -17,7 +17,7 @@ end
         % extract times, spikes
 
 
-		function channels = getchannelsepoch(ndr_reader_base_spikegadgets_obj, epochfiles)
+		function channels = getchannelsepoch(ndr_reader_base_spikegadgets_obj, epochstreams, epoch_select)
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
 			%
 			% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
