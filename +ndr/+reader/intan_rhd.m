@@ -355,7 +355,7 @@ classdef intan_rhd < ndr.reader.base
             sep = find(name=='-');
             chan_intan = str2num(name(sep+1:end));
             chan = chan_intan + 1; % Intan numbers from 0
-            channame = [ndr.system.mfdaq.mfdaq_prefix(type) int2str(chan)];
+            channame = [ndr.reader.base.mfdaq_prefix(type) int2str(chan)];
         end % ndr.reader.intanname2mfdaqname
         
         function headername = mfdaqchanneltype2intanfreqheader(channeltype)
