@@ -22,7 +22,20 @@ function test(varargin)
     for i=1:numel(channels),
         disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
     end
-     % Demonstrate use of r.readchannels_epochsamples by reading channel
-     % ai1 and read samples 1 through 1,000
+    
+    % Demonstrate use of r.readchannels_epochsamples by reading channel ai1 and read samples 1 through 10,000
+    % Use r.readchannels_epochsamples to create a variable d, and t
+    epoch_select = 1; % Which epoch in the file? For most file systems, there is just 1 epoch per file
+    channel = 32; % The waveform channel in our example file
+    d = r.readchannels_epochsamples('ai',32,{filename},epoch_select,1,10000);
+    t = r.readchannels_epochsamples('time',32,{filename},epoch_select,1,10000);
+    
+    if plotit,
+        figure(1);
+        plot(t,d);
+        xlabel('Time (s)');
+        ylabel('Data values');
+        title(['Intan example data']);
+    end;
     
 end % ndr.test.reader.intan_rhd.test
