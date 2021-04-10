@@ -114,8 +114,8 @@ classdef intan_rhd < ndr.reader.base
         %
         %  DATA = READCHANNELS_EPOCHSAMPLES(INTANREADER_OBJ, CHANNELTYPE, CHANNEL, EPOCH, S0, S1)
         %
-        %  CHANNELTYPE is the type of channel to read (cell array of
-        %  strings, one per channel).
+        %  CHANNELTYPE is the type of channel to read (single text string,
+        %  such as 'ai','analog_input','time')
         %
         %  CHANNEL is a vector of the channel numbers to read, beginning
         %  from 1.
@@ -126,13 +126,9 @@ classdef intan_rhd < ndr.reader.base
         %
             [filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             
-            uniquechannel = unique(channeltype);
-            if numel(uniquechannel)~=1,
-                error(['Only one type of channel may be read per function call at present.']);
-            end
-            intanchanneltype = intan_rhd_obj.mfdaqchanneltype2intanchanneltype(uniquechannel{1});
+            intanchanneltype = intan_rhd_obj.mfdaqchanneltype2intanchanneltype(channeltype);
             
-            sr = intan_rhd_obj.samplerate(epochstreams, channeltype, channel);
+            sr = intan_rhd_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
             sr_unique = unique(sr); % get all sample rates
             if numel(sr_unique)~=1,
                 error(['Do not know how to handle different sampling rates across channels.']);
@@ -219,7 +215,7 @@ classdef intan_rhd < ndr.reader.base
         function sr = samplerate(intan_rhd_obj, epochstreams, epoch_select, channeltype, channel)
         % SAMPLERATE - Get the sample rate for specific channel
         %
-        %  SR = SAMPLEREADER(INTANREADER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
+        %  SR = SAMPLERATE(INTANREADER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
         %
         %  SR is an array of sample rates from the specified channels.
         %
@@ -228,6 +224,9 @@ classdef intan_rhd < ndr.reader.base
         %  If CHANNELTYPE is a single string, then it is assumed that that
         %  CHANNELTYPE applies to every entry of CHANNEL.
         %
+        	if epoch_select~=1,
+            	error(['Intan RHD files have 1 epoch per file.']);
+        	end;
             sr = [];
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             
@@ -249,7 +248,7 @@ classdef intan_rhd < ndr.reader.base
         %  that holds the data files and ISDIRECTORY is 1.
         %
             s1 = ['.*\.rhd\>']; % equivalent of *.ext on the command line
-            [tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0)
+            [tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
             parentdir = '';
             isdirectory = 0;
             
