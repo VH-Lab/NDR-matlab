@@ -209,20 +209,22 @@ end
 
 				sr = ndr_reader_base_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
 
-				detailedchannels = ndr_reader_base_spikegadgets_obj.getchannelsepochdetailed(epochfiles);
+				detailedchannels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochfiles); %error
 
 				byteandbit = [];
                 
                 	data = [];
+
                 
 				%read_SpikeGadgets_trodeChannels(filename,NumChannels, channels,samplingRate,headerSize, configExists)
 				%reading from channel 1 in list returned
 				%Reads nTrodes
 				%WARNING channeltype hard coded, ask Steve
 				channeltype
-				if (strcmp(ndr.reader.base.base_type(channeltype{1}),'analog_in') || strcmp(ndr.reader.base.base_type(channeltype{1}), 'analog_out'))
-					data = read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+                if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
+					data = read_SpikeGadgets_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
 
+                    
 				elseif (strcmp(channeltype,'auxiliary') || strcmp(channeltype,'aux')) %Reads analog inputs
 					%for every channel in device
 					for i=1:length(detailedchannels)
@@ -235,7 +237,8 @@ end
 							end
 						end
 					end
-					data = read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
+					data = read_SpikeGadgets_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
+
 
 				elseif (strcmp(channeltype,'digital_in') || strcmp(channeltype, 'digital_out')), %Reads digital inputs
 					%for every channel in device
@@ -253,9 +256,13 @@ end
 
 					data = read_SpikeGadgets_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
 					data = data';
-				else
 
-				end
+                    
+                else % (strcmp(channeltype,'time')
+                    % data = read_SpikeGadgets_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+                     
+                end
+                
 		end % readchannels_epochsamples
 
 		function filename = filenamefromepochfiles(ndr_reader_base_spikegadgets_obj, filename)
@@ -272,4 +279,5 @@ end
                 end % filenamefromepoch
 
     end % methods
+
 end % classdef
