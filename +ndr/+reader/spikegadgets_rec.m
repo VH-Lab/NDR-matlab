@@ -35,7 +35,7 @@ end
 
 			filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 			fileconfig = [];
-			[fileconfig, channels] = read_SpikeGadgets_config(filename);
+			[fileconfig, channels] = ndr.format.spikegadgets.read_rec_config(filename);
 		
 		
 		
@@ -112,7 +112,7 @@ end
 
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				fileconfig = read_SpikeGadgets_config(filename);
+				fileconfig = ndr.format.spikegadgets.read_rec_config(filename);
 
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
@@ -133,7 +133,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				[fileconfig, ~] = read_SpikeGadgets_config(filename);
+				[fileconfig, ~] = ndr.format.spikegadgets.read_rec_config(filename);
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
@@ -161,7 +161,7 @@ end
 		        % name, reference, n-trode, channels
 		        %
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles);
-				fileconfig = read_SpikeGadgets_config(filename);
+				fileconfig = ndr.format.spikegadgets.read_rec_config(filename);
 				nTrodes = fileconfig.nTrodes;
 				%List where epochprobemap objects will be stored
 				epochprobemap = [];
@@ -205,7 +205,7 @@ end
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
-				header = read_SpikeGadgets_config(filename);
+				header = ndr.format.spikegadgets.read_rec_config(filename);
 
 				sr = ndr_reader_base_spikegadgets_obj.samplerate(epochfiles,channeltype,channels);
 
@@ -222,7 +222,7 @@ end
 				%WARNING channeltype hard coded, ask Steve
 				channeltype
                 if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
-					data = read_SpikeGadgets_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+					data = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
 
                     
 				elseif (strcmp(channeltype,'auxiliary') || strcmp(channeltype,'aux')) %Reads analog inputs
@@ -237,7 +237,7 @@ end
 							end
 						end
 					end
-					data = read_SpikeGadgets_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
+					data = ndr.format.spikegadgets.read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
 
 
 				elseif (strcmp(channeltype,'digital_in') || strcmp(channeltype, 'digital_out')), %Reads digital inputs
@@ -254,13 +254,13 @@ end
 						end
 					end
 
-					data = read_SpikeGadgets_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
+					data = ndr.format.spikegadgets.read_rec_digitalChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
 					data = data';
 
                     
-                else % (strcmp(channeltype,'time')
-                    % data = read_SpikeGadgets_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
-                     
+                elseif strcmp(channeltype,'time')
+                    [dummy,data] = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+                    data = data(:);
                 end
                 
 		end % readchannels_epochsamples
