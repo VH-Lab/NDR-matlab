@@ -22,15 +22,21 @@ for i=1:numel(channels),
 	disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 end
 
- % here, use r.readchannel_epochsamples to create a variable d, and t
- epoch_select = 1; % which epoch in the file? For most file systems, there is just 1 epoch per file
- channel = 21; % the waveform channel in our example file
- d = r.readchannels_epochsamples('ai',21,{filename},epoch_select,1,10000);
- t = r.readchannels_epochsamples('time',21,{filename},epoch_select,1,10000);
+% here, use r.readchannel_epochsamples to create a variable d, and t
+epoch_select = 1; % which epoch in the file? For most file systems, there is just 1 epoch per file
+channel = 21; % the waveform channel in our example file
+d = r.readchannels_epochsamples('ai',21,{filename},epoch_select,1,10000);
+t = r.readchannels_epochsamples('time',21,{filename},epoch_select,1,10000);
 
- % each epoch begins at T0 and ends at T1
- ec = ndr.reader_epochclock(ndr_reader_obj, epochstreams, epoch_select);
- epoch = T1 - T0;
+% each epoch begins at T0 and ends at T1
+ec = r.epochclock({filename}, epoch_select),
+t0_t1 = r.t0_t1({filename}, epoch_select);
+
+disp(['These are the clocktypes we know and how long the recording lasted:'])
+for i=1:numel(ec),
+    disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0_t1{i}(1)) ' and ended at ' num2str(t0_t1{i}(2)) '.']);
+end;
+
  
 if plotit,
 	figure (1);

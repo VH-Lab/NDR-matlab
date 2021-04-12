@@ -26,7 +26,7 @@ classdef ced_smr < ndr.reader.base
 		function channels = getchannelsepoch(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% GETCHANNELS - List the channels that are available on this device
 			%
-			%  CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
+			%  CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES, EPOCHSELECT)
 			%
 			%  Returns the channel list of acquired channels in this session
 			%
@@ -37,6 +37,12 @@ classdef ced_smr < ndr.reader.base
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
 
+                if nargin<3,
+                    epochselect = 1;
+                end;
+                if epochselect~=1, 
+                    error(['For CED SOM/SMR files, epochselect should be 1.']);
+                end;
 				channels = vlt.data.emptystruct('name','type');
 
 				% open SMR files, and examine the headers for all channels present
@@ -70,8 +76,11 @@ classdef ced_smr < ndr.reader.base
 			%
 			%  DATA is the channel data (each column contains data from an indvidual channel) 
 			%
+                if epochselect~=1, 
+                    error(['For CED SOM/SMR files, epochselect should be 1.']);
+                end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
-				sr = ndr_ndr_reader_cedsmr_obj.samplerate(epochfiles, channeltype, channel);
+				sr = ndr_ndr_reader_cedsmr_obj.samplerate(epochfiles, epochselect, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
 				if numel(sr_unique)~=1,
 					error(['Do not know how to handle different sampling rates across channels.']);
@@ -112,10 +121,10 @@ classdef ced_smr < ndr.reader.base
 
 		end % readchannels_epochsamples
 
-		function t0t1 = t0_t1(ndr_ndr_reader_cedsmr_obj, epochfiles)
+		function t0t1 = t0_t1(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
-			% T0T1 = T0_T1(NDR_NDR_READER_CEDSMR_OBJ, EPOCHFILES)
+			% T0T1 = T0_T1(NDR_NDR_READER_CEDSMR_OBJ, EPOCHFILES, EPOCHSELECT)
 			%
 			% Return the beginning (t0) and end (t1) times of the EPOCHFILES that define this
 			% epoch in the same units as the ndi.time.clocktype objects returned by EPOCHCLOCK.
@@ -123,15 +132,21 @@ classdef ced_smr < ndr.reader.base
 			%
 			% See also: ndi.time.clocktype, EPOCHCLOCK
 			%
+                if nargin<3,
+                    epochselect = 1;
+                end;
+                if epochselect~=1, 
+                    error(['For CED SOM/SMR files, epochselect should be 1.']);
+                end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
-				header = read_CEDSMR_header(filename);
+				header = ndr.format.ced.read_SOMSMR_header(filename);
 
 				t0 = 0;  % developer note: the time of the first sample in spike2 is not 0 but 0 + 1/4 * sample interval; might be more correct to use this
 				t1 = header.fileinfo.dTimeBase * header.fileinfo.maxFTime * header.fileinfo.usPerTime;
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function data = readevents_epoch(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, t0, t1)
+		function data = readevents_epoch(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, t0, t1)
 			%  FUNCTION READEVENTS - read events or markers of specified channels for a specified epoch
 			%
 			%  DATA = READEVENTS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
@@ -161,13 +176,15 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % readevents_epoch()
 
-		function sr = samplerate(ndr_ndr_reader_cedsmr_obj, epochfiles, channeltype, channel)
+		function sr = samplerate(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC EPOCH AND CHANNEL
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
 			%
 			% SR is the list of sample rate from specified channels
-
+                if epochselect~=1, 
+                    error(['For CED SOM/SMR files, epochselect should be 1.']);
+                end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				sr = [];
