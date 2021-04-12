@@ -28,6 +28,10 @@ end
  d = r.readchannels_epochsamples('ai',21,{filename},epoch_select,1,10000);
  t = r.readchannels_epochsamples('time',21,{filename},epoch_select,1,10000);
 
+ % each epoch begins at T0 and ends at T1
+ ec = ndr.reader_epochclock(ndr_reader_obj, epochstreams, epoch_select);
+ epoch = T1 - T0;
+ 
 if plotit,
 	figure (1);
 	plot(t,d);
