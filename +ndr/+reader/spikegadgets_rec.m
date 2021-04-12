@@ -213,7 +213,7 @@ end
 
 				byteandbit = [];
                 
-                	data = [];
+                		data = [];
 
                 
 				%read_SpikeGadgets_trodeChannels(filename,NumChannels, channels,samplingRate,headerSize, configExists)
@@ -221,7 +221,7 @@ end
 				%Reads nTrodes
 				%WARNING channeltype hard coded, ask Steve
 				channeltype
-                if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
+                		if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
 					data = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
 
                     
@@ -258,10 +258,10 @@ end
 					data = data';
 
                     
-                elseif strcmp(channeltype,'time')
-                    [dummy,data] = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
-                    data = data(:);
-                end
+                		elseif strcmp(channeltype,'time')
+                    			[dummy,data] = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
+                    			data = data(:);
+                		end
                 
 		end % readchannels_epochsamples
 
