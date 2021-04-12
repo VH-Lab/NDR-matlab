@@ -26,15 +26,16 @@ end
 % okay, here demonstrate use of r.readchannels_epochsamples by reading from channel ai1 and read samples 1 through 10000
  
  epoch_select = 1; 
- % channel = 32 ?
+ channel = 120; % ? number of analog_in
  
- data = r.readchannels_epochsamples('time',channels,{filename},epoch_select,1,10000);
- time = r.readchannels_epochsamples(filename,'ai',channels,1,10000);
+ data = r.readchannels_epochsamples('analog_in',channel,{filename},epoch_select,1,10000);
+ time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,1,10000);
+ % no time function yet
 
-if plotit, % empty plot shows 
+if plotit, % empty plot shows: vectors must be the same length  
 	figure (1);
 	plot(time,data);
 	xlabel('Time(s)');
 	ylabel('Data values');
-	title(['SpikeGadgets example data']);
+	title(['SpikeGadgets Example Data']);
 end;
