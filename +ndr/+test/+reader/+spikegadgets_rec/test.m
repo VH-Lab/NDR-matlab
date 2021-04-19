@@ -32,7 +32,7 @@ end
  time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,1,10000);
 
  % each epoch begins at T0 and ends at T1
-ec = r.epochclock({filename}, epoch_select), % ? no epochclock function still work
+ec = r.epochclock({filename}, epoch_select), % no epochclock function still work, why?
 t0t1 = r.t0_t1({filename}, epoch_select);
 
 disp(['These are the clocktypes we know and how long the recording lasted:'])
