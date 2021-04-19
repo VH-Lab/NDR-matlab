@@ -12,6 +12,7 @@ end
 		% READER_OBJ = ndr.ndr.reader()
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
+		
 		end; % READER()
         
         % extract times, spikes
@@ -97,7 +98,7 @@ end
 			
 				remove = {'startbyte','bit','number'};
 				channels = rmfield(channels, remove);
-			end
+		end
 
 	
 		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select, channeltype, channel)
@@ -117,7 +118,7 @@ end
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
 				sr = str2num(fileconfig.samplingRate);
-        end
+        	end
         
 		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select)
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
