@@ -117,19 +117,34 @@ end
 				%Sampling rate is the same for all channels in Spike Gadgets
 				%device so it is returned by checking the file configuration
 				sr = str2num(fileconfig.samplingRate);
-		end
+        end
+        
+        function ec = epochclock(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select)
+			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
+			%
+			% EC = EPOCHCLOCK(ndr_reader_base_spikegadgets_obj, EPOCHFILES, EPOCH_SELECT)
+			%
+			% Return the clock types available for this epoch as a cell array
+			% of ndr.time.clocktype objects (or sub-class members).
+			%
+			% For the generic ndr.reader.base, this returns a single clock
+			% type 'dev_local'time';
+			%
+			% See also: ndr.time.clocktype
+			%
+				ec = {ndr.time.clocktype('dev_local_time')};
+		end % epochclock
 
 		function t0t1 = t0_t1(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select)
-			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
+			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
-			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
+			% T0T1 = T0_T1(ndr_reader_base_spikegadgets_obj, EPOCHFILES, EPOCH_SELECT)
 			%
-			% Return the beginning (t0) and end (t1) times of the epoch EPOCH_NUMBER
-			% in the same units as the ndi.time.clocktype objects returned by EPOCHCLOCK.
+			% Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.
 			%
 			% The abstract class always returns {[NaN NaN]}.
 			%
-			% See also: ndi.time.clocktype, EPOCHCLOCK
+			% See also: ndr.time.clocktype, ndr.reader.base/epochclock
 			%
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles); 
 
