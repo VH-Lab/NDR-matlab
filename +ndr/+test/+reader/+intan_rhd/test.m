@@ -30,6 +30,15 @@ function test(varargin)
     d = r.readchannels_epochsamples('ai',32,{filename},epoch_select,1,10000);
     t = r.readchannels_epochsamples('time',32,{filename},epoch_select,1,10000);
     
+    % Each epoch begins at t0 and ends at t1
+    ec = r.epochclock({filename},epoch_select),
+    t0t1 = r.t0_t1({filename}, epoch_select);
+    
+    disp(['These are the clocktypes we know and how long the recording lasted:'])
+    for i=1:numel(ec),
+        disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0t1{i}(1)) ' and ended at ' num2str(t0t1{i}(2)) '.']);
+    end;
+    
     if plotit,
         figure(1);
         plot(t,d);
