@@ -24,11 +24,11 @@ classdef intan_rhd < ndr.reader.base
         %
         end % ndr.reader.intan_rhd
         
-        function ec = epochclock(intan_rhd_obj, epochstreams, epoch_select)
+        function t0t1 = t0_t1(intan_rhd_obj, epochstreams, epoch_select)
         % EPOCHCLOCK - Return the beginning and end epoch times for an
         % epoch
         %
-        %  EC = EPOCHCLOCK(INTAN_RHD_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+        %  T0T1 = T0_T1(INTAN_RHD_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
         %
         %  Return the beginning (t0) and end (t1) times of the epoch
         %  EPOCH_NUMBER in the same units as the ndr.time.clocktype objects
@@ -42,7 +42,7 @@ classdef intan_rhd < ndr.reader.base
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
             if ~isdirectory,
-                [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.ndr.intan.Intan_RHD2000_blockinfo(filename, header);
+                [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
                 total_samples = 60 * num_data_blocks;
             else,
                 finfo = dir([parentdir filesep 'time.dat']);
@@ -56,7 +56,7 @@ classdef intan_rhd < ndr.reader.base
             t0 = 0;
             t1 = total_time-1/header.frequency_parameters.amplifier_sample_rate;
             
-            ec = {[t0 t1]};
+            t0t1 = {[t0 t1]};
                 % developer note: in the Intan acquisition software, one can define a time offset; right now we aren't considering that
         end % ndr.reader.epochclock
         
