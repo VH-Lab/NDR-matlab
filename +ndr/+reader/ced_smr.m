@@ -146,7 +146,7 @@ classdef ced_smr < ndr.reader.base
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function data = readevents_epoch(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, t0, t1)
+		function data = readevents_epochsamples_native(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, t0, t1)
 			%  FUNCTION READEVENTS - read events or markers of specified channels for a specified epoch
 			%
 			%  DATA = READEVENTS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
@@ -167,12 +167,12 @@ classdef ced_smr < ndr.reader.base
 					data = {};
 					for i=1:numel(channel),
 						data{i} = [];
-						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]= ndr.format.ced.read_CEDSMR_datafile(filename, ... % this needs editing, right? No function with that name right now, needs to have the package name
+						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
 							'',channel(i),t0,t1);
 					end
 				else,
 					data = [];
-					[data(:,2),dummy,dummy,dummy,data(:,1)] = ndr.format.ced.read_CEDSMR_datafile(filename,'',channel,t0,t1); % this needs editing, right? No function with that name right now, needs to have the package name
+					[data(:,2),dummy,dummy,dummy,data(:,1)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel,t0,t1); 
 				end
 		end % readevents_epoch()
 

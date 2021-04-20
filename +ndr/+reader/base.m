@@ -133,7 +133,7 @@ classdef base
 				end;
 		end; % readevents_epochsamples()
 
-		function [data] = readevents_epochsamples_native(ndr_reader_base_obj, channeltype, channel, epochfiles, t0, t1)
+		function [data] = readevents_epochsamples_native(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events or markers of specified channels for a specified epoch
 			%
 			%  [DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)

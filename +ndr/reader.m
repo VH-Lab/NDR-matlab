@@ -160,11 +160,11 @@ classdef reader
 					end;
 				else,
 					data = ndr_reader_obj.readevents_epochsamples_native(channeltype, ...
-						channel, epochfiles, t0, t1); % abstract class
+						channel, epochstreams, epoch_select, t0, t1); % abstract class
 				end;
 		end; % readevents_epochsamples()
 
-		function [data] = readevents_epochsamples_native(ndr_reader_obj, channeltype, channel, epochfiles, t0, t1)
+		function [data] = readevents_epochsamples_native(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events or markers of specified channels for a specified epoch
 			%
 			%  [DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
@@ -182,7 +182,7 @@ classdef reader
 			%
 			%  TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.
 			%
-				data = []; % abstract class
+				data = ndr_reader_obj.ndr_reader_base.readevents_epochsamples_native(channeltype, channel, epochstreams, epoch_select, t0, t1);
 		end; % readevents_epochsamples
 
 		function sr = samplerate(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
