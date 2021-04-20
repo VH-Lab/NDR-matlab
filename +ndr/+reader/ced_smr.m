@@ -37,12 +37,12 @@ classdef ced_smr < ndr.reader.base
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
 
-                if nargin<3,
-                    epochselect = 1;
-                end;
-                if epochselect~=1, 
-                    error(['For CED SOM/SMR files, epochselect should be 1.']);
-                end;
+				if nargin<3,
+				    epochselect = 1;
+				end;
+				if epochselect~=1, 
+				    error(['For CED SOM/SMR files, epochselect should be 1.']);
+				end;
 				channels = vlt.data.emptystruct('name','type');
 
 				% open SMR files, and examine the headers for all channels present
@@ -76,9 +76,9 @@ classdef ced_smr < ndr.reader.base
 			%
 			%  DATA is the channel data (each column contains data from an indvidual channel) 
 			%
-                if epochselect~=1, 
-                    error(['For CED SOM/SMR files, epochselect should be 1.']);
-                end;
+				if epochselect~=1, 
+					error(['For CED SOM/SMR files, epochselect should be 1.']);
+				end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 				sr = ndr_ndr_reader_cedsmr_obj.samplerate(epochfiles, epochselect, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
@@ -132,12 +132,12 @@ classdef ced_smr < ndr.reader.base
 			%
 			% See also: ndi.time.clocktype, EPOCHCLOCK
 			%
-                if nargin<3,
-                    epochselect = 1;
-                end;
-                if epochselect~=1, 
-                    error(['For CED SOM/SMR files, epochselect should be 1.']);
-                end;
+				if nargin<3,
+				    epochselect = 1;
+				end;
+				if epochselect~=1, 
+				    error(['For CED SOM/SMR files, epochselect should be 1.']);
+				end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
@@ -158,8 +158,9 @@ classdef ced_smr < ndr.reader.base
 			%
 			%  EPOCH is the set of epoch files
 			%
-			%  DATA is a two-column vector; the first column has the time of the event. The second
-			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
+			%  DATA is a multiple-column vector; the first column has the
+			%  time of the event. The remaining columns indicate the
+			%  marker code. In the case of 'events', this is just 1. If more than one channel
 			%  is requested, DATA is returned as a cell array, one entry per channel.
 			%
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
@@ -167,12 +168,16 @@ classdef ced_smr < ndr.reader.base
 					data = {};
 					for i=1:numel(channel),
 						data{i} = [];
-						[data{i}(:,2),dummy,dummy,dummy,data{i}(:,1)]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
+						[d,dummy,dummy,dummy,t]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
 							'',channel(i),t0,t1);
+						data{i}(:,1) = t(:,1);
+						data{i}(:,2:size(d,2)+1) = d; 
 					end
 				else,
 					data = [];
-					[data(:,2),dummy,dummy,dummy,data(:,1)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel,t0,t1); 
+					[d,dummy,dummy,dummy,t] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel,t0,t1);
+					data(:,1) = t(:,1);
+					data(:,2:size(d,2)+1) = d; % truncate at a single column
 				end
 		end % readevents_epoch()
 
@@ -182,9 +187,9 @@ classdef ced_smr < ndr.reader.base
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
 			%
 			% SR is the list of sample rate from specified channels
-                if epochselect~=1, 
-                    error(['For CED SOM/SMR files, epochselect should be 1.']);
-                end;
+				if epochselect~=1, 
+				    error(['For CED SOM/SMR files, epochselect should be 1.']);
+				end;
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				sr = [];
