@@ -209,6 +209,7 @@ classdef base
 			% 'auxiliary','aux','ax',     | 'ax'
 			%    'auxiliary_in'           | 
 			% 'mark', 'marker', or 'mk'   | 'mk'
+			% 'text'                      | 'text'
 			% 'event' or 'e'              | 'e'
 			% 'metadata' or 'md'          | 'md'
 			% 'digital_in_event', 'de',   | 'dep'
@@ -247,6 +248,8 @@ classdef base
 						prefix = 'e';
 					case {'metadata','md'},
 						prefix = 'md';
+					case {'text'},
+						prefix = 'text';
 				end;
 		end % mfdaq_prefix()
 

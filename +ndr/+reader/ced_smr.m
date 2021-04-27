@@ -57,6 +57,7 @@ classdef ced_smr < ndr.reader.base
 				end;
 
 				for k=1:length(header.channelinfo),
+                    header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
@@ -146,13 +147,13 @@ classdef ced_smr < ndr.reader.base
 				t0t1 = {[t0 t1]};
 		end % t0t1
 
-		function data = readevents_epochsamples_native(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, t0, t1)
+		function [timestamps, data] = readevents_epochsamples_native(ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, t0, t1)
 			%  FUNCTION READEVENTS - read events or markers of specified channels for a specified epoch
 			%
-			%  DATA = READEVENTS(MYDEV, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
+			%  [TIMESTAMPS, DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_CEDSMR_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
 			%
 			%  CHANNELTYPE is the type of channel to read
-			%  ('event','marker', etc)
+			%  ('event','marker', 'text')
 			%
 			%  CHANNEL is a vector with the identity of the channel(s) to be read.
 			%
@@ -163,22 +164,17 @@ classdef ced_smr < ndr.reader.base
 			%  marker code. In the case of 'events', this is just 1. If more than one channel
 			%  is requested, DATA is returned as a cell array, one entry per channel.
 			%
-				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
-				if numel(channel)>1,
-					data = {};
-					for i=1:numel(channel),
-						data{i} = [];
-						[d,dummy,dummy,dummy,t]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
-							'',channel(i),t0,t1);
-						data{i}(:,1) = t(:,1);
-						data{i}(:,2:size(d,2)+1) = d; 
-					end
-				else,
-					data = [];
-					[d,dummy,dummy,dummy,t] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel,t0,t1);
-					data(:,1) = t(:,1);
-					data(:,2:size(d,2)+1) = d; % truncate at a single column
+				timestamps = {};
+				data = {};
+				filename = ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
+				for i=1:numel(channel),
+					[data{i},dummy,dummy,dummy,timestamps{i}]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
+						'',channel(i),t0,t1);
 				end
+				if numel(channel)==1,
+					timestamps = timestamps{1};
+					data = data{1};
+				end;
 		end % readevents_epoch()
 
 		function sr = samplerate(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect, channeltype, channel)
@@ -196,7 +192,6 @@ classdef ced_smr < ndr.reader.base
 				for i=1:numel(channel),
 					sr(i) = 1/ndr.format.ced.read_SOMSMR_sampleinterval(filename,[],channel(i)); %   % this needs editing, right? No function with that name right now, needs to have the package name
 				end
-
 		end % samplerate()
 
 	end % methods
@@ -232,15 +227,19 @@ classdef ced_smr < ndr.reader.base
 				case {1,9},
 					% 1 is integer, 9 is single precision floating point
 					channeltype = 'analog_in';
-				case {2,3,4,6},
+				case {2,3,4},
 					channeltype = 'event'; % event indicator
 						% 2 - positive-to-negative transition
 						% 3 - negative-to-positive transition
 						% 4 - either transition
-						% 6 - wavemark, a Spike2-detected event
-				case {5,7,8},
+				case {5,6,7}, % various marker types
+					% 5 - generic mark
+					% 6 - wavemark, a Spike2-detected event
+					% 7 - real-valued marker
 					channeltype = 'mark';
-				case {7,9},
+				case 8, % text mark
+					channeltype = 'text';
+				case {11},
 					error(['do not know this event yet--programmer should look it up.']);
 				otherwise,
 					error(['Could not convert channeltype ' cedspike2channeltype '.']);

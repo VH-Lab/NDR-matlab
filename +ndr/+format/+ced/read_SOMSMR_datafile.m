@@ -99,6 +99,7 @@ switch (header.channelinfo(channel_index).kind),
 		data = data(start_sample_within_block:end-samples_to_trim);
 		if any(size(data)==1), data = data(:); end; % ensure column for single vector
 		time = chheader.start + ((s0:actual_s1)-1)* chheader.sampleinterval*1e-6;
+		time = time(:);
 
 	case {2,3,4}, % event
 		blockinfo = SONGetBlockHeaders(fid,header.channelinfo(channel_index).number);
@@ -114,7 +115,8 @@ switch (header.channelinfo(channel_index).kind),
 		[data]=SONGetEventChannel(fid,header.channelinfo(channel_index).number,...
 			block_start,block_end);
 		data = data(find(data>=t0 & data<=t1));
-		time = data;
+		data = data(:); % column
+		time = data(:);
 	case {5,6,7,8}, % marker, ADCMarker (WaveMark), Real-valued Marker, Text Marker
 		blockinfo = SONGetBlockHeaders(fid,header.channelinfo(channel_index).number);
 		if isempty(blockinfo), % no data
@@ -142,6 +144,7 @@ switch (header.channelinfo(channel_index).kind),
 		end;
 		good_indexes = find(data.timings>=t0 & data.timings<=t1);
 		time = data.timings(good_indexes);
+		time = time(:); % enforce column
 		data = data.markers(good_indexes,:);
 	otherwise,
 		fclose(fid);

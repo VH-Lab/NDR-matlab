@@ -133,16 +133,21 @@ classdef reader
 			%               mark the occurence of each event, and DATA indicates whether the event is a negative transition (1) or a positive
 			%               transition (-1).
 			%
-			%  CHANNEL is a vector with the identity of the channel(s) to be read.
+			%  CHANNEL is a vector with the identity(ies) of the channel(s) to be read.
 			%
 			%  EPOCHSTREAMS is a cell array of full path file names or remote 
 			%  access streams that comprise the epoch of data
 			%
-			%  TIME
-			%  DATA is a two-column vector; the first column has the time of the event. The second
-			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
-			%  is requested, DATA is returned as a cell array, one entry per channel.
+			%  EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			%  if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			%
+				  % Step 1: check to see if the user is requesting a "native" type of event (event,marker,text) or a "derived" type of event
+				  %     (like dep, den, dimp, dimn, which are derived from the data of sampled digital channels)
+				  %      If the user does request a derived event type, then compute it
+ 
 				if ~isempty(intersect(channeltype,{'dep','den','dimp','dimn'})),
+					timestamps = {};
 					data = {};
 					for i=1:numel(channel),
 						% optimization speed opportunity
@@ -166,56 +171,70 @@ classdef reader
 								transitions_off_samples = [];
 							end;
 						end;
-						data{i} = [ [ndr.data.colvec(time_here(transitions_on_samples)); ndr.data.colvec(time_here(transitions_off_samples)) ] ...
-								[ones(numel(transitions_on_samples),1); -ones(numel(transitions_off_samples),1) ] ];
+						timestamps{i} = [ndr.data.colvec(time_here(transitions_on_samples)); ndr.data.colvec(time_here(transitions_off_samples)) ]; 
+						data{i} = [ones(numel(transitions_on_samples),1); -ones(numel(transitions_off_samples),1) ];
 						if ~isempty(transitions_off_samples),
-							[dummy,order] = sort(data{i}(:,1));
+							[dummy,order] = sort(timestamps{i}(:,1));
+							timestamps{i} = timestamps{i}(order,:);
 							data{i} = data{i}(order,:); % sort by on/off
 						end;
 					end;
 
 					if numel(channel)==1,
+						timestamps = timestamps{1};
 						data = data{1};
 					end;
 				else,
-					data = ndr_reader_obj.readevents_epochsamples_native(channeltype, ...
+					% if the user doesn't want a derived channel, we need to read it from the file natively (using the class's reader function)
+					[timestamps, data] = ndr_reader_obj.readevents_epochsamples_native(channeltype, ...
 						channel, epochstreams, epoch_select, t0, t1); % abstract class
 				end;
 		end; % readevents_epochsamples()
 
-		function [data] = readevents_epochsamples_native(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
+		function [timestamps, data] = readevents_epochsamples_native(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events or markers of specified channels for a specified epoch
 			%
-			%  [DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
+			%  [TIMESTAMPS, DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
 			%
-			%  CHANNELTYPE is the type of channel to read
-			%  ('event','marker', etc). It must be a string (not a cell array of strings).
+			%  CHANNELTYPE is a cell array of strings, describing the type of each channel to read, such as
+			%      'event'  - TIMESTAMPS mark the occurrence of each event; DATA is a logical 1 for each timestamp
+			%      'marker' - TIMESTAMPS mark the occurence of each event; each row of DATA is the data associated with the marker (type double)
+			%      'text' - TIMESTAMPS mark the occurence of each event; DATA is a cell array of character arrays, 1 per event
+			%  One cannot use the event types that are derived from digital data ('dep','dimp','den','dimn') with 
+			%      READEVENTS_EPOCHSAMPLES_NATIVE. Use READEVENTS_EPOCHSAMPLES instead.
 			%
-			%  CHANNEL is a vector with the identity of the channel(s) to be read.
+			%  CHANNEL is a vector with the identity(ies) of the channel(s) to be read.
 			%
-			%  EPOCH is the epoch number or epochID
+			%  EPOCHSTREAMS is a cell array of full path file names or remote 
+			%  access streams that comprise the epoch of data
 			%
-			%  DATA is a two-column vector; the first column has the time of the event. The second
-			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
-			%  is requested, DATA is returned as a cell array, one entry per channel.
+			%  EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			%  if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 			%
-			%  TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.
-			%
-				data = ndr_reader_obj.ndr_reader_base.readevents_epochsamples_native(channeltype, channel, epochstreams, epoch_select, t0, t1);
+				[timestamps,data] = ndr_reader_obj.ndr_reader_base.readevents_epochsamples_native(channeltype, channel, epochstreams, epoch_select, t0, t1);
 		end; % readevents_epochsamples
 
-		function sr = samplerate(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
-			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC CHANNEL
+		function sr = samplerate(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select)
+			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC CHANNEL FOR REGULARLY-SAMPLED CHANNELS
 			%
-			% SR = SAMPLERATE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
+			% SR = SAMPLERATE(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT)
 			%
 			% SR is an array of sample rates from the specified channels
 			%
-			% CHANNELTYPE can be either a string or a cell array of
-			% strings the same length as the vector CHANNEL.
-			% If CHANNELTYPE is a single string, then it is assumed that
-			% that CHANNELTYPE applies to every entry of CHANNEL.
-				sr = []; % abstract class;
+			%  CHANNELTYPE is a cell array of strings, describing the type of each channel to read. This must be a regularly-sampled type, such as
+			%      'analog_input' or 'ai' - regularly sampled analog input
+			%      'analog_output' or 'ao' - regularly sampled analog output
+			%      'digital_input' or 'di' - regularly sampled digital input
+			%      'digital_output' or 'do' - regularly sampled digital output
+			%
+			%  CHANNEL is a vector with the identity(ies) of the channel(s) to be read.
+			%
+			%  EPOCHSTREAMS is a cell array of full path file names or remote 
+			%  access streams that comprise the epoch of data
+			%
+			%  EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			%  if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+				sr = ndr.reader_obj.ndr_reader_base.samplerate(epochstreams, epoch_select, channeltype, channel);
 		end;
 
 	end; % methods
