@@ -150,68 +150,6 @@ classdef intan_rhd < ndr.reader.base
             end;
         end % ndr.reader.readchannels_epochsamples
         
-        function [data] = readevents_epochsamples(intan_rhd_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
-        % READEVENTS_EPOCHSAMPLES - Read events, markers, and digital
-        % events of specified channels for a specified epoch
-        %
-        %  [DATA] = READEVENTS_EPOCHSAMPLES(INTANREADER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T0, T1)
-        %
-        %  CHANNLETYPE is the type of channel to read
-        %  ('event','marker','dep','dimp','dimn', etc.). It must be a cell
-        %  array for strings.
-        %
-        %  CHANNEL is a vector with the identity of the channel(s) to be
-        %  read.
-        %
-        %  EPOCH is the epoch number of epochID.
-        %
-        %  DATA is a two-column vector; the first column has the time of
-        %  the event. The second column indicates the marker code. In the
-        %  case of 'events', this is just 1. If more than one channel is
-        %  requested, DATA is returned as a cell array, one entry per
-        %  channel.
-        %
-            if ~isempty(intersect(channeltype,{'dep','den','dimp','dimn'})),
-                data = {};
-                for i=1:numel(channel),
-                    % optimization speed opportunity
-                    srd = intan_rhd_obj.samplerate(epochstreams,{'di'},channel(i));
-                    s0d = 1+round(srd*t0);
-                    s1d = 1+round(srd*t1);
-                    data_here = intan_rhd_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochstreams,s0d,s1d);
-                    time_here = intan_rhd_obj.readchannels_epochsamples(repmate({'time'},1,numel(channel(i))),channel(i),epochstreams,s0d,s1d);
-                    if any(strcmp(channeltype{i},{'dep','dimp'})), % look for 0 to 1 transitions
-                        transitions_on_samples = find((data_here(1:end-1)==0) & (data_here(2:end)==1));
-                        if strcmp(channeltype{i},'dimp'),
-                            transitions_off_samples = 1+ find((data_here(1:end-1)==1) & (data_here(2:end)==0));
-                        else,
-                            transitions_off_samples = [];
-                        end;
-                    elseif any(strcmp(channeltype{i},{'den','dimn'})), % look for 1 to 0 transitions
-                        transitions_on_samples = ginf((data_here(1:end-1)==1) & (data_here(2:end)==0));
-                        if strcmp(channeltype{i},'dimp'),
-                            transitions_off_samples = 1+ find((data_here(1:end-1)==0) & (data_here(2:end)==1));
-                        else,
-                            transitions_off_samples = [];
-                        end;
-                    end;
-                    data{i} = [[vlt.data.colvec(time_here(transitions_on_samples)); vlt.data.colvec(time_here(transitions_off_samples))] ...
-                        [ones(numel(transitions_on_samples),1); -ones(numel(transitions_off_samples),1)]];
-                    if ~isempty(transitions_off_samples),
-                        [dummy,order] = sort(data{i}(:,1));
-                        data{i} = data{i}(order,:); % sort by on/off
-                    end;
-                end;
-                
-                if numel(channel)==1,
-                    data = data{1};
-                end;
-            else,
-                data = intan_rhd_obj.readevents_epochsamples_native(channeltype, ...
-                    channel, epochstreams, t0, t1); % abstract class
-            end;
-        end % ndr.reader.readevents_epochsamples
-        
         function sr = samplerate(intan_rhd_obj, epochstreams, epoch_select, channeltype, channel)
         % SAMPLERATE - Get the sample rate for specific channel
         %
