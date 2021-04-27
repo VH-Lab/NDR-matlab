@@ -108,18 +108,37 @@ classdef reader
 				data = ndr_reader_obj.ndr_reader_base.readchannels_epochsamples(channeltype, channel, epochstreams, epoch_select, s0, s1);
 		end % readchannels_epochsamples()
 
-		function [data] = readevents_epochsamples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
+		function [timestamps, data] = readevents_epochsamples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events, markers, and digital events of specified channels for a specified epoch
 			%
-			%  [DATA] = READEVENTS_EPOCHSAMPLES(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T0, T1)
+			%  [TIMESTAMPS, DATA] = READEVENTS_EPOCHSAMPLES(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T0, T1)
 			%
-			%  CHANNELTYPE is the type of channel to read
-			%  ('event','marker', 'dep', 'dimp', 'dimn', etc). It must be a a cell array of strings.
+			%  Returns TIMESTAMPS and DATA corresponding to event or marker channels. If the number of CHANNEL entries is 1, then TIMESTAMPS
+			%  is a column vector of type double, and DATA is also a column of a type that depends on the type of event that is read. 
+			%  If the number of CHANNEL entries is more than 1, then TIMESTAMPS and DATA are both columns of cell arrays, with 1 column
+			%  per channel.
+			%  
+			%  CHANNELTYPE is a cell array of strings, describing the type of each channel to read, such as
+			%      'event'  - TIMESTAMPS mark the occurrence of each event; DATA is a logical 1 for each timestamp
+			%      'marker' - TIMESTAMPS mark the occurence of each event; each row of DATA is the data associated with the marker (type double)
+			%      'text' - TIMESTAMPS mark the occurence of each event; DATA is a cell array of character arrays, 1 per event
+			%      'dep' - Create events from a digital channel with positive transitions. TIMESTAMPS mark the occurence of each event and
+			%              DATA entries will be a 1
+			%      'dimp' - Create events from a digital channel by finding impulses that exhibit positive then negative transitions. TIMESTAMPS
+			%               mark the occurrence of each event, and DATA indicates whether the event is a positive transition (1) or negative (-1)
+			%               transition.
+			%      'den' - Create events from a digital channel with negative transitions. TIMESTAMPS mark the occurrence of each event and
+			%              DATA entries will be a -1.
+			%      'dimn' - Create events from a digital channel by finding impulses that exhibit negative then positive transitions. TIMESTAMPS
+			%               mark the occurence of each event, and DATA indicates whether the event is a negative transition (1) or a positive
+			%               transition (-1).
 			%
 			%  CHANNEL is a vector with the identity of the channel(s) to be read.
 			%
-			%  EPOCH is the epoch number or epochID
+			%  EPOCHSTREAMS is a cell array of full path file names or remote 
+			%  access streams that comprise the epoch of data
 			%
+			%  TIME
 			%  DATA is a two-column vector; the first column has the time of the event. The second
 			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
 			%  is requested, DATA is returned as a cell array, one entry per channel.
