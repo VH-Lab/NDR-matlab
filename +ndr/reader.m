@@ -27,6 +27,73 @@ classdef reader
 				ndr_reader_obj.ndr_reader_base = feval(j(match).classname);
 		end; % reader()
 
+		function [data, time] = read(ndr_reader_obj, epochstreams, channelstring, varargin)
+			% READ - read data from an ndr.reader object
+			%
+			% [DATA, TIME] = READ(NDR_READER_OBJ, EPOCHSTREAMS, CHANNELSTRING, ...)
+			%
+			
+			%
+			% This function takes additional arguments in the form of name/value pairs.
+			% -------------------------------------------------------------------------
+			% | Parameter (default)       | Description                               |
+			% |---------------------------|-------------------------------------------|
+			% | t0 (-Inf)                 | Time to start reading (in units of        |
+			% |                           |     epochclock). Use -Inf to start from   |
+			% |                           |     earliest sample available.            |
+			% | t1 (Inf)                  | Time to stop reading (in units of         |
+			% |                           |    epochclock). Use Inf to stop at the    |
+			% |                           |    last sample available.                 |
+			% | epoch_select (1)          | The epoch within EPOCHSTREAMS to select.  |
+			% |                           |    Usually, there is only 1 epoch per file|
+			% |                           |    but some file formats support more than|
+			% |                           |    1 epoch per file.                      |
+			% | useSamples (0)            | Use sample numbers instead of time        |
+			% | s0 (NaN)                  | Sample number to start reading, if        |
+			% |                           |    useSamples is 1. First sample is 1.    |
+			% | s1 (NaN)                  | Sample number to stop reading, if         |
+			% |                           |    useSamples is 1. Last sample is Inf.   |
+			% -------------------------------------------------------------------------
+			%
+			%
+				t0 = -Inf;
+				t1 = Inf;
+				epoch_select = 1;
+				useSamples = 0;
+				s0 = NaN;
+				s1 = NaN;
+
+				ndr.data.assign(varargin{:});
+
+				[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
+
+				channelstruct = ndr_reader_obj.ndr_reader_base.daqchannels2internalchannels(...
+					channelprefix, channelnumber, epochstreams, epoch_select);
+
+				[b,errormsg] =  ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct),
+
+				if b,
+					switch (channelstruct(1).ndr_type),
+						case {'analog_input','analog_output'},
+							if ~useSamples, % must compute the samples to be read
+								s0 = round(1+t0*channelstruct(1).samplerate);
+								s1 = round(1+t1*channelstruct(1).samplerate);
+							end;
+							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type,...
+								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
+							t = []; % how to read this in general??
+						otherwise, % readevents
+							[data,t] = ndr_reader_obj.readevents({channelstruct.internal_type},...
+								channelstruct.internal_number,epochstreams,epoch_select,t0,t1);
+					end;
+				else, % we can't do it, report an error
+					error(['Specified channels in channelstring (' ...
+						channelstring ...
+						') cannot be read in a single function call. Please split channel reading by similar channel types. ' ...
+						errormsg]);
+				end;
+		end; % read() 
+
 		function ec = epochclock(ndr_reader_obj, epochstreams, epoch_select)
 			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
 			%
