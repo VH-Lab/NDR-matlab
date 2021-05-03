@@ -4,7 +4,6 @@ classdef spikegadgets_rec < ndr.reader.base
 properties
 end
 	
-
 	methods
   	  	function ndr_reader_base_spikegadgets_obj = spikegadgets_rec() % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
@@ -14,6 +13,93 @@ end
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 		
 		end; % READER()
+		
+		
+		function [b,errormsg] = canbereadtogether(ndr_reader_base_spikegadgets_obj, channelstruct)
+			% CANBEREADTOGETHER - can the channels in a channel struct be read in a single function call?
+			% 
+			% [B,ERRORMSG] = CANBEREADTOGETHER(NDR_READER_BASE_OBJ, CHANNELSTRUCT)
+			%
+			% Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
+			% CHANNELSTRUCT with a single function call. If they cannot be read together,
+			% a description is provided in ERRORMSG.
+			%
+			% In the abstract class, this returns 1 if all of the samplerate values are
+			% the same and none are NaNs.
+			%
+			% CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.
+			% ------------------------------------------------------------------------------
+			%
+				% in the abstract class, this returns 1 if all the samplerates are the same
+				% and none are NaNs
+				b  = 1;
+				errormsg = '';
+
+				sr = [channelstruct.samplerate];
+				if ~all(isnan(sr)),
+					% if all are not NaN, then none can be
+					if any(isnan(sr)),
+						b = 0;
+						errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
+					else,
+						sr_ = uniquetol(sr)
+						if numel(sr_)~=1,
+							b = 0;
+							errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
+						end;
+					end;
+				end;
+
+		end; % canbereadtogether()
+
+		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochfiles, epoch_select)
+			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
+			%
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
+			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHFILES, EPOCH_SELECT)
+			%
+			% Inputs:
+			% For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
+			% this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
+			% and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
+			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
+			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+			%
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			% Output: CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% ------------------------------------------------------------------------------
+			%
+				% abstract class returns empty
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type');
+		end; % daqchannels2internalchannels
         
         % extract times, spikes
 
@@ -22,6 +108,12 @@ end
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
 			%
 			% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
+			%
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 			%
 			% Returns the channel list of acquired channels in this epoch
 			%
@@ -106,7 +198,13 @@ end
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
 			%
-			% SR is the list of sample rate from specified channels
+			% SR is the list of sample rate from specified channels			
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
 			%
 			% CHANNELTYPE and CHANNEL not used in this case since it is the
 			% same for all channels in this device
@@ -124,6 +222,12 @@ end
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
 			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
+			%
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 			%
 			% Return the beginning (t0) and end (t1) times of the epoch EPOCH_NUMBER
 			% in the same units as the ndi.time.clocktype objects returned by EPOCHCLOCK.
@@ -160,6 +264,12 @@ end
 		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochfiles, epoch_select)
 		        % GETEPOCHPROBEMAP returns struct with probe information
 		        % name, reference, n-trode, channels
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
 		        %
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles);
 				fileconfig = ndr.format.spikegadgets.read_rec_config(filename);
