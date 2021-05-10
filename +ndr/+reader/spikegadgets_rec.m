@@ -392,9 +392,9 @@ end
 					internal_type = ndr.reader.base.mfdaq_channeltypes
 					
 					
-					#internal_number= channelnumber
+					%internal_number= channelnumber
 					
-					#internal_channelname = 
+					%internal_channelname = 
 					
 					ndr_type = ndr.reader.base.mfdaq_type(internal_type)
 					
