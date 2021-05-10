@@ -389,12 +389,11 @@ end
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type');
 					
-					internal_type = ndr.reader.base.mfdaq_channeltypes
+					internal_type = channels.type(epochfiles)
+										
+					internal_number= channels.number(epochfiles)
 					
-					
-					%internal_number= channelnumber
-					
-					%internal_channelname = 
+					internal_channelname = channels.name(epochfiles)
 					
 					ndr_type = ndr.reader.base.mfdaq_type(internal_type)
 					
