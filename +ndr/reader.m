@@ -16,10 +16,12 @@ classdef reader
 				j = ndr.fun.ndrresource('ndr_reader_types.json');
 				match = 0;
 				for i=1:numel(j),
-					if any(strcmpi(ndr_reader_type, j(i).type)),
-						match = i;
-						break;
-					end;
+					if (ndr_reader_type = CedSpike2 || ndr_reader_type = IntanRHD || ndr_reader_type = SpikeGadgets || ndr_reader_type = Blackrock), 
+                        			if any(strcmpi(ndr_reader_type, j(i).type)),
+                          		  		match = i;
+                           				break;
+                        			end;
+                    			end; 
 				end;
 				if match==0,
 					error(['Do not know how to make a reader of type ''' ndr_reader_type '''.']);
