@@ -40,8 +40,7 @@ end
 		disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0t1{i}(1)) ' and ended at ' num2str(t0t1{i}(2)) '.']);
 	end;
  
- 
- channelstruct = r.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
+ channelstruct = r.ndr_reader_base.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
  
  % Unrecognized method, property, or field 'daqchannels2internalchannels' for class 'ndr.reader'.
  

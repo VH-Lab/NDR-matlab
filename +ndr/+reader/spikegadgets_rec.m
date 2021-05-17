@@ -340,14 +340,15 @@ end
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type');
 					
-				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochfiles, epoch_select);
+ 				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochfiles, epoch_select);
 					
 				for i=1:numel(channels),
-				        newentry.internal_type = channels.type(epochfiles);
-					newentry.internal_number = channels.number(epochfiles);
-					newentry.internal_channelname = channels.name(epochfiles);
-					newentry.ndr_type = ndr.reader.base.mfdaq_type(internal_type);
-					if any(newentry.internalnumber == channelnumbers),
+				        newentry.internal_type = channels(i).type;
+                    [CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
+					newentry.internal_number = numericchannel;
+					newentry.internal_channelname = channels(i).name;
+					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
 						channelstruct(end+1) = newentry;
 					end;
 				end;					
