@@ -45,7 +45,7 @@ end
  
  % Unrecognized method, property, or field 'daqchannels2internalchannels' for class 'ndr.reader'.
  
- print(channelstruct)
+ channelstruct % add function as base results in empty struct array 
  
 
 if plotit, 
