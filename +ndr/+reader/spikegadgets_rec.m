@@ -304,7 +304,7 @@ end
 				end
                 end % filenamefromepoch
 		
-		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochfiles, epoch_select)
+		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
 			%
 			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
@@ -317,7 +317,7 @@ end
 			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
 			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
 			%
-			% EPOCHFILES is a cell array of full path file names or remote
+			% EPOCHSTREAMS is a cell array of full path file names or remote
 			% access streams that comprise the epoch of data
 			%
 			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
@@ -340,7 +340,7 @@ end
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type');
 					
- 				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochfiles, epoch_select);
+ 				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochstreams, epoch_select);
 					
 				for i=1:numel(channels),
 				        newentry.internal_type = channels(i).type;
@@ -352,6 +352,7 @@ end
 						channelstruct(end+1) = newentry;
 					end;
 				end;					
+
 		end; % daqchannels2internalchannels
 
     end % methods

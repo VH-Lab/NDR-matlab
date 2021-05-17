@@ -194,6 +194,55 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % samplerate()
 
+		function channelstruct = daqchannels2internalchannels(ndr_reader_base_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
+			%
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
+			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Inputs:
+			% For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
+			% this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
+			% and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
+			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
+			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+			%
+			% EPOCHSTREAMS is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			% Output: CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% ------------------------------------------------------------------------------
+			%
+				% abstract class returns empty
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type');
+					
+				channels = ndr_reader_base_ced_obj.getchannelsepoch(epochfiles, epoch_select);
+					
+				for i=1:numel(channels),
+				        newentry.internal_type = channels.type(epochfiles);
+					newentry.internal_number = channels.number(epochfiles);
+					newentry.internal_channelname = channels.name(epochfiles);
+					newentry.ndr_type = ndr.reader.base.mfdaq_type(internal_type);
+					if any(newentry.internalnumber == channelnumbers),
+						channelstruct(end+1) = newentry;
+					end;
+				end;					
+		end; % daqchannels2internalchannels
+
 	end % methods
 
 	methods (Static)  % helper functions
@@ -246,6 +295,5 @@ classdef ced_smr < ndr.reader.base
 			end;
 
 		end % readercedsmrheadertype()
-
 	end % methods (Static)
 end
