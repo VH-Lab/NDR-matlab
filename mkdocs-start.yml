@@ -1,0 +1,30 @@
+site_name: NDR-matlab
+repo_url: https://github.com/VH-Lab/NDR-matlab
+site_author: Steve Van Hooser
+docs_dir: 'docs'
+google_analytics:
+  - UA-91714905-6
+  - auto
+theme:
+  name: 'material'
+  palette:
+    - scheme: default
+      primary: 'indigo'
+      secondary: 'indigo'
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation
+nav:
+  - Home: index.md
+  - Installation: 'installation.md'
+  - Tutorials:
+    - 1 Reading analog data: 'tutorials/readanalog.md'
+    - 2 Reading digital data: 'tutorials/readdigital.md'
+    - 3 Reading events: 'tutorials/readevents.md'
+  - Code reference:
