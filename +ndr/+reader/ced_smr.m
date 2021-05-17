@@ -23,7 +23,7 @@ classdef ced_smr < ndr.reader.base
 			%
 		end; % ced_smr() creator
 
-		function channels = getchannelsepoch(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect)
+		function channels = getchannelsepoch(ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% GETCHANNELS - List the channels that are available on this device
 			%
 			%  CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES, EPOCHSELECT)
@@ -48,7 +48,7 @@ classdef ced_smr < ndr.reader.base
 				% open SMR files, and examine the headers for all channels present
 				%   for any new channel that hasn't been identified before,
 				%   add it to the list
-				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
+				filename = ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
@@ -57,7 +57,7 @@ classdef ced_smr < ndr.reader.base
 				end;
 
 				for k=1:length(header.channelinfo),
-                    header.channelinfo(k).kind
+					%header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
@@ -295,10 +295,10 @@ classdef ced_smr < ndr.reader.base
 
 		end; % canbereadtogether()
 
-		function channelstruct = daqchannels2internalchannels(ndr_reader_base_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+		function channelstruct = daqchannels2internalchannels(ndr_reader_cedsmr_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
 			%
-			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_CEDSMR_OBJ, ...
 			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)
 			%
 			% Inputs:
@@ -327,9 +327,19 @@ classdef ced_smr < ndr.reader.base
 			% |                             |   ndr.reader.base.mfdaq_type                 |
 			% ------------------------------------------------------------------------------
 			%
-				% abstract class returns empty
-				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
-					'internal_channelname','ndr_type');
+ 				channels = ndr_reader_cedsmr_obj.getchannelsepoch(epochstreams, epoch_select);
+								
+				for i=1:numel(channels),
+					newentry.internal_type = channels(i).type;
+					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
+					newentry.internal_number = numericchannel;
+					newentry.internal_channelname = channels(i).name;
+					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+						channelstruct(end+1) = newentry;
+					end;
+				end;					
+
 		end; % daqchannels2internalchannels
 
 	end % methods (Static)
