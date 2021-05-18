@@ -27,4 +27,6 @@ nav:
     - 1 Reading analog data: 'tutorials/readanalog.md'
     - 2 Reading digital data: 'tutorials/readdigital.md'
     - 3 Reading events: 'tutorials/readevents.md'
+    - 4 Add a new file format: 'tutorials/makingnewreader.md'
+  - Contributing: 'contributing.md'
   - Code reference:
