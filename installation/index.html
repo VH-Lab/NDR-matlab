@@ -275,8 +275,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#required-matlab-toolboxes" class="md-nav__link">
-    Required Matlab toolboxes
+  <a href="#recommended-method" class="md-nav__link">
+    Recommended method:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manual-method" class="md-nav__link">
+    Manual method:
   </a>
   
 </li>
@@ -1533,8 +1540,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#required-matlab-toolboxes" class="md-nav__link">
-    Required Matlab toolboxes
+  <a href="#recommended-method" class="md-nav__link">
+    Recommended method:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#manual-method" class="md-nav__link">
+    Manual method:
   </a>
   
 </li>
@@ -1557,6 +1571,9 @@
                 
                 
                 <h1 id="installation">Installation:<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
+<h2 id="recommended-method">Recommended method:<a class="headerlink" href="#recommended-method" title="Permanent link">&para;</a></h2>
+<p>NDR is installed as a part of the Neuroscience Data Interface (<a href="http://ndi.vhlab.org">NDI</a>). The easiest way is to install it with the
+NDI installer as described here. </p>
 <ol>
 <li>
 <p>Make sure <code>git</code> is installed on your machine. If it is not, on Windows, go <a href="https://git-scm.com/download/win">here</a>. On Mac, open a terminal, and type xcode-select --install . Accept the license and wait for install. On Linux, consult your Linux distribution's package manager.</p>
@@ -1570,24 +1587,15 @@
 <p><code>ndi_install</code></p>
 </li>
 </ol>
-<h2 id="required-matlab-toolboxes">Required Matlab toolboxes<a class="headerlink" href="#required-matlab-toolboxes" title="Permanent link">&para;</a></h2>
-<p>To use all of the NDI tools, the following Matlab toolboxes are required:</p>
-<p>MATLAB</p>
-<p>Simulink</p>
-<p>Bioinformatics Toolbox</p>
-<p>Control System Toolbox</p>
-<p>Curve Fitting Toolbox</p>
-<p>Image Processing Toolbox</p>
-<p>Instrument Control Toolbox</p>
-<p>Optimization Toolbox</p>
-<p>Parallel Computing Toolbox</p>
-<p>Signal Processing Toolbox</p>
-<p>Simscape</p>
-<p>Simscape Multibody</p>
-<p>Simulink Control Design</p>
-<p>Stateflow</p>
-<p>Statistics and Machine Learning Toolbox</p>
-<p>Symbolic Math Toolbox</p>
+<h2 id="manual-method">Manual method:<a class="headerlink" href="#manual-method" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p>Run the following on your terminal command line: <code>git clone http://github.com/VH-Lab/NDR-matlab</code></p>
+</li>
+<li>
+<p>You'll need a Matlab startup.m file. Add the command <code>ndi_Init</code> to that file, after ensuring that the directory for NDR-matlab is on your Matlab path. (All of these steps are taken care of via the automatic installation above.)</p>
+</li>
+</ol>
                 
               
               
