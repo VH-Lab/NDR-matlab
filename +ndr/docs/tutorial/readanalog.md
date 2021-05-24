@@ -61,8 +61,7 @@ channels = r.getchannelsepoch({filename});
 If you need to view every channel number and type in your data,  
 ** Code block 2.1.3.3. Type this in to Matlab:**
 
-`
-for i=1:numel(channels),
+`for i=1:numel(channels),
   
   disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 
