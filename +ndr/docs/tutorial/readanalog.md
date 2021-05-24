@@ -34,9 +34,9 @@ some helper functions to open our data to make this process even easier, but thi
 There are three [example files](https://github.com/VH-Lab/NDR-matlab/tree/main/example_data), and we will need `ndr.reader('emample format')` to open the 
 correspoding reader, and the [supporting formats](https://github.com/VH-Lab/NDR-matlab/blob/main/resource/ndr_reader_types.json) are listed below:
 
--ndr.reader.intan_rhd: "intan", "RHD", "intanRHD"
--ndr.reader.ced_smr: "ced-smr", "smr", "son"
--ndr.reader.spikegadgets_rec: "SpikeGadgets", "SpikeGadgetsREC","rec"
+- ndr.reader.intan_rhd: "intan", "RHD", "intanRHD"
+- ndr.reader.ced_smr: "ced-smr", "smr", "son"
+- ndr.reader.spikegadgets_rec: "SpikeGadgets", "SpikeGadgetsREC","rec"
 
 ### 2.1.3 Introduction to the data
 
