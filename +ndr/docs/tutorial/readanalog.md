@@ -34,19 +34,17 @@ r = ndr.reader('rec');`
 
 We setup `getchannelsepoch`function to list the channels that are available on your device for a given epoch.
 
-** Code block 2.1.3.2. Type this in to Matlab:**
+#### Code block 2.1.3.2. Type this in to Matlab:
 ```
 channels = r.getchannelsepoch({filename});
 ```
 
 If you need to view every channel number and type in your data,  
-** Code block 2.1.3.3. Type this in to Matlab:**
+#### Code block 2.1.3.3. Type this in to Matlab:
 
 ```matlab
 for i=1:numel(channels),
-  
   disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
-
 end
 ```
 
@@ -72,6 +70,7 @@ disp(['These are the clocktypes we know and how long the recording lasted:'])
   
 Then, using `readchannels_epochsamples` function to read events, markers, and digital events of specified channels for a specified epoch. 
 Taking 'analog_in' as an example, if you want to reading from channel ai1 and read samples 1 through 10000
+
 #### Code block 2.1.3.6. Type this in to Matlab:
 
 ```matlab
@@ -80,16 +79,6 @@ t0=1;
 t1=10000;
 data = r.readchannels_epochsamples('analog_in',channel,{filename},epoch_select,t0,t1);
 time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,t0,t1);
-```
-
-To read your channel prefixes and channel numbers in a stanard way, using `daqchannels2internalchannels` to convert a set of DAQ channel prefixes and channel 
-numbers to an internal structure to pass to internal reading functions.
-Taking 'analog_in' as an example,
-
-#### Code block 2.1.3.7. Type this in to Matlab:
-
-```
-channelstruct = r.ndr_reader_base.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
 ```
 
 
