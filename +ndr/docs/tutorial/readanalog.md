@@ -65,11 +65,11 @@ end`
 
 You need to choose which epoch in the file you wants to access, if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 ** Code block 2.1.3.4. Type this in to Matlab:**
- `epoch_select = 1; `
+`epoch_select = 1; `
 
 If you want to view the beginning and end epoch times and clock type for an epoch: 
 ** Code block 2.1.3.5. Type this in to Matlab:**
- `ec = r.epochclock({filename}, epoch_select);
+`ec = r.epochclock({filename}, epoch_select);
  t0t1 = r.t0_t1({filename}, epoch_select);
 
  disp(['These are the clocktypes we know and how long the recording lasted:'])
