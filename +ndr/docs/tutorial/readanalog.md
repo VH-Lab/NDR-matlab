@@ -1,24 +1,3 @@
-# NDR
-
-Neuroscience Data Readers - A Matlab conglomerative package for reading neuroscience data files
-
-## Availability
-A mature prototype of NDR is available in [Matlab](https://github.com/VH-Lab/NDR-matlab/tree/main) and a version for Python is well under construction.
-
-## Installation
-Check out the [Installation Guide](https://vh-lab.github.io/NDI-matlab/installation/).
-
-## Help and Support
-Use the [issue tracker](https://github.com/VH-Lab/NDR-matlab/issues) to submit questions, bugs, and issues.
-
-## Financial Support
-Supported by the [NIH BRAIN Initiative informatics group](https://braininitiative.nih.gov/brain-programs/informatics), grant MH114678.
-
-
-# Tutorial 1: Introduction
-[introductory tutorial of the NDR](https://github.com/VH-Lab/NDR-matlab/blob/main/README.md)
-
-
 # Tutorial 2: reading you neuroscience data files with NDR
 
 ## 2.1 Reading an example data file
@@ -43,67 +22,75 @@ correspoding reader, and the [supporting formats](https://github.com/VH-Lab/NDR-
 Taking SpikeGadgets format as an example.
 
 First, setup path to your data and openning rec reader.  
-** Code block 2.1.3.1. Type this in to Matlab:**
-`
+#### Code block 2.1.3.1. Type this in to Matlab:
+
+```matlab
 assign(varargin{:});
 ndr.globals
 example_dir = [ndr_globals.path.path filesep 'example_data'];
 filename = [example_dir filesep 'example.rec'];
 r = ndr.reader('rec');`
+```
 
 We setup `getchannelsepoch`function to list the channels that are available on your device for a given epoch.
 
 ** Code block 2.1.3.2. Type this in to Matlab:**
-`
+```
 channels = r.getchannelsepoch({filename});
-`
+```
 
 If you need to view every channel number and type in your data,  
 ** Code block 2.1.3.3. Type this in to Matlab:**
 
-`for i=1:numel(channels),
+```matlab
+for i=1:numel(channels),
   
   disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 
-end`
+end
+```
 
 You need to choose which epoch in the file you wants to access, if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
-** Code block 2.1.3.4. Type this in to Matlab:**
 
-`
+#### Code block 2.1.3.4. Type this in to Matlab:
+
+```
 epoch_select = 1; 
-`
+```
 
 If you want to view the beginning and end epoch times and clock type for an epoch: 
-** Code block 2.1.3.5. Type this in to Matlab:**
+#### Code block 2.1.3.5. Type this in to Matlab:
 
-`
+```
 ec = r.epochclock({filename}, epoch_select);
 t0t1 = r.t0_t1({filename}, epoch_select);
 disp(['These are the clocktypes we know and how long the recording lasted:'])
 	for i=1:numel(ec),
 		disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0t1{i}(1)) ' and ended at ' num2str(t0t1{i}(2)) '.']);
-	end;`
+	end;
+```
   
 Then, using `readchannels_epochsamples` function to read events, markers, and digital events of specified channels for a specified epoch. 
 Taking 'analog_in' as an example, if you want to reading from channel ai1 and read samples 1 through 10000
-** Code block 2.1.3.6. Type this in to Matlab:**
+#### Code block 2.1.3.6. Type this in to Matlab:
 
-`
+```matlab
 channel = 1;
 t0=1;
 t1=10000;
 data = r.readchannels_epochsamples('analog_in',channel,{filename},epoch_select,t0,t1);
-time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,t0,t1);`
+time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,t0,t1);
+```
 
 To read your channel prefixes and channel numbers in a stanard way, using `daqchannels2internalchannels` to convert a set of DAQ channel prefixes and channel 
 numbers to an internal structure to pass to internal reading functions.
 Taking 'analog_in' as an example,
-** Code block 2.1.3.7. Type this in to Matlab:**
 
-`
+#### Code block 2.1.3.7. Type this in to Matlab:
+
+```
 channelstruct = r.ndr_reader_base.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
-`
+```
 
 
 
