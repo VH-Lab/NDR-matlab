@@ -1,4 +1,4 @@
-# Tutorial 2: reading you neuroscience data files with NDR
+# Tutorial 2: Reading neuroscience data files with NDR
 
 ## 2.1 Reading an example data file
 We will start with learning to read an example dataset into NDR. We assume you have already installed [NDR](https://github.com/VH-Lab/NDR-matlab/tree/main) 
