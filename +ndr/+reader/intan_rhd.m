@@ -40,17 +40,17 @@ classdef intan_rhd < ndr.reader.base
         % CHANNELSTRUCT is a structure with the following fields:
         % ------------------------------------------------------------------------------
         % | Parameter                   | Description                                  |
-		% |-----------------------------|----------------------------------------------|
-		% | internal_type               | Internal channel type; the type of channel as|
-		% |                             |   it is known to the device.                 |
-		% | internal_number             | Internal channel number, as known to device  |
-		% | internal_channelname        | Internal channel name, as known to the device|
-		% | ndr_type                    | The NDR type of channel; should be one of the|
-		% |                             |   types returned by                          |
-		% |                             |   ndr.reader.base.mfdaq_type                 |
+	% |-----------------------------|----------------------------------------------|
+	% | internal_type               | Internal channel type; the type of channel as|
+	% |                             |   it is known to the device.                 |
+	% | internal_number             | Internal channel number, as known to device  |
+	% | internal_channelname        | Internal channel name, as known to the device|
+	% | ndr_type                    | The NDR type of channel; should be one of the|
+	% |                             |   types returned by                          |
+	% |                             |   ndr.reader.base.mfdaq_type                 |
         % | samplerate                  | The sampling rate of this channel, or NaN if |
-		% |                             |   not applicable.                            |
-		% ------------------------------------------------------------------------------
+	% |                             |   not applicable.                            |
+	% ------------------------------------------------------------------------------
         %
             % In the abstract class, this returns 1 if all the samplerates
             % are the same and none are NaNs.
@@ -98,17 +98,17 @@ classdef intan_rhd < ndr.reader.base
         %  For most devices, EPOCH_SELECT is always 1.
         %
         % Output: CHANNELSTRUCT is a structure with the following fields:
-		% ------------------------------------------------------------------------------
-		% | Parameter                   | Description                                  |
-		% |-----------------------------|----------------------------------------------|
-		% | internal_type               | Internal channel type; the type of channel as|
-		% |                             |   it is known to the device.                 |
-		% | internal_number             | Internal channel number, as known to device  |
-		% | internal_channelname        | Internal channel name, as known to the device|
-		% | ndr_type                    | The NDR type of channel; should be one of the|
-		% |                             |   types returned by                          |
-		% |                             |   ndr.reader.base.mfdaq_type                 |
-		% ------------------------------------------------------------------------------
+	% ------------------------------------------------------------------------------
+	% | Parameter                   | Description                                  |
+	% |-----------------------------|----------------------------------------------|
+	% | internal_type               | Internal channel type; the type of channel as|
+	% |                             |   it is known to the device.                 |
+	% | internal_number             | Internal channel number, as known to device  |
+	% | internal_channelname        | Internal channel name, as known to the device|
+	% | ndr_type                    | The NDR type of channel; should be one of the|
+	% |                             |   types returned by                          |
+	% |                             |   ndr.reader.base.mfdaq_type                 |
+	% ------------------------------------------------------------------------------
         %
             % abstract class returns empty
             channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
