@@ -22,7 +22,98 @@ classdef intan_rhd < ndr.reader.base
         %  Creates a Neuroscience Data Reader object of the Intan
         %  Technologies .RHD file format.
         %
-        end % ndr.reader.intan_rhd
+        end % ndr.reader.intan_rhd.intan_rhd
+        
+        function [b,errormsg] = canbereadtogether(intan_rhd_obj, channelstruct)
+        % CANBEREADTOGETHER - Can the channels in a channel struct be read
+        % in a single function call?
+        %
+        %  [B,ERRORMSG] = CANBEREADTOGETHER(INTAN_RHD_OBJ, CHANNELSTRUCT)
+        %
+        %  Returns 1 if the INTAN_RHD_OBJ can read all of the channels in
+        %  CHANNELSTRUCT with a single function call. If they cannot be read
+        %  together, a description is provided in ERRORMSG.
+        %
+        %  In the abstract class, this returns 1 if all of the samplerate
+        %  values are the same and none are NaNs.
+        %
+        % CHANNELSTRUCT is a structure with the following fields:
+        % ------------------------------------------------------------------------------
+        % | Parameter                   | Description                                  |
+		% |-----------------------------|----------------------------------------------|
+		% | internal_type               | Internal channel type; the type of channel as|
+		% |                             |   it is known to the device.                 |
+		% | internal_number             | Internal channel number, as known to device  |
+		% | internal_channelname        | Internal channel name, as known to the device|
+		% | ndr_type                    | The NDR type of channel; should be one of the|
+		% |                             |   types returned by                          |
+		% |                             |   ndr.reader.base.mfdaq_type                 |
+        % | samplerate                  | The sampling rate of this channel, or NaN if |
+		% |                             |   not applicable.                            |
+		% ------------------------------------------------------------------------------
+        %
+            % In the abstract class, this returns 1 if all the samplerates
+            % are the same and none are NaNs.
+            b = 1;
+            errormsg = '';
+            
+            sr = [channelstruct.samplerate];
+            if ~all(isnan(sr)),
+                % if all are not NaN, then none can be
+                if any(isnan(sr)),
+                    b = 0;
+                    errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
+                else,
+                    sr_ = uniquetol(sr)
+                    if numel(sr_)~=1,
+                        b = 0;
+                        errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
+                    end;
+                end;
+            end;
+        end; % ndr.reader.intan_rhd.canbereadtogether
+        
+        function channelstruct = daqchannels2internalchannels(intan_rhd_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+        % DAQCHANNELS2INTERNALCHANNELS - Convert a set of DAQ channel
+        % prefixes and channel numbers to an internal structure to pass to
+        % internal reading functions
+        %
+        %  CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(INTAN_RHD_OBJ, ...
+        %     CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)
+        %
+        %  Inputs:
+        %  For a set of CHANNELPREFIX (cell array of channel prefixes that
+        %  describe channels for this device) and CHANNELNUMBER (array of
+        %  of channel numbers, 1 for each entry in CHANNELPREFIX), and for
+        %  a given recording epoch (specified by EPOCHSTREAMS and
+        %  EPOCH_SELECT), this function returns a structure CHANNELSTRUCT
+        %  describing the channel information that should be passed to
+        %  READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+        %
+        %  EPOCHSTREAMS is a cell array of full path file names or remote
+        %  access streams that comprise the epoch of data.
+        %
+        %  EPOCH_SELECT allows one to choose which epoch in the file one
+        %  wants to access, if the file(s) has more than epoch contained.
+        %  For most devices, EPOCH_SELECT is always 1.
+        %
+        % Output: CHANNELSTRUCT is a structure with the following fields:
+		% ------------------------------------------------------------------------------
+		% | Parameter                   | Description                                  |
+		% |-----------------------------|----------------------------------------------|
+		% | internal_type               | Internal channel type; the type of channel as|
+		% |                             |   it is known to the device.                 |
+		% | internal_number             | Internal channel number, as known to device  |
+		% | internal_channelname        | Internal channel name, as known to the device|
+		% | ndr_type                    | The NDR type of channel; should be one of the|
+		% |                             |   types returned by                          |
+		% |                             |   ndr.reader.base.mfdaq_type                 |
+		% ------------------------------------------------------------------------------
+        %
+            % abstract class returns empty
+            channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+                'internal_channelname','ndr_type');
+        end; % ndr.reader.intan_rhd.daqchannels2internalchannels
         
         function t0t1 = t0_t1(intan_rhd_obj, epochstreams, epoch_select)
         % EPOCHCLOCK - Return the beginning and end epoch times for an
@@ -58,7 +149,7 @@ classdef intan_rhd < ndr.reader.base
             
             t0t1 = {[t0 t1]};
                 % developer note: in the Intan acquisition software, one can define a time offset; right now we aren't considering that
-        end % ndr.reader.epochclock
+        end % ndr.reader.intan_rhd.epochclock
         
         function channels = getchannelsepoch(intan_rhd_obj, epochstreams, epoch_select)
         % GETCHANNELS - List the channels that are available on this Intan
@@ -107,7 +198,7 @@ classdef intan_rhd < ndr.reader.base
                     end
                 end
             end
-        end % ndr.reader.getchannelsepoch
+        end % ndr.reader.intan_rhd.getchannelsepoch
         
         function data = readchannels_epochsamples(intan_rhd_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
         % READCHANNELS_EPOCHSAMPLES - Read the data based on specified channels
@@ -148,7 +239,7 @@ classdef intan_rhd < ndr.reader.base
             else,
                 data = ndr.format.intan.read_Intan_RHD2000_directory(parentdir,'',intanchanneltype,channel,t0,t1);
             end;
-        end % ndr.reader.readchannels_epochsamples
+        end % ndr.reader.intan_rhd.readchannels_epochsamples
         
         function sr = samplerate(intan_rhd_obj, epochstreams, epoch_select, channeltype, channel)
         % SAMPLERATE - Get the sample rate for specific channel
@@ -174,7 +265,7 @@ classdef intan_rhd < ndr.reader.base
                 freq_fieldname = intan_rhd_obj.mfdaqchanneltype2intanfreqheader(channeltype_here);
                 sr(i) = getfield(head.frequency_parameters,freq_fieldname);
             end
-        end % ndr.reader.samplerate
+        end % ndr.reader.intan_rhd.samplerate
         
         function [filename, parentdir, isdirectory] = filenamefromepochfiles(intan_rhd_obj, filename_array)
         % FILENAMEFROMEPOCHFILES - Return the file name that corresponds to the .RHD file, or directory in case of directory
@@ -207,7 +298,7 @@ classdef intan_rhd < ndr.reader.base
                     end;
                 end;
             end
-        end % ndr.reader.filenamefromepochfiles
+        end % ndr.reader.intan_rhd.filenamefromepochfiles
         
     end % methods
     
@@ -254,7 +345,7 @@ classdef intan_rhd < ndr.reader.base
                 otherwise,
                     error(['Could not convert channeltype ' intanchanneltype '.']);
             end;
-        end % ndr.reader.intanheadertype2mfdaqchanneltype
+        end % ndr.reader.intan_rhd.intanheadertype2mfdaqchanneltype
         
         function intanchanneltype = mfdaqchanneltype2intanchanneltype(channeltype)
         % MFDAQCHANNELTYPE2INTANCHANNELTYPE - Convert the channel type from generic format of multifuncdaqchannel
@@ -278,7 +369,7 @@ classdef intan_rhd < ndr.reader.base
                 otherwise,
                     error(['Do not know how to convert channel type ' channeltype '.']);
             end;
-        end % ndr.reader.mfdaqchanneltype2intanchanneltype
+        end % ndr.reader.intan_rhd.mfdaqchanneltype2intanchanneltype
         
         function [channame] = intanname2mfdaqname(intan_rhd_obj, type, name)
         % INTANNAME2MFDAQNAME - Converts a channel name from Intan native format to ndr.ndr.reader.mfdaq format
@@ -293,7 +384,7 @@ classdef intan_rhd < ndr.reader.base
             chan_intan = str2num(name(sep+1:end));
             chan = chan_intan + 1; % Intan numbers from 0
             channame = [ndr.reader.base.mfdaq_prefix(type) int2str(chan)];
-        end % ndr.reader.intanname2mfdaqname
+        end % ndr.reader.intan_rhd.intanname2mfdaqname
         
         function headername = mfdaqchanneltype2intanfreqheader(channeltype)
         % MFDAQCHANNELTYPE2INTANFREQHEADER - Return header name with frequency information for channel type
@@ -314,7 +405,7 @@ classdef intan_rhd < ndr.reader.base
                 otherwise,
                     error(['Do not know frequency header for channel type ' channeltype '.']);
             end;
-        end % ndr.reader.mfdaqchanneltype2intanfreqheader
+        end % ndr.reader.intan_rhd.mfdaqchanneltype2intanfreqheader
         
     end % methods (Static)
     
