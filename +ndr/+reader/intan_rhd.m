@@ -64,7 +64,9 @@ classdef intan_rhd < ndr.reader.base
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
-            [channelnameprefix, channelnumber] = ndr.string.channelstring2channels(header); % Is this supposed to be in the for loop?
+            for i=1:length(header),
+                [channelnameprefix, channelnumber] = ndr.string.channelstring2channels(header(i).amplifier_channels.native_channel_name);
+            end;
         end; % ndr.reader.intan_rhd.daqchannels2internalchannels
         
         function t0t1 = t0_t1(intan_rhd_obj, epochstreams, epoch_select)
