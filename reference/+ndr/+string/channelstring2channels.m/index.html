@@ -1518,24 +1518,29 @@
                 
                 
                 <h1 id="ndrstringchannelstring2channels">ndr.string.channelstring2channels<a class="headerlink" href="#ndrstringchannelstring2channels" title="Permanent link">&para;</a></h1>
-<p>ndr.string.channelstring2channels - convert a channel string to an array of channel prefiex and numbers</p>
-<p>[CHANNELNAMEPREFIX, CHANNELNUMBER] = ...
-       ndr.string.channelstring2channels(CHANNELSTRING)</p>
-<p>Given a CHANNELSTRING, returns a cell array of channel prefixes and
-  an array of channel numbers that correspond to the CHANNELSTRING.</p>
-<p>A CHANNELSTRING is a means of specifying channels that have prefixes and
-  numbers. It includes a sequence of letters, followed by numbers to specify
-  the channels. One can indicate a sequential range of channels by using a
-  dash ('-') and one can enumerate individual channels with a comma (',').
-  Different channel prefixes can be specified by placing a plus ('+') between
-  sets of channels.</p>
-<p>Examples: 
-       [cp, cn] = ndr.string.channelstring2channels('a1,3-5,2')
-       % cp == {'a','a','a','a','a'}'
-       % cn == [1 3 4 5 2]'
-       [cp, cn] = ndr.string.channelstring2channels('ai1-3+b2-4')
-       % cp == {'ai','ai','ai','b','b','b'}'
-       % cn == [ 1 2 3 2 3 4]'</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">ndr</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">channelstring2channels</span> <span class="o">-</span> <span class="nb">convert</span> <span class="n">a</span> <span class="n">channel</span> <span class="n">string</span> <span class="n">to</span> <span class="n">an</span> <span class="n">array</span> <span class="n">of</span> <span class="n">channel</span> <span class="n">prefiex</span> <span class="ow">and</span> <span class="n">numbers</span>
+
+  <span class="p">[</span><span class="n">CHANNELNAMEPREFIX</span><span class="p">,</span> <span class="n">CHANNELNUMBER</span><span class="p">]</span> <span class="o">=</span> <span class="o">...</span>
+       <span class="n">ndr</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">channelstring2channels</span><span class="p">(</span><span class="n">CHANNELSTRING</span><span class="p">)</span>
+
+  <span class="n">Given</span> <span class="n">a</span> <span class="n">CHANNELSTRING</span><span class="p">,</span> <span class="n">returns</span> <span class="n">a</span> <span class="n">cell</span> <span class="n">array</span> <span class="n">of</span> <span class="n">channel</span> <span class="n">prefixes</span> <span class="ow">and</span>
+  <span class="n">an</span> <span class="n">array</span> <span class="n">of</span> <span class="n">channel</span> <span class="n">numbers</span> <span class="n">that</span> <span class="n">correspond</span> <span class="n">to</span> <span class="n">the</span> <span class="n">CHANNELSTRING</span><span class="o">.</span>
+
+  <span class="n">A</span> <span class="n">CHANNELSTRING</span> <span class="k">is</span> <span class="n">a</span> <span class="n">means</span> <span class="n">of</span> <span class="n">specifying</span> <span class="n">channels</span> <span class="n">that</span> <span class="n">have</span> <span class="n">prefixes</span> <span class="ow">and</span>
+  <span class="n">numbers</span><span class="o">.</span> <span class="n">It</span> <span class="n">includes</span> <span class="n">a</span> <span class="n">sequence</span> <span class="n">of</span> <span class="n">letters</span><span class="p">,</span> <span class="n">followed</span> <span class="n">by</span> <span class="n">numbers</span> <span class="n">to</span> <span class="n">specify</span>
+  <span class="n">the</span> <span class="n">channels</span><span class="o">.</span> <span class="n">One</span> <span class="n">can</span> <span class="n">indicate</span> <span class="n">a</span> <span class="n">sequential</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">channels</span> <span class="n">by</span> <span class="n">using</span> <span class="n">a</span>
+  <span class="n">dash</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">one</span> <span class="n">can</span> <span class="n">enumerate</span> <span class="n">individual</span> <span class="n">channels</span> <span class="n">with</span> <span class="n">a</span> <span class="n">comma</span> <span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">Different</span> <span class="n">channel</span> <span class="n">prefixes</span> <span class="n">can</span> <span class="n">be</span> <span class="n">specified</span> <span class="n">by</span> <span class="n">placing</span> <span class="n">a</span> <span class="n">plus</span> <span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="n">between</span>
+  <span class="n">sets</span> <span class="n">of</span> <span class="n">channels</span><span class="o">.</span>
+
+  <span class="n">Examples</span><span class="p">:</span> 
+       <span class="p">[</span><span class="n">cp</span><span class="p">,</span> <span class="n">cn</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndr</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">channelstring2channels</span><span class="p">(</span><span class="s1">&#39;a1,3-5,2&#39;</span><span class="p">)</span>
+       <span class="o">%</span> <span class="n">cp</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">}</span><span class="s1">&#39;</span>
+       <span class="o">%</span> <span class="n">cn</span> <span class="o">==</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">2</span><span class="p">]</span><span class="s1">&#39;</span>
+       <span class="p">[</span><span class="n">cp</span><span class="p">,</span> <span class="n">cn</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndr</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">channelstring2channels</span><span class="p">(</span><span class="s1">&#39;ai1-3+b2-4&#39;</span><span class="p">)</span>
+       <span class="o">%</span> <span class="n">cp</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;ai&#39;</span><span class="p">,</span><span class="s1">&#39;ai&#39;</span><span class="p">,</span><span class="s1">&#39;ai&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">}</span><span class="s1">&#39;</span>
+       <span class="o">%</span> <span class="n">cn</span> <span class="o">==</span> <span class="p">[</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span><span class="p">]</span><span class="s1">&#39;</span>
+</code></pre></div>
                 
               
               

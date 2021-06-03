@@ -1520,22 +1520,24 @@
                 
                 
                 <h1 id="ndrformatspikegadgetsread_rec_config">ndr.format.spikegadgets.read_rec_config<a class="headerlink" href="#ndrformatspikegadgetsread_rec_config" title="Permanent link">&para;</a></h1>
-<p>out = read_SpikeGadgets_config(filename)</p>
-<p>Reads the configuration section of a Trodes (.rec) file
-  xml header is parsed and read
-  out is a 1x1 struct with 12 fields
-  configText - length(configText) is the number of characters in header
-  filePath               - &lt;---&gt;
-  filePrefix             - &lt;---&gt;
-  realtimeMode           - logical
-  saveDisplayedChanOnly  - logical
-  systemTimeAtCreation   - str with systemTimeAtCreation
-  timestampAtCreation    - str with timestampAtCreation
-  numChannels            - str of number of channels in nTrodes (sum of all trodes channels)
-  samplingRate           - str of sampling rate
-  headerSize             - str of sum of numBytes in devices / 2
-  nTrodes                - struct that lists nTrodes with structs inside that describe each channel
-  headerChannels         - channels listed in AuxDisplayConfiguration</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">out</span> <span class="o">=</span> <span class="n">read_SpikeGadgets_config</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+  <span class="n">Reads</span> <span class="n">the</span> <span class="n">configuration</span> <span class="n">section</span> <span class="kr">of</span> <span class="n">a</span> <span class="n">Trodes</span> <span class="p">(.</span><span class="n">rec</span><span class="p">)</span> <span class="n">file</span>
+  <span class="kr">xml</span> <span class="kr">header</span> <span class="n">is</span> <span class="n">parsed</span> <span class="kr">and</span> <span class="n">read</span>
+  <span class="n">out</span> <span class="n">is</span> <span class="n">a</span> <span class="mi">1</span><span class="n">x1</span> <span class="n">struct</span> <span class="n">with</span> <span class="mi">12</span> <span class="n">fields</span>
+  <span class="n">configText</span> <span class="o">-</span> <span class="nf">length</span><span class="p">(</span><span class="n">configText</span><span class="p">)</span> <span class="n">is</span> <span class="n">the</span> <span class="n">number</span> <span class="kr">of</span> <span class="n">characters</span> <span class="kr">in</span> <span class="kr">header</span>
+  <span class="n">filePath</span>               <span class="o">-</span> <span class="o">&lt;---&gt;</span>
+  <span class="n">filePrefix</span>             <span class="o">-</span> <span class="o">&lt;---&gt;</span>
+  <span class="n">realtimeMode</span>           <span class="o">-</span> <span class="n">logical</span>
+  <span class="n">saveDisplayedChanOnly</span>  <span class="o">-</span> <span class="n">logical</span>
+  <span class="n">systemTimeAtCreation</span>   <span class="o">-</span> <span class="n">str</span> <span class="n">with</span> <span class="n">systemTimeAtCreation</span>
+  <span class="n">timestampAtCreation</span>    <span class="o">-</span> <span class="n">str</span> <span class="n">with</span> <span class="n">timestampAtCreation</span>
+  <span class="n">numChannels</span>            <span class="o">-</span> <span class="n">str</span> <span class="kr">of</span> <span class="n">number</span> <span class="kr">of</span> <span class="n">channels</span> <span class="kr">in</span> <span class="n">nTrodes</span> <span class="p">(</span><span class="nf">sum</span> <span class="kr">of</span> <span class="kr">all</span> <span class="n">trodes</span> <span class="n">channels</span><span class="p">)</span>
+  <span class="n">samplingRate</span>           <span class="o">-</span> <span class="n">str</span> <span class="kr">of</span> <span class="n">sampling</span> <span class="n">rate</span>
+  <span class="n">headerSize</span>             <span class="o">-</span> <span class="n">str</span> <span class="kr">of</span> <span class="nf">sum</span> <span class="kr">of</span> <span class="n">numBytes</span> <span class="kr">in</span> <span class="n">devices</span> <span class="o">/</span> <span class="mi">2</span>
+  <span class="n">nTrodes</span>                <span class="o">-</span> <span class="n">struct</span> <span class="n">that</span> <span class="n">lists</span> <span class="n">nTrodes</span> <span class="n">with</span> <span class="n">structs</span> <span class="n">inside</span> <span class="n">that</span> <span class="n">describe</span> <span class="n">each</span> <span class="n">channel</span>
+  <span class="n">headerChannels</span>         <span class="o">-</span> <span class="n">channels</span> <span class="n">listed</span> <span class="kr">in</span> <span class="n">AuxDisplayConfiguration</span>
+</code></pre></div>
                 
               
               

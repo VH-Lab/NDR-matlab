@@ -1520,25 +1520,28 @@
                 
                 
                 <h1 id="ndrformatintanread_intan_rhd2000_header">ndr.format.intan.read_Intan_RHD2000_header<a class="headerlink" href="#ndrformatintanread_intan_rhd2000_header" title="Permanent link">&para;</a></h1>
-<p>READ_INTAN_RHD2000_HEADER - Read header information from an Intan data file</p>
-<div class="codehilite"><pre><span></span><code>HEADER = READ_INTAN_RHD2000_HEADER(FILENAME)
-</code></pre></div>
+<div class="codehilite"><pre><span></span><code>  <span class="nv">READ_INTAN_RHD2000_HEADER</span> <span class="o">-</span> <span class="nv">Read</span> <span class="nv">header</span> <span class="nv">information</span> <span class="nv">from</span> <span class="nv">an</span> <span class="nv">Intan</span> <span class="nv">data</span> <span class="nv">file</span>
 
-<p>Returns a structure HEADER with all of the information fields that
-  are stored in the Intan RHD2000 file FILENAME.</p>
-<p>HEADER contains several substructures:</p>
-<hr />
-<p>fileinfo                |  Information about the file and its version
-  frequency_parameters    |  Information about sampling frequency 
-  spike_triggers          |  Information about spike triggers for each amplifier channel
-  amplifier_channels      |  Information about amplifier channels
-  aux_input_channels      |  Information about auxillary input channels
-  supply_voltage_channels |  Information about supply voltage channels
-  board_adc_channels      |  Information about the board analog to digital converter channels
-  board_dig_in_channels   |  Digital input channels
-  board_dig_out_channels  |  Digital output channels
-  num_temp_sensor_channels|  Number of temperature sensor channels</p>
-<p>See also: READ_INTAN_RDH2000_DATAFILE</p>
+    <span class="nv">HEADER</span> <span class="o">=</span> <span class="nv">READ_INTAN_RHD2000_HEADER</span><span class="ss">(</span><span class="nv">FILENAME</span><span class="ss">)</span>
+
+  <span class="nv">Returns</span> <span class="nv">a</span> <span class="nv">structure</span> <span class="nv">HEADER</span> <span class="nv">with</span> <span class="nv">all</span> <span class="nv">of</span> <span class="nv">the</span> <span class="nv">information</span> <span class="nv">fields</span> <span class="nv">that</span>
+  <span class="nv">are</span> <span class="nv">stored</span> <span class="nv">in</span> <span class="nv">the</span> <span class="nv">Intan</span> <span class="nv">RHD2000</span> <span class="nv">file</span> <span class="nv">FILENAME</span>.
+
+  <span class="nv">HEADER</span> <span class="nv">contains</span> <span class="nv">several</span> <span class="nv">substructures</span>:
+  <span class="o">--------------------------------------------------------------------</span>
+  <span class="nv">fileinfo</span>                <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">the</span> <span class="nv">file</span> <span class="nv">and</span> <span class="nv">its</span> <span class="nv">version</span>
+  <span class="nv">frequency_parameters</span>    <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">sampling</span> <span class="nv">frequency</span> 
+  <span class="nv">spike_triggers</span>          <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">spike</span> <span class="nv">triggers</span> <span class="k">for</span> <span class="nv">each</span> <span class="nv">amplifier</span> <span class="nv">channel</span>
+  <span class="nv">amplifier_channels</span>      <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">amplifier</span> <span class="nv">channels</span>
+  <span class="nv">aux_input_channels</span>      <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">auxillary</span> <span class="nv">input</span> <span class="nv">channels</span>
+  <span class="nv">supply_voltage_channels</span> <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">supply</span> <span class="nv">voltage</span> <span class="nv">channels</span>
+  <span class="nv">board_adc_channels</span>      <span class="o">|</span>  <span class="nv">Information</span> <span class="nv">about</span> <span class="nv">the</span> <span class="nv">board</span> <span class="nv">analog</span> <span class="nv">to</span> <span class="nv">digital</span> <span class="nv">converter</span> <span class="nv">channels</span>
+  <span class="nv">board_dig_in_channels</span>   <span class="o">|</span>  <span class="nv">Digital</span> <span class="nv">input</span> <span class="nv">channels</span>
+  <span class="nv">board_dig_out_channels</span>  <span class="o">|</span>  <span class="nv">Digital</span> <span class="nv">output</span> <span class="nv">channels</span>
+  <span class="nv">num_temp_sensor_channels</span><span class="o">|</span>  <span class="nv">Number</span> <span class="nv">of</span> <span class="nv">temperature</span> <span class="nv">sensor</span> <span class="nv">channels</span>
+
+  <span class="nv">See</span> <span class="nv">also</span>: <span class="nv">READ_INTAN_RDH2000_DATAFILE</span>
+</code></pre></div>
                 
               
               

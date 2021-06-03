@@ -1520,49 +1520,57 @@
                 
                 
                 <h1 id="ndrformatintanread_intan_rhd2000_datafile">ndr.format.intan.read_Intan_RHD2000_datafile<a class="headerlink" href="#ndrformatintanread_intan_rhd2000_datafile" title="Permanent link">&para;</a></h1>
-<p>READ_INTAN_RHD2000_DATAFILE - Read samples from an Intan data file</p>
-<p>[DATA,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO] = READ_INTAN_RHD2000_DATAFILE(FILENAME,
-      HEADER, CHANNEL_TYPE, CHANNEL_NUMBERS, T0, T1);</p>
-<p>Inputs:
-   Reads data from the Intan Technologies .rhd 2000 file FILENAME.
-   The file HEADER information can be provided in HEADER.  If HEADER
-   is empty, then it will be read from the file. CHANNEL_TYPE is the
-   type of channel to be read (use table below). CHANNEL_NUMBERS are the
-   the channel numbers for which to return data (randing from 1 to the number
-   of channels of that type sampled). CHANNEL_NUMBERS are from 1...N where
-   N is the number of channels ENABLED in the recording. 1 is the first channel
-   enabled, 2 is the 2nd channel enabled, etc. One can examine the header file to
-   see its correspondance with Intan bank and channel indexes (e.g., the first channel, 1, may be
-   'amp-A-000'). T0 is the time to start reading (the beginning of
-   the recording is 0) and T1 is the time to stop reading. If T0 is negative, we will
-   start with time 0. If T1 is INF, we will use the end time of the whole file.</p>
-<p>CHANNEL_TYPE values:
-   Value:                      | Meaning:</p>
-<hr />
-<p>'time', 'timestamps', or 1  | read timestamps of samples
-   'amp', 'amplifier' or 2     | read amplifier channels
-   'aux', 'aux_in', or 3       | read auxiliary input channels
-   'supply', or 4              | read supply voltages
-   'temp', or 5                | read temperature sensor
-   'adc', or 6                 | read analog to digital converter signals
-   'din', 'digital_in', or 7   | read digital input (a single channel of 16 bit values)
-   'dout', 'digital_out', or 8 | read digital output signal (a single channel)</p>
-<p>Outputs:
-     DATA - each column contains samples from an individual channel; if more than
-        one channel has been requested, DATA will have more than one column.
-     TOTAL_SAMPLES - The total number of (amplifier or digital) samples estimated to be
-        in the file.
-     TOTAL_TIME - An estimate of the total duration of the time series data in the
-        recorded file, in seconds.</p>
-<p>Notes: (1) The Intan RHD2000 board has its own clock. Asking this function
-   to read at time T0=0 will read the first sample in the file. This time
-   might correspond to some other time on the Intan board.  Reading the
-   'time' channel will indicate the time of the sample on the board's clock.
-   (2) This function performs no filtering. Even if the user had checked
-   for the RHD2000 software to use a 60Hz notch or a high-pass filter,
-   this function returns the raw data. </p>
-<p>See also: READ_INTAN_RHD2000_HEADER</p>
-<p>2014-12-08 SDV - wrote it and tested it</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">READ_INTAN_RHD2000_DATAFILE</span> <span class="o">-</span> <span class="n">Read</span> <span class="n">samples</span> <span class="n">from</span> <span class="n">an</span> <span class="n">Intan</span> <span class="n">data</span> <span class="n">file</span>
+
+   <span class="p">[</span><span class="n">DATA</span><span class="p">,</span><span class="n">TOTAL_SAMPLES</span><span class="p">,</span><span class="n">TOTAL_TIME</span><span class="p">,</span><span class="n">BLOCKINFO</span><span class="p">]</span> <span class="o">=</span> <span class="n">READ_INTAN_RHD2000_DATAFILE</span><span class="p">(</span><span class="n">FILENAME</span><span class="p">,</span>
+      <span class="n">HEADER</span><span class="p">,</span> <span class="n">CHANNEL_TYPE</span><span class="p">,</span> <span class="n">CHANNEL_NUMBERS</span><span class="p">,</span> <span class="n">T0</span><span class="p">,</span> <span class="n">T1</span><span class="p">);</span>
+
+   <span class="n">Inputs</span><span class="p">:</span>
+   <span class="n">Reads</span> <span class="n">data</span> <span class="n">from</span> <span class="n">the</span> <span class="n">Intan</span> <span class="n">Technologies</span> <span class="o">.</span><span class="n">rhd</span> <span class="mi">2000</span> <span class="n">file</span> <span class="n">FILENAME</span><span class="o">.</span>
+   <span class="n">The</span> <span class="n">file</span> <span class="n">HEADER</span> <span class="n">information</span> <span class="n">can</span> <span class="n">be</span> <span class="n">provided</span> <span class="ow">in</span> <span class="n">HEADER</span><span class="o">.</span>  <span class="n">If</span> <span class="n">HEADER</span>
+   <span class="k">is</span> <span class="n">empty</span><span class="p">,</span> <span class="n">then</span> <span class="n">it</span> <span class="n">will</span> <span class="n">be</span> <span class="n">read</span> <span class="n">from</span> <span class="n">the</span> <span class="n">file</span><span class="o">.</span> <span class="n">CHANNEL_TYPE</span> <span class="k">is</span> <span class="n">the</span>
+   <span class="n">type</span> <span class="n">of</span> <span class="n">channel</span> <span class="n">to</span> <span class="n">be</span> <span class="n">read</span> <span class="p">(</span><span class="n">use</span> <span class="n">table</span> <span class="n">below</span><span class="p">)</span><span class="o">.</span> <span class="n">CHANNEL_NUMBERS</span> <span class="n">are</span> <span class="n">the</span>
+   <span class="n">the</span> <span class="n">channel</span> <span class="n">numbers</span> <span class="k">for</span> <span class="n">which</span> <span class="n">to</span> <span class="k">return</span> <span class="n">data</span> <span class="p">(</span><span class="n">randing</span> <span class="n">from</span> <span class="mi">1</span> <span class="n">to</span> <span class="n">the</span> <span class="n">number</span>
+   <span class="n">of</span> <span class="n">channels</span> <span class="n">of</span> <span class="n">that</span> <span class="n">type</span> <span class="n">sampled</span><span class="p">)</span><span class="o">.</span> <span class="n">CHANNEL_NUMBERS</span> <span class="n">are</span> <span class="n">from</span> <span class="mf">1.</span><span class="o">..</span><span class="n">N</span> <span class="n">where</span>
+   <span class="n">N</span> <span class="k">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">channels</span> <span class="n">ENABLED</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">recording</span><span class="o">.</span> <span class="mi">1</span> <span class="k">is</span> <span class="n">the</span> <span class="n">first</span> <span class="n">channel</span>
+   <span class="n">enabled</span><span class="p">,</span> <span class="mi">2</span> <span class="k">is</span> <span class="n">the</span> <span class="mi">2</span><span class="n">nd</span> <span class="n">channel</span> <span class="n">enabled</span><span class="p">,</span> <span class="n">etc</span><span class="o">.</span> <span class="n">One</span> <span class="n">can</span> <span class="n">examine</span> <span class="n">the</span> <span class="n">header</span> <span class="n">file</span> <span class="n">to</span>
+   <span class="n">see</span> <span class="n">its</span> <span class="n">correspondance</span> <span class="n">with</span> <span class="n">Intan</span> <span class="n">bank</span> <span class="ow">and</span> <span class="n">channel</span> <span class="n">indexes</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="p">,</span> <span class="n">the</span> <span class="n">first</span> <span class="n">channel</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span>
+   <span class="s1">&#39;amp-A-000&#39;</span><span class="p">)</span><span class="o">.</span> <span class="n">T0</span> <span class="k">is</span> <span class="n">the</span> <span class="n">time</span> <span class="n">to</span> <span class="n">start</span> <span class="n">reading</span> <span class="p">(</span><span class="n">the</span> <span class="n">beginning</span> <span class="n">of</span>
+   <span class="n">the</span> <span class="n">recording</span> <span class="k">is</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">T1</span> <span class="k">is</span> <span class="n">the</span> <span class="n">time</span> <span class="n">to</span> <span class="n">stop</span> <span class="n">reading</span><span class="o">.</span> <span class="n">If</span> <span class="n">T0</span> <span class="k">is</span> <span class="n">negative</span><span class="p">,</span> <span class="n">we</span> <span class="n">will</span>
+   <span class="n">start</span> <span class="n">with</span> <span class="n">time</span> <span class="mf">0.</span> <span class="n">If</span> <span class="n">T1</span> <span class="k">is</span> <span class="bp">INF</span><span class="p">,</span> <span class="n">we</span> <span class="n">will</span> <span class="n">use</span> <span class="n">the</span> <span class="n">end</span> <span class="n">time</span> <span class="n">of</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">file</span><span class="o">.</span>
+
+   <span class="n">CHANNEL_TYPE</span> <span class="n">values</span><span class="p">:</span>
+   <span class="n">Value</span><span class="p">:</span>                      <span class="o">|</span> <span class="n">Meaning</span><span class="p">:</span>
+   <span class="o">--------------------------------------------------------------------------</span>
+   <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamps&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">1</span>  <span class="o">|</span> <span class="n">read</span> <span class="n">timestamps</span> <span class="n">of</span> <span class="n">samples</span>
+   <span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="s1">&#39;amplifier&#39;</span> <span class="ow">or</span> <span class="mi">2</span>     <span class="o">|</span> <span class="n">read</span> <span class="n">amplifier</span> <span class="n">channels</span>
+   <span class="s1">&#39;aux&#39;</span><span class="p">,</span> <span class="s1">&#39;aux_in&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">3</span>       <span class="o">|</span> <span class="n">read</span> <span class="n">auxiliary</span> <span class="n">input</span> <span class="n">channels</span>
+   <span class="s1">&#39;supply&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">4</span>              <span class="o">|</span> <span class="n">read</span> <span class="n">supply</span> <span class="n">voltages</span>
+   <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">5</span>                <span class="o">|</span> <span class="n">read</span> <span class="n">temperature</span> <span class="n">sensor</span>
+   <span class="s1">&#39;adc&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">6</span>                 <span class="o">|</span> <span class="n">read</span> <span class="n">analog</span> <span class="n">to</span> <span class="n">digital</span> <span class="n">converter</span> <span class="n">signals</span>
+   <span class="s1">&#39;din&#39;</span><span class="p">,</span> <span class="s1">&#39;digital_in&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">7</span>   <span class="o">|</span> <span class="n">read</span> <span class="n">digital</span> <span class="n">input</span> <span class="p">(</span><span class="n">a</span> <span class="n">single</span> <span class="n">channel</span> <span class="n">of</span> <span class="mi">16</span> <span class="n">bit</span> <span class="n">values</span><span class="p">)</span>
+   <span class="s1">&#39;dout&#39;</span><span class="p">,</span> <span class="s1">&#39;digital_out&#39;</span><span class="p">,</span> <span class="ow">or</span> <span class="mi">8</span> <span class="o">|</span> <span class="n">read</span> <span class="n">digital</span> <span class="n">output</span> <span class="k">signal</span> <span class="p">(</span><span class="n">a</span> <span class="n">single</span> <span class="n">channel</span><span class="p">)</span>
+
+   <span class="n">Outputs</span><span class="p">:</span>
+     <span class="n">DATA</span> <span class="o">-</span> <span class="n">each</span> <span class="n">column</span> <span class="n">contains</span> <span class="n">samples</span> <span class="n">from</span> <span class="n">an</span> <span class="n">individual</span> <span class="n">channel</span><span class="p">;</span> <span class="k">if</span> <span class="n">more</span> <span class="n">than</span>
+        <span class="n">one</span> <span class="n">channel</span> <span class="n">has</span> <span class="n">been</span> <span class="n">requested</span><span class="p">,</span> <span class="n">DATA</span> <span class="n">will</span> <span class="n">have</span> <span class="n">more</span> <span class="n">than</span> <span class="n">one</span> <span class="n">column</span><span class="o">.</span>
+     <span class="n">TOTAL_SAMPLES</span> <span class="o">-</span> <span class="n">The</span> <span class="n">total</span> <span class="n">number</span> <span class="n">of</span> <span class="p">(</span><span class="n">amplifier</span> <span class="ow">or</span> <span class="n">digital</span><span class="p">)</span> <span class="n">samples</span> <span class="n">estimated</span> <span class="n">to</span> <span class="n">be</span>
+        <span class="ow">in</span> <span class="n">the</span> <span class="n">file</span><span class="o">.</span>
+     <span class="n">TOTAL_TIME</span> <span class="o">-</span> <span class="n">An</span> <span class="n">estimate</span> <span class="n">of</span> <span class="n">the</span> <span class="n">total</span> <span class="n">duration</span> <span class="n">of</span> <span class="n">the</span> <span class="n">time</span> <span class="n">series</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">the</span>
+        <span class="n">recorded</span> <span class="n">file</span><span class="p">,</span> <span class="ow">in</span> <span class="n">seconds</span><span class="o">.</span>
+
+   <span class="n">Notes</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">The</span> <span class="n">Intan</span> <span class="n">RHD2000</span> <span class="n">board</span> <span class="n">has</span> <span class="n">its</span> <span class="n">own</span> <span class="n">clock</span><span class="o">.</span> <span class="n">Asking</span> <span class="n">this</span> <span class="n">function</span>
+   <span class="n">to</span> <span class="n">read</span> <span class="n">at</span> <span class="n">time</span> <span class="n">T0</span><span class="o">=</span><span class="mi">0</span> <span class="n">will</span> <span class="n">read</span> <span class="n">the</span> <span class="n">first</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">file</span><span class="o">.</span> <span class="n">This</span> <span class="n">time</span>
+   <span class="n">might</span> <span class="n">correspond</span> <span class="n">to</span> <span class="n">some</span> <span class="n">other</span> <span class="n">time</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Intan</span> <span class="n">board</span><span class="o">.</span>  <span class="n">Reading</span> <span class="n">the</span>
+   <span class="s1">&#39;time&#39;</span> <span class="n">channel</span> <span class="n">will</span> <span class="n">indicate</span> <span class="n">the</span> <span class="n">time</span> <span class="n">of</span> <span class="n">the</span> <span class="n">sample</span> <span class="n">on</span> <span class="n">the</span> <span class="n">board</span><span class="s1">&#39;s clock.</span>
+   <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="n">This</span> <span class="n">function</span> <span class="n">performs</span> <span class="n">no</span> <span class="n">filtering</span><span class="o">.</span> <span class="n">Even</span> <span class="k">if</span> <span class="n">the</span> <span class="n">user</span> <span class="n">had</span> <span class="n">checked</span>
+   <span class="k">for</span> <span class="n">the</span> <span class="n">RHD2000</span> <span class="n">software</span> <span class="n">to</span> <span class="n">use</span> <span class="n">a</span> <span class="mi">60</span><span class="n">Hz</span> <span class="n">notch</span> <span class="ow">or</span> <span class="n">a</span> <span class="n">high</span><span class="o">-</span><span class="k">pass</span> <span class="n">filter</span><span class="p">,</span>
+   <span class="n">this</span> <span class="n">function</span> <span class="n">returns</span> <span class="n">the</span> <span class="n">raw</span> <span class="n">data</span><span class="o">.</span> 
+
+   <span class="n">See</span> <span class="n">also</span><span class="p">:</span> <span class="n">READ_INTAN_RHD2000_HEADER</span>
+
+   <span class="mi">2014</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">08</span> <span class="n">SDV</span> <span class="o">-</span> <span class="n">wrote</span> <span class="n">it</span> <span class="ow">and</span> <span class="n">tested</span> <span class="n">it</span>
+</code></pre></div>
                 
               
               

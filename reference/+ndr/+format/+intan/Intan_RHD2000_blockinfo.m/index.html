@@ -1520,23 +1520,30 @@
                 
                 
                 <h1 id="ndrformatintanintan_rhd2000_blockinfo">ndr.format.intan.Intan_RHD2000_blockinfo<a class="headerlink" href="#ndrformatintanintan_rhd2000_blockinfo" title="Permanent link">&para;</a></h1>
-<p>INTAN_RHD2000_BLOCKINFO - Block information for an Intan RHD2000 file</p>
-<p>[BLOCK_INFO, BYTES_PER_BLOCK, BYTES_PRESENT, NUMDATABLOCKS]  = ...
-          INTAN_RHD2000_BLOCKINFO(FILENAME [, HEADER])</p>
-<p>Computes the parameters of each data block of an Intan_RHD_2000 file.</p>
-<p>The Intan 2000 RHD file type is organized into a header, and then data blocks of
-  samples of the various channel types that the Intan demo board can sample.
-  This file, along with the HEADER, computes the structure of these data blocks that are
-  needed to interpret each data block.</p>
-<p>FILENAME should be the name of an RHD2000 file (normally with extension
-  '.rhd').  HEADER should be the header information structure that is returned
-  by READ_INTAN_RHD2000_HEADER; if it is left blank, it will be read from the
-  file.</p>
-<p>BLOCK_INFO is a structure describing the parameters of each block.
-  BYTES_PER_BLOCK is the number of bytes per data block
-  BYTES_PRESENT is the number of non-header bytes in the file.
-  NUMDATABLOCKS is the number of data blocks in the file.</p>
-<p>See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, CAT_INTAN_RHD2000_FILES</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">INTAN_RHD2000_BLOCKINFO</span> <span class="o">-</span> <span class="n">Block</span> <span class="n">information</span> <span class="k">for</span> <span class="n">an</span> <span class="n">Intan</span> <span class="n">RHD2000</span> <span class="n">file</span>
+
+   <span class="p">[</span><span class="n">BLOCK_INFO</span><span class="p">,</span> <span class="n">BYTES_PER_BLOCK</span><span class="p">,</span> <span class="n">BYTES_PRESENT</span><span class="p">,</span> <span class="n">NUMDATABLOCKS</span><span class="p">]</span>  <span class="o">=</span> <span class="o">...</span>
+          <span class="n">INTAN_RHD2000_BLOCKINFO</span><span class="p">(</span><span class="n">FILENAME</span> <span class="p">[,</span> <span class="n">HEADER</span><span class="p">])</span>
+
+  <span class="n">Computes</span> <span class="n">the</span> <span class="n">parameters</span> <span class="n">of</span> <span class="n">each</span> <span class="n">data</span> <span class="n">block</span> <span class="n">of</span> <span class="n">an</span> <span class="n">Intan_RHD_2000</span> <span class="n">file</span><span class="o">.</span>
+
+  <span class="n">The</span> <span class="n">Intan</span> <span class="mi">2000</span> <span class="n">RHD</span> <span class="n">file</span> <span class="n">type</span> <span class="k">is</span> <span class="n">organized</span> <span class="n">into</span> <span class="n">a</span> <span class="n">header</span><span class="p">,</span> <span class="ow">and</span> <span class="n">then</span> <span class="n">data</span> <span class="n">blocks</span> <span class="n">of</span>
+  <span class="n">samples</span> <span class="n">of</span> <span class="n">the</span> <span class="n">various</span> <span class="n">channel</span> <span class="n">types</span> <span class="n">that</span> <span class="n">the</span> <span class="n">Intan</span> <span class="n">demo</span> <span class="n">board</span> <span class="n">can</span> <span class="n">sample</span><span class="o">.</span>
+  <span class="n">This</span> <span class="n">file</span><span class="p">,</span> <span class="n">along</span> <span class="n">with</span> <span class="n">the</span> <span class="n">HEADER</span><span class="p">,</span> <span class="n">computes</span> <span class="n">the</span> <span class="n">structure</span> <span class="n">of</span> <span class="n">these</span> <span class="n">data</span> <span class="n">blocks</span> <span class="n">that</span> <span class="n">are</span>
+  <span class="n">needed</span> <span class="n">to</span> <span class="n">interpret</span> <span class="n">each</span> <span class="n">data</span> <span class="n">block</span><span class="o">.</span>
+
+  <span class="n">FILENAME</span> <span class="n">should</span> <span class="n">be</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">an</span> <span class="n">RHD2000</span> <span class="n">file</span> <span class="p">(</span><span class="n">normally</span> <span class="n">with</span> <span class="n">extension</span>
+  <span class="s1">&#39;.rhd&#39;</span><span class="p">)</span><span class="o">.</span>  <span class="n">HEADER</span> <span class="n">should</span> <span class="n">be</span> <span class="n">the</span> <span class="n">header</span> <span class="n">information</span> <span class="n">structure</span> <span class="n">that</span> <span class="k">is</span> <span class="n">returned</span>
+  <span class="n">by</span> <span class="n">READ_INTAN_RHD2000_HEADER</span><span class="p">;</span> <span class="k">if</span> <span class="n">it</span> <span class="k">is</span> <span class="n">left</span> <span class="n">blank</span><span class="p">,</span> <span class="n">it</span> <span class="n">will</span> <span class="n">be</span> <span class="n">read</span> <span class="n">from</span> <span class="n">the</span>
+  <span class="n">file</span><span class="o">.</span>
+
+  <span class="n">BLOCK_INFO</span> <span class="k">is</span> <span class="n">a</span> <span class="n">structure</span> <span class="n">describing</span> <span class="n">the</span> <span class="n">parameters</span> <span class="n">of</span> <span class="n">each</span> <span class="n">block</span><span class="o">.</span>
+  <span class="n">BYTES_PER_BLOCK</span> <span class="k">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">bytes</span> <span class="n">per</span> <span class="n">data</span> <span class="n">block</span>
+  <span class="n">BYTES_PRESENT</span> <span class="k">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">non</span><span class="o">-</span><span class="n">header</span> <span class="n">bytes</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">file</span><span class="o">.</span>
+  <span class="n">NUMDATABLOCKS</span> <span class="k">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">data</span> <span class="n">blocks</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">file</span><span class="o">.</span>
+
+  <span class="n">See</span> <span class="n">also</span><span class="p">:</span> <span class="n">READ_INTAN_RHD2000_HEADER</span><span class="p">,</span> <span class="n">READ_INTAN_RHD2000_DATAFILE</span><span class="p">,</span> <span class="n">CAT_INTAN_RHD2000_FILES</span>
+</code></pre></div>
                 
               
               

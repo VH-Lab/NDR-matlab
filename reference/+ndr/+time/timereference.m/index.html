@@ -1617,7 +1617,9 @@
                 
                 
                 <h1 id="class-ndrtimetimereference">CLASS ndr.time.timereference<a class="headerlink" href="#class-ndrtimetimereference" title="Permanent link">&para;</a></h1>
-<p>NDR.TIME.TIMEREFERENCE - a class for specifying time relative to an NDR_CLOCK</p>
+<div class="codehilite"><pre><span></span><code>  <span class="nv">NDR</span>.<span class="nv">TIME</span>.<span class="nv">TIMEREFERENCE</span> <span class="o">-</span> <span class="nv">a</span> <span class="nv">class</span> <span class="k">for</span> <span class="nv">specifying</span> <span class="nv">time</span> <span class="nv">relative</span> <span class="nv">to</span> <span class="nv">an</span> <span class="nv">NDR_CLOCK</span>
+</code></pre></div>
+
 <h2 id="superclasses">Superclasses<a class="headerlink" href="#superclasses" title="Permanent link">&para;</a></h2>
 <p><em>none</em></p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
@@ -1672,32 +1674,42 @@
 </table>
 <h3 id="methods-help">Methods help<a class="headerlink" href="#methods-help" title="Permanent link">&para;</a></h3>
 <p><strong>ndr_timereference_struct</strong> - <em>return a structure that describes an ndr.time.timereference object that lacks Matlab objects</em></p>
-<p>A = NDR_TIMEREFERENCE_STRUCT(NDI_TIMEREF_OBJ)</p>
-<p>Returns a structure with the following fields:
-  Fieldname                      | Description</p>
-<hr />
-<p>referent_epochsetname          | The epochsetname() of the referent
+<div class="codehilite"><pre><span></span><code>A = NDR_TIMEREFERENCE_STRUCT(NDI_TIMEREF_OBJ)
+
+  Returns a structure with the following fields:
+  Fieldname                      | Description
+  --------------------------------------------------------------------------------
+  referent_epochsetname          | The epochsetname() of the referent
   referent_classname             | The classname of the referent
   clocktypestring                | The value of the clocktype
   epoch                          | The epoch (either a string or a number)
   session_ID                     | The session ID of the session that contains the epoch
-  time                           | The time</p>
+  time                           | The time
+</code></pre></div>
+
 <hr />
 <p><strong>timereference</strong> - <em>creates a new time reference object</em></p>
-<p>OBJ = NDR.TIME.TIMEREFERENCE(REFERENT, CLOCKTYPE, EPOCH, TIME)</p>
-<p>Creates a new ndr.time.timereference object. The REFERENT, EPOCH, and TIME must
-  specify a unique time. </p>
-<p>REFERENT is any subclass of ndi.epoch.epochset object that has a 'session' property
-    (e.g., ndr.system, ndr.element, etc...).
-  TYPE is the time type, can be 'utc', 'exp_global_time', or 'dev_global_time' or 'dev_local_time'
-  If TYPE is 'dev_local_time', then the EPOCH identifier is necessary. Otherwise, it can be empty.
-  If EPOCH is specified, then TIME is taken to be relative to the EPOCH number of the
-  device associated with CLOCK, even if the device keeps universal or time.</p>
-<p>An alternative creator is available:</p>
-<p>OBJ = ndr.time.timereference(NDR_SESSION_OBJ, NDR_TIMEREF_STRUCT)</p>
-<p>where NDR_SESSION_OBJ is an ndr.session and NDR_TIMEREF_STRUCT is a structure
-  returned by ndr.time.timereference/NDR_TIMEREFERENCE_STRUCT. The NDR_SESSION_OBJ fields will
-  be searched to find the live REFERENT to create OBJ.</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">OBJ</span> <span class="o">=</span> <span class="nv">NDR</span>.<span class="nv">TIME</span>.<span class="nv">TIMEREFERENCE</span><span class="ss">(</span><span class="nv">REFERENT</span>, <span class="nv">CLOCKTYPE</span>, <span class="nv">EPOCH</span>, <span class="nv">TIME</span><span class="ss">)</span>
+
+  <span class="nv">Creates</span> <span class="nv">a</span> <span class="nv">new</span> <span class="nv">ndr</span>.<span class="nv">time</span>.<span class="nv">timereference</span> <span class="nv">object</span>. <span class="nv">The</span> <span class="nv">REFERENT</span>, <span class="nv">EPOCH</span>, <span class="nv">and</span> <span class="nv">TIME</span> <span class="nv">must</span>
+  <span class="nv">specify</span> <span class="nv">a</span> <span class="nv">unique</span> <span class="nv">time</span>. 
+
+  <span class="nv">REFERENT</span> <span class="nv">is</span> <span class="nv">any</span> <span class="nv">subclass</span> <span class="nv">of</span> <span class="nv">ndi</span>.<span class="nv">epoch</span>.<span class="nv">epochset</span> <span class="nv">object</span> <span class="nv">that</span> <span class="nv">has</span> <span class="nv">a</span> <span class="s1">&#39;</span><span class="s">session</span><span class="s1">&#39;</span> <span class="nv">property</span>
+    <span class="ss">(</span><span class="nv">e</span>.<span class="nv">g</span>., <span class="nv">ndr</span>.<span class="nv">system</span>, <span class="nv">ndr</span>.<span class="nv">element</span>, <span class="nv">etc</span>...<span class="ss">)</span>.
+  <span class="nv">TYPE</span> <span class="nv">is</span> <span class="nv">the</span> <span class="nv">time</span> <span class="nv">type</span>, <span class="nv">can</span> <span class="nv">be</span> <span class="s1">&#39;</span><span class="s">utc</span><span class="s1">&#39;</span>, <span class="s1">&#39;</span><span class="s">exp_global_time</span><span class="s1">&#39;</span>, <span class="nv">or</span> <span class="s1">&#39;</span><span class="s">dev_global_time</span><span class="s1">&#39;</span> <span class="nv">or</span> <span class="s1">&#39;</span><span class="s">dev_local_time</span><span class="s1">&#39;</span>
+  <span class="k">If</span> <span class="nv">TYPE</span> <span class="nv">is</span> <span class="s1">&#39;</span><span class="s">dev_local_time</span><span class="s1">&#39;</span>, <span class="k">then</span> <span class="nv">the</span> <span class="nv">EPOCH</span> <span class="nv">identifier</span> <span class="nv">is</span> <span class="nv">necessary</span>. <span class="nv">Otherwise</span>, <span class="nv">it</span> <span class="nv">can</span> <span class="nv">be</span> <span class="nv">empty</span>.
+  <span class="k">If</span> <span class="nv">EPOCH</span> <span class="nv">is</span> <span class="nv">specified</span>, <span class="k">then</span> <span class="nv">TIME</span> <span class="nv">is</span> <span class="nv">taken</span> <span class="nv">to</span> <span class="nv">be</span> <span class="nv">relative</span> <span class="nv">to</span> <span class="nv">the</span> <span class="nv">EPOCH</span> <span class="nv">number</span> <span class="nv">of</span> <span class="nv">the</span>
+  <span class="nv">device</span> <span class="nv">associated</span> <span class="nv">with</span> <span class="nv">CLOCK</span>, <span class="nv">even</span> <span class="k">if</span> <span class="nv">the</span> <span class="nv">device</span> <span class="nv">keeps</span> <span class="nv">universal</span> <span class="nv">or</span> <span class="nv">time</span>.
+
+  <span class="nv">An</span> <span class="nv">alternative</span> <span class="nv">creator</span> <span class="nv">is</span> <span class="nv">available</span>:
+
+  <span class="nv">OBJ</span> <span class="o">=</span> <span class="nv">ndr</span>.<span class="nv">time</span>.<span class="nv">timereference</span><span class="ss">(</span><span class="nv">NDR_SESSION_OBJ</span>, <span class="nv">NDR_TIMEREF_STRUCT</span><span class="ss">)</span>
+
+  <span class="nv">where</span> <span class="nv">NDR_SESSION_OBJ</span> <span class="nv">is</span> <span class="nv">an</span> <span class="nv">ndr</span>.<span class="nv">session</span> <span class="nv">and</span> <span class="nv">NDR_TIMEREF_STRUCT</span> <span class="nv">is</span> <span class="nv">a</span> <span class="nv">structure</span>
+  <span class="nv">returned</span> <span class="nv">by</span> <span class="nv">ndr</span>.<span class="nv">time</span>.<span class="nv">timereference</span><span class="o">/</span><span class="nv">NDR_TIMEREFERENCE_STRUCT</span>. <span class="nv">The</span> <span class="nv">NDR_SESSION_OBJ</span> <span class="nv">fields</span> <span class="nv">will</span>
+  <span class="nv">be</span> <span class="nv">searched</span> <span class="nv">to</span> <span class="nv">find</span> <span class="nv">the</span> <span class="nv">live</span> <span class="nv">REFERENT</span> <span class="nv">to</span> <span class="nv">create</span> <span class="nv">OBJ</span>.
+</code></pre></div>
+
 <hr />
                 
               

@@ -1520,18 +1520,21 @@
                 
                 
                 <h1 id="ndrformatspikegadgetsread_rec_analogchannels">ndr.format.spikegadgets.read_rec_analogChannels<a class="headerlink" href="#ndrformatspikegadgetsread_rec_analogchannels" title="Permanent link">&para;</a></h1>
-<p>[recData, timestamps] = read_SpikeGadgets_analogChannels(filename,NumChannels, channels, samplingRate,headerSize, configExists) )
-  Imports digital channel data in matlab from the raw data file</p>
-<p>INPUTS
+<div class="codehilite"><pre><span></span><code>  [recData, timestamps] = read_SpikeGadgets_analogChannels(filename,NumChannels, channels, samplingRate,headerSize, configExists) )
+  Imports digital channel data in matlab from the raw data file
+
+  INPUTS
   filename-- a string containing the name of the .dat file (raw file from SD card)
   NumChannels-- the number of channels in the recording (i.e., 32,64,96...)
   channels-- the analog channels you want to extract, designated by the byte location (1-based), i.e., [3 5 7]
   samplingRate-- the sampling rate of the recording, i.e 30000
-  headerSize--the size, in int16's, of the header block of the data
-  (contains DIO channels and aux analog channels).</p>
-<p>OUTPUTS
+  headerSize--the size, in int16&#39;s, of the header block of the data
+  (contains DIO channels and aux analog channels).
+
+  OUTPUTS
   timestamps--the system clock when each sample was taken
-  recData-- an N by M matrix with N data points and M channels (M is equal to the number of channels in the input)</p>
+  recData-- an N by M matrix with N data points and M channels (M is equal to the number of channels in the input)
+</code></pre></div>
                 
               
               

@@ -1520,17 +1520,23 @@
                 
                 
                 <h1 id="ndrformatintancopy_intan_rhd2000_blocks">ndr.format.intan.copy_Intan_RHD2000_blocks<a class="headerlink" href="#ndrformatintancopy_intan_rhd2000_blocks" title="Permanent link">&para;</a></h1>
-<p>COPY_INTAN_RHD2000_BLOCKS - Concatenate multiple RHD blocks together</p>
-<p>STATUS = COPY_INTAN_RHD2000_BLOCKS(FILENAME_IN, B1, B2, FILENAME_OUT)</p>
-<p>Copies data blocks from B1 to B2 from the RHD 2000 file 
-  FILENAME_IN and writes it to the file FILENAME_OUT.  The first block is numbered
-  1.</p>
-<p>This is useful for trimming files down to certain blocks.  Check out
-  INTAN_RHD2000_BLOCKINFO to understand the relationship between data blocks and
-  samples (short version: data blocks are not samples, they are regular collections
-  of samples).</p>
-<p>STATUS should always return 0 if there was no error.</p>
-<p>See also: READ_INTAN_RHD2000_DATAFILE, READ_INTAN_RHD2000_HEADER, INTAN_RHD2000_BLOCKINFO</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">COPY_INTAN_RHD2000_BLOCKS</span> <span class="o">-</span> <span class="n">Concatenate</span> <span class="n">multiple</span> <span class="n">RHD</span> <span class="n">blocks</span> <span class="n">together</span>
+
+  <span class="n">STATUS</span> <span class="o">=</span> <span class="n">COPY_INTAN_RHD2000_BLOCKS</span><span class="p">(</span><span class="n">FILENAME_IN</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">FILENAME_OUT</span><span class="p">)</span>
+
+  <span class="n">Copies</span> <span class="n">data</span> <span class="n">blocks</span> <span class="n">from</span> <span class="n">B1</span> <span class="n">to</span> <span class="n">B2</span> <span class="n">from</span> <span class="n">the</span> <span class="n">RHD</span> <span class="mh">2000</span> <span class="n">file</span> 
+  <span class="n">FILENAME_IN</span> <span class="k">and</span> <span class="n">writes</span> <span class="n">it</span> <span class="n">to</span> <span class="n">the</span> <span class="n">file</span> <span class="n">FILENAME_OUT</span><span class="p">.</span>  <span class="n">The</span> <span class="n">first</span> <span class="n">block</span> <span class="n">is</span> <span class="n">numbered</span>
+  <span class="mf">1.</span>
+
+  <span class="n">This</span> <span class="n">is</span> <span class="n">useful</span> <span class="k">for</span> <span class="n">trimming</span> <span class="n">files</span> <span class="n">down</span> <span class="n">to</span> <span class="n">certain</span> <span class="n">blocks</span><span class="p">.</span>  <span class="n">Check</span> <span class="n">out</span>
+  <span class="n">INTAN_RHD2000_BLOCKINFO</span> <span class="n">to</span> <span class="n">understand</span> <span class="n">the</span> <span class="n">relationship</span> <span class="n">between</span> <span class="n">data</span> <span class="n">blocks</span> <span class="k">and</span>
+  <span class="n">samples</span> <span class="p">(</span><span class="n">short</span> <span class="nl">version:</span> <span class="n">data</span> <span class="n">blocks</span> <span class="n">are</span> <span class="k">not</span> <span class="n">samples</span><span class="p">,</span> <span class="n">they</span> <span class="n">are</span> <span class="n">regular</span> <span class="n">collections</span>
+  <span class="n">of</span> <span class="n">samples</span><span class="p">).</span>
+
+  <span class="n">STATUS</span> <span class="n">should</span> <span class="k">always</span> <span class="k">return</span> <span class="mh">0</span> <span class="k">if</span> <span class="n">there</span> <span class="n">was</span> <span class="n">no</span> <span class="n">error</span><span class="p">.</span>
+
+  <span class="n">See</span> <span class="nl">also:</span> <span class="n">READ_INTAN_RHD2000_DATAFILE</span><span class="p">,</span> <span class="n">READ_INTAN_RHD2000_HEADER</span><span class="p">,</span> <span class="n">INTAN_RHD2000_BLOCKINFO</span>
+</code></pre></div>
                 
               
               

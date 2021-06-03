@@ -1617,9 +1617,13 @@
                 
                 
                 <h1 id="class-ndrreaderbase">CLASS ndr.reader.base<a class="headerlink" href="#class-ndrreaderbase" title="Permanent link">&para;</a></h1>
-<p>READER - create a new Neuroscience Data Reader Base object</p>
-<p>READER_OBJ = ndr.reader.base()</p>
-<p>Creates an Neuroscence Data Reader object of the indicated type.</p>
+<div class="codehilite"><pre><span></span><code>  READER - create a new Neuroscience Data Reader Base object
+
+  READER_OBJ = ndr.reader.base()
+
+  Creates an Neuroscence Data Reader object of the indicated type.
+</code></pre></div>
+
 <h2 id="superclasses">Superclasses<a class="headerlink" href="#superclasses" title="Permanent link">&para;</a></h2>
 <p><em>none</em></p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
@@ -1685,232 +1689,225 @@
 </table>
 <h3 id="methods-help">Methods help<a class="headerlink" href="#methods-help" title="Permanent link">&para;</a></h3>
 <p><strong>base</strong> - <em>create a new Neuroscience Data Reader Base object</em></p>
-<p>READER_OBJ = ndr.reader.base()</p>
-<p>Creates an Neuroscence Data Reader object of the indicated type.</p>
+<div class="codehilite"><pre><span></span><code>READER_OBJ = ndr.reader.base()
+
+  Creates an Neuroscence Data Reader object of the indicated type.
+</code></pre></div>
+
 <hr />
 <p><strong>canbereadtogether</strong> - <em>can the channels in a channel struct be read in a single function call?</em></p>
-<p>[B,ERRORMSG] = CANBEREADTOGETHER(NDR_READER_BASE_OBJ, CHANNELSTRUCT)</p>
-<p>Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
-  CHANNELSTRUCT with a single function call. If they cannot be read together,
-  a description is provided in ERRORMSG.</p>
-<p>In the abstract class, this returns 1 if all of the samplerate values are
-  the same and none are NaNs.</p>
-<p>CHANNELSTRUCT is a structure with the following fields:</p>
-<hr />
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>internal_type</td>
-<td>Internal channel type; the type of channel as</td>
-</tr>
-<tr>
-<td></td>
-<td>it is known to the device.</td>
-</tr>
-<tr>
-<td>internal_number</td>
-<td>Internal channel number, as known to device</td>
-</tr>
-<tr>
-<td>internal_channelname</td>
-<td>Internal channel name, as known to the device</td>
-</tr>
-<tr>
-<td>ndr_type</td>
-<td>The NDR type of channel; should be one of the</td>
-</tr>
-<tr>
-<td></td>
-<td>types returned by</td>
-</tr>
-<tr>
-<td></td>
-<td>ndr.reader.base.mfdaq_type</td>
-</tr>
-<tr>
-<td>samplerate</td>
-<td>The sampling rate of this channel, or NaN if</td>
-</tr>
-<tr>
-<td></td>
-<td>not applicable.</td>
-</tr>
-<tr>
-<td>------------------------------------------------------------------------------</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>in the abstract class, this returns 1 if all the samplerates are the same
-  and none are NaNs</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">[</span><span class="nx">B</span><span class="p">,</span><span class="nx">ERRORMSG</span><span class="cp">]</span> <span class="o">=</span> <span class="nt">CANBEREADTOGETHER</span><span class="o">(</span><span class="nt">NDR_READER_BASE_OBJ</span><span class="o">,</span> <span class="nt">CHANNELSTRUCT</span><span class="o">)</span>
+
+  <span class="nt">Returns</span> <span class="nt">1</span> <span class="nt">if</span> <span class="nt">the</span> <span class="nt">NDR_READER_BASE_OBJ</span> <span class="nt">can</span> <span class="nt">read</span> <span class="nt">all</span> <span class="nt">of</span> <span class="nt">the</span> <span class="nt">channels</span> <span class="nt">in</span>
+  <span class="nt">CHANNELSTRUCT</span> <span class="nt">with</span> <span class="nt">a</span> <span class="nt">single</span> <span class="nt">function</span> <span class="nt">call</span><span class="o">.</span> <span class="nt">If</span> <span class="nt">they</span> <span class="nt">cannot</span> <span class="nt">be</span> <span class="nt">read</span> <span class="nt">together</span><span class="o">,</span>
+  <span class="nt">a</span> <span class="nt">description</span> <span class="nt">is</span> <span class="nt">provided</span> <span class="nt">in</span> <span class="nt">ERRORMSG</span><span class="o">.</span>
+
+  <span class="nt">In</span> <span class="nt">the</span> <span class="nt">abstract</span> <span class="nt">class</span><span class="o">,</span> <span class="nt">this</span> <span class="nt">returns</span> <span class="nt">1</span> <span class="nt">if</span> <span class="nt">all</span> <span class="nt">of</span> <span class="nt">the</span> <span class="nt">samplerate</span> <span class="nt">values</span> <span class="nt">are</span>
+  <span class="nt">the</span> <span class="nt">same</span> <span class="nt">and</span> <span class="nt">none</span> <span class="nt">are</span> <span class="nt">NaNs</span><span class="o">.</span>
+
+  <span class="nt">CHANNELSTRUCT</span> <span class="nt">is</span> <span class="nt">a</span> <span class="nt">structure</span> <span class="nt">with</span> <span class="nt">the</span> <span class="nt">following</span> <span class="nt">fields</span><span class="o">:</span>
+  <span class="nt">------------------------------------------------------------------------------</span>
+  <span class="o">|</span> <span class="nt">Parameter</span>                   <span class="o">|</span> <span class="nt">Description</span>                                  <span class="o">|</span>
+  <span class="o">|</span><span class="nt">-----------------------------</span><span class="o">|</span><span class="nt">----------------------------------------------</span><span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_type</span>               <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">type</span><span class="o">;</span> <span class="nt">the</span> <span class="nt">type</span> <span class="nt">of</span> <span class="nt">channel</span> <span class="nt">as</span><span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">it</span> <span class="nt">is</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">device</span><span class="o">.</span>                 <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_number</span>             <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">number</span><span class="o">,</span> <span class="nt">as</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">device</span>  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_channelname</span>        <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">name</span><span class="o">,</span> <span class="nt">as</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">device</span><span class="o">|</span>
+  <span class="o">|</span> <span class="nt">ndr_type</span>                    <span class="o">|</span> <span class="nt">The</span> <span class="nt">NDR</span> <span class="nt">type</span> <span class="nt">of</span> <span class="nt">channel</span><span class="o">;</span> <span class="nt">should</span> <span class="nt">be</span> <span class="nt">one</span> <span class="nt">of</span> <span class="nt">the</span><span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">types</span> <span class="nt">returned</span> <span class="nt">by</span>                          <span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">ndr</span><span class="p">.</span><span class="nc">reader</span><span class="p">.</span><span class="nc">base</span><span class="p">.</span><span class="nc">mfdaq_type</span>                 <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">samplerate</span>                  <span class="o">|</span> <span class="nt">The</span> <span class="nt">sampling</span> <span class="nt">rate</span> <span class="nt">of</span> <span class="nt">this</span> <span class="nt">channel</span><span class="o">,</span> <span class="nt">or</span> <span class="nt">NaN</span> <span class="nt">if</span> <span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">not</span> <span class="nt">applicable</span><span class="o">.</span>
+  <span class="nt">------------------------------------------------------------------------------</span>
+
+  <span class="nt">in</span> <span class="nt">the</span> <span class="nt">abstract</span> <span class="nt">class</span><span class="o">,</span> <span class="nt">this</span> <span class="nt">returns</span> <span class="nt">1</span> <span class="nt">if</span> <span class="nt">all</span> <span class="nt">the</span> <span class="nt">samplerates</span> <span class="nt">are</span> <span class="nt">the</span> <span class="nt">same</span>
+  <span class="nt">and</span> <span class="nt">none</span> <span class="nt">are</span> <span class="nt">NaNs</span>
+</code></pre></div>
+
 <hr />
 <p><strong>daqchannels2internalchannels</strong> - <em>convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions</em></p>
-<p>CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
-     CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)</p>
-<p>Inputs:
-  For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
-  this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
-  and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
-  returns a structure CHANNELSTRUCT describing the channel information that should be passed to
-  READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.</p>
-<p>EPOCHSTREAMS is a cell array of full path file names or remote
-  access streams that comprise the epoch of data</p>
-<p>EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
-  if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.</p>
-<p>Output: CHANNELSTRUCT is a structure with the following fields:</p>
-<hr />
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>internal_type</td>
-<td>Internal channel type; the type of channel as</td>
-</tr>
-<tr>
-<td></td>
-<td>it is known to the device.</td>
-</tr>
-<tr>
-<td>internal_number</td>
-<td>Internal channel number, as known to device</td>
-</tr>
-<tr>
-<td>internal_channelname</td>
-<td>Internal channel name, as known to the device</td>
-</tr>
-<tr>
-<td>ndr_type</td>
-<td>The NDR type of channel; should be one of the</td>
-</tr>
-<tr>
-<td></td>
-<td>types returned by</td>
-</tr>
-<tr>
-<td></td>
-<td>ndr.reader.base.mfdaq_type</td>
-</tr>
-<tr>
-<td>------------------------------------------------------------------------------</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>abstract class returns empty</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">CHANNELSTRUCT</span> <span class="o">=</span> <span class="nt">DAQCHANNELS2INTERNALCHANNELS</span><span class="o">(</span><span class="nt">NDR_READER_BASE_OBJ</span><span class="o">,</span> <span class="o">...</span>
+     <span class="nt">CHANNELPREFIX</span><span class="o">,</span> <span class="nt">CHANNELNUMBERS</span><span class="o">,</span> <span class="nt">EPOCHSTREAMS</span><span class="o">,</span> <span class="nt">EPOCH_SELECT</span><span class="o">)</span>
+
+  <span class="nt">Inputs</span><span class="o">:</span>
+  <span class="nt">For</span> <span class="nt">a</span> <span class="nt">set</span> <span class="nt">of</span> <span class="nt">CHANNELPREFIX</span> <span class="o">(</span><span class="nt">cell</span> <span class="nt">array</span> <span class="nt">of</span> <span class="nt">channel</span> <span class="nt">prefixes</span> <span class="nt">that</span> <span class="nt">describe</span> <span class="nt">channels</span> <span class="nt">for</span>
+  <span class="nt">this</span> <span class="nt">device</span><span class="o">)</span> <span class="nt">and</span> <span class="nt">CHANNELNUMBER</span> <span class="o">(</span><span class="nt">array</span> <span class="nt">of</span> <span class="nt">channel</span> <span class="nt">numbers</span><span class="o">,</span> <span class="nt">1</span> <span class="nt">for</span> <span class="nt">each</span> <span class="nt">entry</span> <span class="nt">in</span> <span class="nt">CHANNELPREFIX</span><span class="o">),</span>
+  <span class="nt">and</span> <span class="nt">for</span> <span class="nt">a</span> <span class="nt">given</span> <span class="nt">recording</span> <span class="nt">epoch</span> <span class="o">(</span><span class="nt">specified</span> <span class="nt">by</span> <span class="nt">EPOCHSTREAMS</span> <span class="nt">and</span> <span class="nt">EPOCH_SELECT</span><span class="o">),</span> <span class="nt">this</span> <span class="nt">function</span>
+  <span class="nt">returns</span> <span class="nt">a</span> <span class="nt">structure</span> <span class="nt">CHANNELSTRUCT</span> <span class="nt">describing</span> <span class="nt">the</span> <span class="nt">channel</span> <span class="nt">information</span> <span class="nt">that</span> <span class="nt">should</span> <span class="nt">be</span> <span class="nt">passed</span> <span class="nt">to</span>
+  <span class="nt">READCHANNELS_EPOCHSAMPLES</span> <span class="nt">or</span> <span class="nt">READEVENTS_EPOCHSAMPLES</span><span class="o">.</span>
+
+  <span class="nt">EPOCHSTREAMS</span> <span class="nt">is</span> <span class="nt">a</span> <span class="nt">cell</span> <span class="nt">array</span> <span class="nt">of</span> <span class="nt">full</span> <span class="nt">path</span> <span class="nt">file</span> <span class="nt">names</span> <span class="nt">or</span> <span class="nt">remote</span>
+  <span class="nt">access</span> <span class="nt">streams</span> <span class="nt">that</span> <span class="nt">comprise</span> <span class="nt">the</span> <span class="nt">epoch</span> <span class="nt">of</span> <span class="nt">data</span>
+
+  <span class="nt">EPOCH_SELECT</span> <span class="nt">allows</span> <span class="nt">one</span> <span class="nt">to</span> <span class="nt">choose</span> <span class="nt">which</span> <span class="nt">epoch</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">file</span> <span class="nt">one</span> <span class="nt">wants</span> <span class="nt">to</span> <span class="nt">access</span><span class="o">,</span>
+  <span class="nt">if</span> <span class="nt">the</span> <span class="nt">file</span><span class="o">(</span><span class="nt">s</span><span class="o">)</span> <span class="nt">has</span> <span class="nt">more</span> <span class="nt">than</span> <span class="nt">one</span> <span class="nt">epoch</span> <span class="nt">contained</span><span class="o">.</span> <span class="nt">For</span> <span class="nt">most</span> <span class="nt">devices</span><span class="o">,</span> <span class="nt">EPOCH_SELECT</span> <span class="nt">is</span> <span class="nt">always</span> <span class="nt">1</span><span class="o">.</span>
+
+  <span class="nt">Output</span><span class="o">:</span> <span class="nt">CHANNELSTRUCT</span> <span class="nt">is</span> <span class="nt">a</span> <span class="nt">structure</span> <span class="nt">with</span> <span class="nt">the</span> <span class="nt">following</span> <span class="nt">fields</span><span class="o">:</span>
+  <span class="nt">------------------------------------------------------------------------------</span>
+  <span class="o">|</span> <span class="nt">Parameter</span>                   <span class="o">|</span> <span class="nt">Description</span>                                  <span class="o">|</span>
+  <span class="o">|</span><span class="nt">-----------------------------</span><span class="o">|</span><span class="nt">----------------------------------------------</span><span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_type</span>               <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">type</span><span class="o">;</span> <span class="nt">the</span> <span class="nt">type</span> <span class="nt">of</span> <span class="nt">channel</span> <span class="nt">as</span><span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">it</span> <span class="nt">is</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">device</span><span class="o">.</span>                 <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_number</span>             <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">number</span><span class="o">,</span> <span class="nt">as</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">device</span>  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">internal_channelname</span>        <span class="o">|</span> <span class="nt">Internal</span> <span class="nt">channel</span> <span class="nt">name</span><span class="o">,</span> <span class="nt">as</span> <span class="nt">known</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">device</span><span class="o">|</span>
+  <span class="o">|</span> <span class="nt">ndr_type</span>                    <span class="o">|</span> <span class="nt">The</span> <span class="nt">NDR</span> <span class="nt">type</span> <span class="nt">of</span> <span class="nt">channel</span><span class="o">;</span> <span class="nt">should</span> <span class="nt">be</span> <span class="nt">one</span> <span class="nt">of</span> <span class="nt">the</span><span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">types</span> <span class="nt">returned</span> <span class="nt">by</span>                          <span class="o">|</span>
+  <span class="o">|</span>                             <span class="o">|</span>   <span class="nt">ndr</span><span class="p">.</span><span class="nc">reader</span><span class="p">.</span><span class="nc">base</span><span class="p">.</span><span class="nc">mfdaq_type</span>                 <span class="o">|</span>
+  <span class="nt">------------------------------------------------------------------------------</span>
+
+  <span class="nt">abstract</span> <span class="nt">class</span> <span class="nt">returns</span> <span class="nt">empty</span>
+</code></pre></div>
+
 <hr />
 <p><strong>epochclock</strong> - <em>return the ndr.time.clocktype objects for an epoch</em></p>
-<p>EC = EPOCHCLOCK(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)</p>
-<p>Return the clock types available for this epoch as a cell array
-  of ndr.time.clocktype objects (or sub-class members).</p>
-<p>For the generic ndr.reader.base, this returns a single clock
-  type 'dev_local'time';</p>
-<p>See also: ndr.time.clocktype</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">EC</span> <span class="o">=</span> <span class="nv">EPOCHCLOCK</span><span class="ss">(</span><span class="nv">NDR_READER_BASE_OBJ</span>, <span class="nv">EPOCHSTREAMS</span>, <span class="nv">EPOCH_SELECT</span><span class="ss">)</span>
+
+  <span class="k">Return</span> <span class="nv">the</span> <span class="nv">clock</span> <span class="nv">types</span> <span class="nv">available</span> <span class="k">for</span> <span class="nv">this</span> <span class="nv">epoch</span> <span class="nv">as</span> <span class="nv">a</span> <span class="nv">cell</span> <span class="nv">array</span>
+  <span class="nv">of</span> <span class="nv">ndr</span>.<span class="nv">time</span>.<span class="nv">clocktype</span> <span class="nv">objects</span> <span class="ss">(</span><span class="nv">or</span> <span class="nv">sub</span><span class="o">-</span><span class="nv">class</span> <span class="nv">members</span><span class="ss">)</span>.
+
+  <span class="k">For</span> <span class="nv">the</span> <span class="nv">generic</span> <span class="nv">ndr</span>.<span class="nv">reader</span>.<span class="nv">base</span>, <span class="nv">this</span> <span class="nv">returns</span> <span class="nv">a</span> <span class="nv">single</span> <span class="nv">clock</span>
+  <span class="nv">type</span> <span class="s1">&#39;</span><span class="s">dev_local</span><span class="s1">&#39;</span><span class="nv">time</span><span class="s1">&#39;</span><span class="s">;</span>
+
+  <span class="nv">See</span> <span class="nv">also</span>: <span class="nv">ndr</span>.<span class="nv">time</span>.<span class="nv">clocktype</span>
+</code></pre></div>
+
 <hr />
 <p><strong>getchannelsepoch</strong> - <em>List the channels that are available on this device for a given epoch</em></p>
-<p>CHANNELS = GETCHANNELSEPOCH(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)</p>
-<p>Returns the channel list of acquired channels in this epoch</p>
-<p>CHANNELS is a structure list of all channels with fields:</p>
-<hr />
-<p>'name'             | The name of the channel (e.g., 'ai1')
-  'type'             | The type of data stored in the channel
-                     |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')</p>
+<div class="codehilite"><pre><span></span><code>CHANNELS = GETCHANNELSEPOCH(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+
+  Returns the channel list of acquired channels in this epoch
+
+
+  CHANNELS is a structure list of all channels with fields:
+  -------------------------------------------------------
+  &#39;name&#39;             | The name of the channel (e.g., &#39;ai1&#39;)
+  &#39;type&#39;             | The type of data stored in the channel
+                     |    (e.g., &#39;analogin&#39;, &#39;digitalin&#39;, &#39;image&#39;, &#39;timestamp&#39;)
+</code></pre></div>
+
 <hr />
 <p><strong>mfdaq_channeltypes</strong> - <em>channel types for ndi.daq.system.mfdaq objects</em></p>
-<p>CT = MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects</p>
-<p>Returns a cell array of strings of supported channels of the
-   ndi.daq.system.mfdaq class. These are the following:</p>
-<p>Channel type:       | Description: </p>
-<hr />
-<p>analog_in           | Analog input channel
-   aux_in              | Auxiliary input
-   analog_out          | Analog output channel
-   digital_in          | Digital input channel
-   digital_out         | Digital output channel
-   marker              | </p>
-<p>See also: ndi.daq.system.mfdaq/MFDAQ_TYPE</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">CT</span> <span class="o">=</span> <span class="nv">MFDAQ_CHANNELTYPES</span> <span class="o">-</span> <span class="nv">channel</span> <span class="nv">types</span> <span class="k">for</span> <span class="nv">ndi</span>.<span class="nv">daq</span>.<span class="nv">system</span>.<span class="nv">mfdaq</span> <span class="nv">objects</span>
+
+   <span class="nv">Returns</span> <span class="nv">a</span> <span class="nv">cell</span> <span class="nv">array</span> <span class="nv">of</span> <span class="nv">strings</span> <span class="nv">of</span> <span class="nv">supported</span> <span class="nv">channels</span> <span class="nv">of</span> <span class="nv">the</span>
+   <span class="nv">ndi</span>.<span class="nv">daq</span>.<span class="nv">system</span>.<span class="nv">mfdaq</span> <span class="nv">class</span>. <span class="nv">These</span> <span class="nv">are</span> <span class="nv">the</span> <span class="nv">following</span>:
+
+   <span class="nv">Channel</span> <span class="nv">type</span>:       <span class="o">|</span> <span class="nv">Description</span>: 
+   <span class="o">-------------------------------------------------------------</span>
+   <span class="nv">analog_in</span>           <span class="o">|</span> <span class="nv">Analog</span> <span class="nv">input</span> <span class="nv">channel</span>
+   <span class="nv">aux_in</span>              <span class="o">|</span> <span class="nv">Auxiliary</span> <span class="nv">input</span>
+   <span class="nv">analog_out</span>          <span class="o">|</span> <span class="nv">Analog</span> <span class="nv">output</span> <span class="nv">channel</span>
+   <span class="nv">digital_in</span>          <span class="o">|</span> <span class="nv">Digital</span> <span class="nv">input</span> <span class="nv">channel</span>
+   <span class="nv">digital_out</span>         <span class="o">|</span> <span class="nv">Digital</span> <span class="nv">output</span> <span class="nv">channel</span>
+   <span class="nv">marker</span>              <span class="o">|</span> 
+
+  <span class="nv">See</span> <span class="nv">also</span>: <span class="nv">ndi</span>.<span class="nv">daq</span>.<span class="nv">system</span>.<span class="nv">mfdaq</span><span class="o">/</span><span class="nv">MFDAQ_TYPE</span>
+</code></pre></div>
+
 <hr />
 <p><strong>mfdaq_prefix</strong> - <em>Give the channel prefix for a channel type</em></p>
-<p>PREFIX = MFDAQ_PREFIX(CHANNELTYPE)</p>
-<p>Produces the channel name prefix for a given CHANNELTYPE.</p>
-<p>Channel type:               | MFDAQ_PREFIX:</p>
-<hr />
-<p>'analog_in',       'ai'     | 'ai' 
-  'analog_out',      'ao'     | 'ao'
-  'digital_in',      'di'     | 'di'
-  'digital_out',     'do'     | 'do'
-  'time','timestamp','t'      | 't'
-  'auxiliary','aux','ax',     | 'ax'
-     'auxiliary_in'           | 
-  'mark', 'marker', or 'mk'   | 'mk'
-  'text'                      | 'text'
-  'event' or 'e'              | 'e'
-  'metadata' or 'md'          | 'md'
-  'digital_in_event', 'de',   | 'dep'
-  'digital_in_event_pos','dep'| 
-  'digital_in_event_neg','den'| 'den'
-  'digital_in_mark','dimp',   | 'dimp'
-  'digital_in_mark_pos','dim' |
-  'digital_in_mark_neg','dimn'| 'dimn'</p>
-<p>See also: ndi.daq.system.mfdaq/MFDAQ_TYPE</p>
+<div class="codehilite"><pre><span></span><code><span class="err">PREFIX</span> <span class="err">=</span> <span class="err">MFDAQ_PREFIX</span><span class="p">(</span><span class="err">CHANNELTYPE</span><span class="p">)</span>
+
+   <span class="err">Produces</span> <span class="err">the</span> <span class="err">channel</span> <span class="err">name</span> <span class="err">prefix</span> <span class="err">for</span> <span class="kt">a</span> <span class="err">given</span> <span class="err">CHANNELTYPE</span><span class="p">.</span>
+
+  <span class="err">Channel</span> <span class="nn">type</span><span class="p">:</span>               <span class="err">|</span> <span class="nn">MFDAQ_PREFIX</span><span class="p">:</span>
+  <span class="err">---------------------------------------------------------</span>
+  <span class="s">&#39;analog_in&#39;</span><span class="p">,</span>       <span class="s">&#39;ai&#39;</span>     <span class="err">|</span> <span class="s">&#39;ai&#39;</span> 
+  <span class="s">&#39;analog_out&#39;</span><span class="p">,</span>      <span class="s">&#39;ao&#39;</span>     <span class="err">|</span> <span class="s">&#39;ao&#39;</span>
+  <span class="s">&#39;digital_in&#39;</span><span class="p">,</span>      <span class="s">&#39;di&#39;</span>     <span class="err">|</span> <span class="s">&#39;di&#39;</span>
+  <span class="s">&#39;digital_out&#39;</span><span class="p">,</span>     <span class="s">&#39;do&#39;</span>     <span class="err">|</span> <span class="s">&#39;do&#39;</span>
+  <span class="s">&#39;time&#39;</span><span class="p">,</span><span class="s">&#39;timestamp&#39;</span><span class="p">,</span><span class="s">&#39;t&#39;</span>      <span class="err">|</span> <span class="s">&#39;t&#39;</span>
+  <span class="s">&#39;auxiliary&#39;</span><span class="p">,</span><span class="s">&#39;aux&#39;</span><span class="p">,</span><span class="s">&#39;ax&#39;</span><span class="p">,</span>     <span class="err">|</span> <span class="s">&#39;ax&#39;</span>
+     <span class="s">&#39;auxiliary_in&#39;</span>           <span class="err">|</span> 
+  <span class="s">&#39;mark&#39;</span><span class="p">,</span> <span class="s">&#39;marker&#39;</span><span class="p">,</span> <span class="err">or</span> <span class="s">&#39;mk&#39;</span>   <span class="err">|</span> <span class="s">&#39;mk&#39;</span>
+  <span class="s">&#39;text&#39;</span>                      <span class="err">|</span> <span class="s">&#39;text&#39;</span>
+  <span class="s">&#39;event&#39;</span> <span class="err">or</span> <span class="s">&#39;e&#39;</span>              <span class="err">|</span> <span class="s">&#39;e&#39;</span>
+  <span class="s">&#39;metadata&#39;</span> <span class="err">or</span> <span class="s">&#39;md&#39;</span>          <span class="err">|</span> <span class="s">&#39;md&#39;</span>
+  <span class="s">&#39;digital_in_event&#39;</span><span class="p">,</span> <span class="s">&#39;de&#39;</span><span class="p">,</span>   <span class="err">|</span> <span class="s">&#39;dep&#39;</span>
+  <span class="s">&#39;digital_in_event_pos&#39;</span><span class="p">,</span><span class="s">&#39;dep&#39;</span><span class="err">|</span> 
+  <span class="s">&#39;digital_in_event_neg&#39;</span><span class="p">,</span><span class="s">&#39;den&#39;</span><span class="err">|</span> <span class="s">&#39;den&#39;</span>
+  <span class="s">&#39;digital_in_mark&#39;</span><span class="p">,</span><span class="s">&#39;dimp&#39;</span><span class="p">,</span>   <span class="err">|</span> <span class="s">&#39;dimp&#39;</span>
+  <span class="s">&#39;digital_in_mark_pos&#39;</span><span class="p">,</span><span class="s">&#39;dim&#39;</span> <span class="err">|</span>
+  <span class="s">&#39;digital_in_mark_neg&#39;</span><span class="p">,</span><span class="s">&#39;dimn&#39;</span><span class="err">|</span> <span class="s">&#39;dimn&#39;</span>
+
+  <span class="err">See</span> <span class="nn">also</span><span class="p">:</span> <span class="err">ndi</span><span class="p">.</span><span class="err">daq</span><span class="p">.</span><span class="err">system</span><span class="p">.</span><span class="err">mfdaq/MFDAQ_TYPE</span>
+</code></pre></div>
+
 <hr />
 <p><strong>mfdaq_type</strong> - <em>Give the preferred long channel type for a channel type</em></p>
-<p>TYPE = MFDAQ_TYPE(CHANNELTYPE)</p>
-<p>Produces the preferred long channel type name for a given CHANNELTYPE.</p>
-<p>Channel type:               | MFDAQ_TYPE:</p>
-<hr />
-<p>'analog_in',       'ai'     | 'analog_in' 
-  'analog_out',      'ao'     | 'analog_out'
-  'digital_in',      'di'     | 'digital_in'
-  'digital_out',     'do'     | 'digital_out'
-  'time','timestamp','t'      | 'time'
-  'auxiliary','aux','ax',     | 'auxiliary'
-     'auxiliary_in'           | 
-  'mark', 'marker', or 'mk'   | 'mark'
-  'event' or 'e'              | 'event'</p>
-<p>See also: ndi.daq.system.mfdaq/MFDAQ_PREFIX</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">TYPE</span> <span class="o">=</span> <span class="nv">MFDAQ_TYPE</span><span class="ss">(</span><span class="nv">CHANNELTYPE</span><span class="ss">)</span>
+
+   <span class="nv">Produces</span> <span class="nv">the</span> <span class="nv">preferred</span> <span class="nv">long</span> <span class="nv">channel</span> <span class="nv">type</span> <span class="nv">name</span> <span class="k">for</span> <span class="nv">a</span> <span class="nv">given</span> <span class="nv">CHANNELTYPE</span>.
+
+  <span class="nv">Channel</span> <span class="nv">type</span>:               <span class="o">|</span> <span class="nv">MFDAQ_TYPE</span>:
+  <span class="o">---------------------------------------------------------</span>
+  <span class="s1">&#39;</span><span class="s">analog_in</span><span class="s1">&#39;</span>,       <span class="s1">&#39;</span><span class="s">ai</span><span class="s1">&#39;</span>     <span class="o">|</span> <span class="s1">&#39;</span><span class="s">analog_in</span><span class="s1">&#39;</span> 
+  <span class="s1">&#39;</span><span class="s">analog_out</span><span class="s1">&#39;</span>,      <span class="s1">&#39;</span><span class="s">ao</span><span class="s1">&#39;</span>     <span class="o">|</span> <span class="s1">&#39;</span><span class="s">analog_out</span><span class="s1">&#39;</span>
+  <span class="s1">&#39;</span><span class="s">digital_in</span><span class="s1">&#39;</span>,      <span class="s1">&#39;</span><span class="s">di</span><span class="s1">&#39;</span>     <span class="o">|</span> <span class="s1">&#39;</span><span class="s">digital_in</span><span class="s1">&#39;</span>
+  <span class="s1">&#39;</span><span class="s">digital_out</span><span class="s1">&#39;</span>,     <span class="s1">&#39;</span><span class="s">do</span><span class="s1">&#39;</span>     <span class="o">|</span> <span class="s1">&#39;</span><span class="s">digital_out</span><span class="s1">&#39;</span>
+  <span class="s1">&#39;</span><span class="s">time</span><span class="s1">&#39;</span>,<span class="s1">&#39;</span><span class="s">timestamp</span><span class="s1">&#39;</span>,<span class="s1">&#39;</span><span class="s">t</span><span class="s1">&#39;</span>      <span class="o">|</span> <span class="s1">&#39;</span><span class="s">time</span><span class="s1">&#39;</span>
+  <span class="s1">&#39;</span><span class="s">auxiliary</span><span class="s1">&#39;</span>,<span class="s1">&#39;</span><span class="s">aux</span><span class="s1">&#39;</span>,<span class="s1">&#39;</span><span class="s">ax</span><span class="s1">&#39;</span>,     <span class="o">|</span> <span class="s1">&#39;</span><span class="s">auxiliary</span><span class="s1">&#39;</span>
+     <span class="s1">&#39;</span><span class="s">auxiliary_in</span><span class="s1">&#39;</span>           <span class="o">|</span> 
+  <span class="s1">&#39;</span><span class="s">mark</span><span class="s1">&#39;</span>, <span class="s1">&#39;</span><span class="s">marker</span><span class="s1">&#39;</span>, <span class="nv">or</span> <span class="s1">&#39;</span><span class="s">mk</span><span class="s1">&#39;</span>   <span class="o">|</span> <span class="s1">&#39;</span><span class="s">mark</span><span class="s1">&#39;</span>
+  <span class="s1">&#39;</span><span class="s">event</span><span class="s1">&#39;</span> <span class="nv">or</span> <span class="s1">&#39;</span><span class="s">e</span><span class="s1">&#39;</span>              <span class="o">|</span> <span class="s1">&#39;</span><span class="s">event</span><span class="s1">&#39;</span>
+
+  <span class="nv">See</span> <span class="nv">also</span>: <span class="nv">ndi</span>.<span class="nv">daq</span>.<span class="nv">system</span>.<span class="nv">mfdaq</span><span class="o">/</span><span class="nv">MFDAQ_PREFIX</span>
+</code></pre></div>
+
 <hr />
 <p><strong>readchannels_epochsamples</strong> - <em>read the data based on specified channels</em></p>
-<p>DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCH ,S0, S1)</p>
-<p>CHANNELTYPE is the type of channel to read</p>
-<p>CHANNEL is a vector of the channel numbers to read, beginning from 1</p>
-<p>EPOCH is the epoch number to read from.</p>
-<p>DATA will have one column per channel.</p>
+<div class="codehilite"><pre><span></span><code>DATA = READ_CHANNELS(MYDEV, CHANNELTYPE, CHANNEL, EPOCH ,S0, S1)
+
+   CHANNELTYPE is the type of channel to read
+
+   CHANNEL is a vector of the channel numbers to read, beginning from 1
+
+   EPOCH is the epoch number to read from.
+
+   DATA will have one column per channel.
+</code></pre></div>
+
 <hr />
 <p><strong>readevents_epochsamples_native</strong> - <em>read events or markers of specified channels for a specified epoch</em></p>
-<p>[DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)</p>
-<p>CHANNELTYPE is the type of channel to read
-   ('event','marker', etc). It must be a string (not a cell array of strings).</p>
-<p>CHANNEL is a vector with the identity of the channel(s) to be read.</p>
-<p>EPOCH is the epoch number or epochID</p>
-<p>DATA is a two-column vector; the first column has the time of the event. The second
-   column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
-   is requested, DATA is returned as a cell array, one entry per channel.</p>
-<p>TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">DATA</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">READEVENTS_EPOCHSAMPLES_NATIVE</span><span class="p">(</span><span class="n">NDR_READER_BASE_OBJ</span><span class="p">,</span><span class="w"> </span><span class="n">CHANNELTYPE</span><span class="p">,</span><span class="w"> </span><span class="n">CHANNEL</span><span class="p">,</span><span class="w"> </span><span class="n">EPOCHFILES</span><span class="p">,</span><span class="w"> </span><span class="n">T0</span><span class="p">,</span><span class="w"> </span><span class="n">T1</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">   </span><span class="n">CHANNELTYPE</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">channel</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">read</span><span class="w"></span>
+<span class="w">   </span><span class="p">(</span><span class="s1">&#39;event&#39;</span><span class="p">,</span><span class="s1">&#39;marker&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">etc</span><span class="p">).</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="n">must</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="p">(</span><span class="ow">not</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="k">array</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">strings</span><span class="p">).</span><span class="w"></span>
+
+<span class="w">   </span><span class="n">CHANNEL</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">vector</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">identity</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">channel</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="k">read</span><span class="p">.</span><span class="w"></span>
+
+<span class="w">   </span><span class="n">EPOCH</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">epoch</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">epochID</span><span class="w"></span>
+
+<span class="w">   </span><span class="k">DATA</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">two</span><span class="o">-</span><span class="k">column</span><span class="w"> </span><span class="n">vector</span><span class="p">;</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">first</span><span class="w"> </span><span class="k">column</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">event</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="k">second</span><span class="w"></span>
+<span class="w">   </span><span class="k">column</span><span class="w"> </span><span class="n">indicates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">marker</span><span class="w"> </span><span class="n">code</span><span class="p">.</span><span class="w"> </span><span class="ow">In</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="s1">&#39;events&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">just</span><span class="w"> </span><span class="mf">1.</span><span class="w"> </span><span class="k">If</span><span class="w"> </span><span class="n">more</span><span class="w"> </span><span class="k">than</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="n">channel</span><span class="w"></span>
+<span class="w">   </span><span class="k">is</span><span class="w"> </span><span class="n">requested</span><span class="p">,</span><span class="w"> </span><span class="k">DATA</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">returned</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="k">array</span><span class="p">,</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="n">entry</span><span class="w"> </span><span class="n">per</span><span class="w"> </span><span class="n">channel</span><span class="p">.</span><span class="w"></span>
+
+<span class="w">   </span><span class="n">TIMEREF</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">ndi</span><span class="p">.</span><span class="nc">time</span><span class="p">.</span><span class="n">timereference</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">NDI_CLOCK</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">referring</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">epoch</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reference</span><span class="p">.</span><span class="w"></span>
+</code></pre></div>
+
 <hr />
 <p><strong>samplerate</strong> - <em>GET THE SAMPLE RATE FOR SPECIFIC CHANNEL</em></p>
-<p>SR = SAMPLERATE(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)</p>
-<p>SR is an array of sample rates from the specified channels</p>
-<p>CHANNELTYPE can be either a string or a cell array of
-  strings the same length as the vector CHANNEL.
-  If CHANNELTYPE is a single string, then it is assumed that
-  that CHANNELTYPE applies to every entry of CHANNEL.</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">SR</span> <span class="o">=</span> <span class="nv">SAMPLERATE</span><span class="ss">(</span><span class="nv">NDR_READER_BASE_OBJ</span>, <span class="nv">EPOCHSTREAMS</span>, <span class="nv">EPOCH_SELECT</span>, <span class="nv">CHANNELTYPE</span>, <span class="nv">CHANNEL</span><span class="ss">)</span>
+
+  <span class="nv">SR</span> <span class="nv">is</span> <span class="nv">an</span> <span class="nv">array</span> <span class="nv">of</span> <span class="nv">sample</span> <span class="nv">rates</span> <span class="nv">from</span> <span class="nv">the</span> <span class="nv">specified</span> <span class="nv">channels</span>
+
+  <span class="nv">CHANNELTYPE</span> <span class="nv">can</span> <span class="nv">be</span> <span class="nv">either</span> <span class="nv">a</span> <span class="nv">string</span> <span class="nv">or</span> <span class="nv">a</span> <span class="nv">cell</span> <span class="nv">array</span> <span class="nv">of</span>
+  <span class="nv">strings</span> <span class="nv">the</span> <span class="nv">same</span> <span class="nv">length</span> <span class="nv">as</span> <span class="nv">the</span> <span class="nv">vector</span> <span class="nv">CHANNEL</span>.
+  <span class="k">If</span> <span class="nv">CHANNELTYPE</span> <span class="nv">is</span> <span class="nv">a</span> <span class="nv">single</span> <span class="nv">string</span>, <span class="k">then</span> <span class="nv">it</span> <span class="nv">is</span> <span class="nv">assumed</span> <span class="nv">that</span>
+  <span class="nv">that</span> <span class="nv">CHANNELTYPE</span> <span class="nv">applies</span> <span class="nv">to</span> <span class="nv">every</span> <span class="nv">entry</span> <span class="nv">of</span> <span class="nv">CHANNEL</span>.
+</code></pre></div>
+
 <hr />
 <p><strong>t0_t1</strong> - <em>return the t0_t1 (beginning and end) epoch times for an epoch</em></p>
-<p>T0T1 = T0_T1(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)</p>
-<p>Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.</p>
-<p>The abstract class always returns {[NaN NaN]}.</p>
-<p>See also: ndr.time.clocktype, ndr.reader.base/epochclock</p>
+<div class="codehilite"><pre><span></span><code><span class="n">T0T1</span> <span class="o">=</span> <span class="n">T0_T1</span><span class="p">(</span><span class="n">NDR_READER_BASE_OBJ</span><span class="p">,</span> <span class="n">EPOCHSTREAMS</span><span class="p">,</span> <span class="n">EPOCH_SELECT</span><span class="p">)</span>
+
+  <span class="n">Return</span> <span class="n">the</span> <span class="n">beginning</span> <span class="p">(</span><span class="n">t0</span><span class="p">)</span> <span class="n">and</span> <span class="n">end</span> <span class="p">(</span><span class="n">t1</span><span class="p">)</span> <span class="n">times</span> <span class="n">of</span> <span class="n">the</span> <span class="n">epoch</span> <span class="n">defined</span> <span class="n">by</span> <span class="n">EPOCHSTREAMS</span> <span class="n">and</span> <span class="n">EPOCH_SELECT</span><span class="p">.</span>
+
+  <span class="n">The</span> <span class="n">abstract</span> <span class="k">class</span> <span class="n">always</span> <span class="n">returns</span> <span class="p">{[</span><span class="n">NaN</span> <span class="n">NaN</span><span class="p">]}.</span>
+
+  <span class="n">See</span> <span class="nl">also</span><span class="p">:</span> <span class="n">ndr</span><span class="p">.</span><span class="n">time</span><span class="p">.</span><span class="n">clocktype</span><span class="p">,</span> <span class="n">ndr</span><span class="p">.</span><span class="n">reader</span><span class="p">.</span><span class="n">base</span><span class="o">/</span><span class="n">epochclock</span>
+</code></pre></div>
+
 <hr />
                 
               

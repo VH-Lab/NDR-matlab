@@ -1520,21 +1520,24 @@
                 
                 
                 <h1 id="ndrformatspikegadgetsread_rec_trodechannels">ndr.format.spikegadgets.read_rec_trodeChannels<a class="headerlink" href="#ndrformatspikegadgetsread_rec_trodechannels" title="Permanent link">&para;</a></h1>
-<p>[recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize, s0, s1) )
-  Imports channel data in matlab from the raw data file</p>
-<p>INPUTS
-  filename-- a string containing the name of the .dat file (raw file from SD card)
-  NumChannels-- the number of channels in the recording (i.e., 32,64,96...)
-  channels-- the channels you want to extract (extracting all channels at
-  once may overload memory) numbers 1-120 which belong to each 4 of the 30 tetrodes
-  samplingRate-- the sampling rate of the recording, i.e 30000
-  headerSize--the size, in int16's, of the header block of the data
-  (contains DIO channels and aux analog channels). calculated from (MCUnumbytes + ECUnumbytes + 1) / 2 = 17
-  s0 - the first sample number to read
-  s1 - the last sample number to read</p>
-<p>OUTPUTS
-  timestamps--the system clock when each sample was taken
-  recData-- an N by M matrix with N data points and M channels (M is equal to the number of channels in the input)</p>
+<div class="codehilite"><pre><span></span><code>  <span class="p">[</span><span class="n">recData</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_SpikeGadgets_trodeChannels</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">NumChannels</span><span class="p">,</span><span class="n">channels</span><span class="p">,</span><span class="n">samplingRate</span><span class="p">,</span><span class="n">headerSize</span><span class="p">,</span> <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span> <span class="p">)</span>
+  <span class="n">Imports</span> <span class="n">channel</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">matlab</span> <span class="n">from</span> <span class="n">the</span> <span class="n">raw</span> <span class="n">data</span> <span class="n">file</span>
+
+  <span class="n">INPUTS</span>
+  <span class="n">filename</span><span class="o">--</span> <span class="n">a</span> <span class="n">string</span> <span class="n">containing</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">the</span> <span class="o">.</span><span class="n">dat</span> <span class="n">file</span> <span class="p">(</span><span class="n">raw</span> <span class="n">file</span> <span class="n">from</span> <span class="n">SD</span> <span class="n">card</span><span class="p">)</span>
+  <span class="n">NumChannels</span><span class="o">--</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">channels</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">recording</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mf">96.</span><span class="o">..</span><span class="p">)</span>
+  <span class="n">channels</span><span class="o">--</span> <span class="n">the</span> <span class="n">channels</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="n">extract</span> <span class="p">(</span><span class="n">extracting</span> <span class="n">all</span> <span class="n">channels</span> <span class="n">at</span>
+  <span class="n">once</span> <span class="n">may</span> <span class="n">overload</span> <span class="n">memory</span><span class="p">)</span> <span class="n">numbers</span> <span class="mi">1</span><span class="o">-</span><span class="mi">120</span> <span class="n">which</span> <span class="n">belong</span> <span class="n">to</span> <span class="n">each</span> <span class="mi">4</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">30</span> <span class="n">tetrodes</span>
+  <span class="n">samplingRate</span><span class="o">--</span> <span class="n">the</span> <span class="n">sampling</span> <span class="n">rate</span> <span class="n">of</span> <span class="n">the</span> <span class="n">recording</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">e</span> <span class="mi">30000</span>
+  <span class="n">headerSize</span><span class="o">--</span><span class="n">the</span> <span class="n">size</span><span class="p">,</span> <span class="ow">in</span> <span class="n">int16</span><span class="s1">&#39;s, of the header block of the data</span>
+  <span class="p">(</span><span class="n">contains</span> <span class="n">DIO</span> <span class="n">channels</span> <span class="ow">and</span> <span class="n">aux</span> <span class="n">analog</span> <span class="n">channels</span><span class="p">)</span><span class="o">.</span> <span class="n">calculated</span> <span class="n">from</span> <span class="p">(</span><span class="n">MCUnumbytes</span> <span class="o">+</span> <span class="n">ECUnumbytes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">=</span> <span class="mi">17</span>
+  <span class="n">s0</span> <span class="o">-</span> <span class="n">the</span> <span class="n">first</span> <span class="n">sample</span> <span class="n">number</span> <span class="n">to</span> <span class="n">read</span>
+  <span class="n">s1</span> <span class="o">-</span> <span class="n">the</span> <span class="n">last</span> <span class="n">sample</span> <span class="n">number</span> <span class="n">to</span> <span class="n">read</span>
+
+  <span class="n">OUTPUTS</span>
+  <span class="n">timestamps</span><span class="o">--</span><span class="n">the</span> <span class="n">system</span> <span class="n">clock</span> <span class="n">when</span> <span class="n">each</span> <span class="n">sample</span> <span class="n">was</span> <span class="n">taken</span>
+  <span class="n">recData</span><span class="o">--</span> <span class="n">an</span> <span class="n">N</span> <span class="n">by</span> <span class="n">M</span> <span class="n">matrix</span> <span class="n">with</span> <span class="n">N</span> <span class="n">data</span> <span class="n">points</span> <span class="ow">and</span> <span class="n">M</span> <span class="n">channels</span> <span class="p">(</span><span class="n">M</span> <span class="k">is</span> <span class="n">equal</span> <span class="n">to</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">channels</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">input</span><span class="p">)</span>
+</code></pre></div>
                 
               
               

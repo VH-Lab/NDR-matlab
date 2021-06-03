@@ -1520,24 +1520,30 @@
                 
                 
                 <h1 id="ndrformatcedread_somsmr_sampleinterval">ndr.format.ced.read_SOMSMR_sampleinterval<a class="headerlink" href="#ndrformatcedread_somsmr_sampleinterval" title="Permanent link">&para;</a></h1>
-<p>ndr.format.ced.read_SOMSMR_sampleinterval - Reads sample interval from a CED SOM/SMR file </p>
-<p>[SAMPLEINTERVAL,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO] = ndr.format.ced.read_SOMSMR_sampleinterval(FILENAME, ...
-      HEADER, CHANNEL_NUMBER)</p>
-<p>Inputs:
-   Reads the sampleinterval (in seconds) for a given channel from the
-   Cambridge Electronic Design .SOM or .SMR file FILENAME. The file HEADER
-   information can be provided in HEADER. If HEADER is empty, then it will
-   be read from the file.  CHANNEL_NUMBER is the the channel number for which
-   to return data; it corresponds to the channel number in the Spike2 .SMR file 
-   (that is, in the Sampling Configuration that was used on Spike2).</p>
-<p>Outputs:
-     SAMPLE_INTERVAL - each column contains samples from an individual channel; if more than
-        one channel has been requested, DATA will have more than one column.
-     TOTAL_SAMPLES - The total number of (amplifier or digital) samples estimated to be
-        in the file.
-     TOTAL_TIME - An estimate of the total duration of the time series data in the
-        recorded file, in seconds.</p>
-<p>See also: ndr.format.ced.read_SOMSMR_datafile, ndr.format.ced.read_SOMSMR_header</p>
+<div class="codehilite"><pre><span></span><code>  <span class="nt">ndr</span><span class="p">.</span><span class="nc">format</span><span class="p">.</span><span class="nc">ced</span><span class="p">.</span><span class="nc">read_SOMSMR_sampleinterval</span> <span class="nt">-</span> <span class="nt">Reads</span> <span class="nt">sample</span> <span class="nt">interval</span> <span class="nt">from</span> <span class="nt">a</span> <span class="nt">CED</span> <span class="nt">SOM</span><span class="o">/</span><span class="nt">SMR</span> <span class="nt">file</span> 
+
+   <span class="cp">[</span><span class="nx">SAMPLEINTERVAL</span><span class="p">,</span><span class="nx">TOTAL_SAMPLES</span><span class="p">,</span><span class="nx">TOTAL_TIME</span><span class="p">,</span><span class="nx">BLOCKINFO</span><span class="cp">]</span> <span class="o">=</span> <span class="nt">ndr</span><span class="p">.</span><span class="nc">format</span><span class="p">.</span><span class="nc">ced</span><span class="p">.</span><span class="nc">read_SOMSMR_sampleinterval</span><span class="o">(</span><span class="nt">FILENAME</span><span class="o">,</span> <span class="o">...</span>
+      <span class="nt">HEADER</span><span class="o">,</span> <span class="nt">CHANNEL_NUMBER</span><span class="o">)</span>
+
+
+   <span class="nt">Inputs</span><span class="o">:</span>
+   <span class="nt">Reads</span> <span class="nt">the</span> <span class="nt">sampleinterval</span> <span class="o">(</span><span class="nt">in</span> <span class="nt">seconds</span><span class="o">)</span> <span class="nt">for</span> <span class="nt">a</span> <span class="nt">given</span> <span class="nt">channel</span> <span class="nt">from</span> <span class="nt">the</span>
+   <span class="nt">Cambridge</span> <span class="nt">Electronic</span> <span class="nt">Design</span> <span class="p">.</span><span class="nc">SOM</span> <span class="nt">or</span> <span class="p">.</span><span class="nc">SMR</span> <span class="nt">file</span> <span class="nt">FILENAME</span><span class="o">.</span> <span class="nt">The</span> <span class="nt">file</span> <span class="nt">HEADER</span>
+   <span class="nt">information</span> <span class="nt">can</span> <span class="nt">be</span> <span class="nt">provided</span> <span class="nt">in</span> <span class="nt">HEADER</span><span class="o">.</span> <span class="nt">If</span> <span class="nt">HEADER</span> <span class="nt">is</span> <span class="nt">empty</span><span class="o">,</span> <span class="nt">then</span> <span class="nt">it</span> <span class="nt">will</span>
+   <span class="nt">be</span> <span class="nt">read</span> <span class="nt">from</span> <span class="nt">the</span> <span class="nt">file</span><span class="o">.</span>  <span class="nt">CHANNEL_NUMBER</span> <span class="nt">is</span> <span class="nt">the</span> <span class="nt">the</span> <span class="nt">channel</span> <span class="nt">number</span> <span class="nt">for</span> <span class="nt">which</span>
+   <span class="nt">to</span> <span class="nt">return</span> <span class="nt">data</span><span class="o">;</span> <span class="nt">it</span> <span class="nt">corresponds</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">channel</span> <span class="nt">number</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">Spike2</span> <span class="p">.</span><span class="nc">SMR</span> <span class="nt">file</span> 
+   <span class="o">(</span><span class="nt">that</span> <span class="nt">is</span><span class="o">,</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">Sampling</span> <span class="nt">Configuration</span> <span class="nt">that</span> <span class="nt">was</span> <span class="nt">used</span> <span class="nt">on</span> <span class="nt">Spike2</span><span class="o">).</span>
+
+   <span class="nt">Outputs</span><span class="o">:</span>
+     <span class="nt">SAMPLE_INTERVAL</span> <span class="nt">-</span> <span class="nt">each</span> <span class="nt">column</span> <span class="nt">contains</span> <span class="nt">samples</span> <span class="nt">from</span> <span class="nt">an</span> <span class="nt">individual</span> <span class="nt">channel</span><span class="o">;</span> <span class="nt">if</span> <span class="nt">more</span> <span class="nt">than</span>
+        <span class="nt">one</span> <span class="nt">channel</span> <span class="nt">has</span> <span class="nt">been</span> <span class="nt">requested</span><span class="o">,</span> <span class="nt">DATA</span> <span class="nt">will</span> <span class="nt">have</span> <span class="nt">more</span> <span class="nt">than</span> <span class="nt">one</span> <span class="nt">column</span><span class="o">.</span>
+     <span class="nt">TOTAL_SAMPLES</span> <span class="nt">-</span> <span class="nt">The</span> <span class="nt">total</span> <span class="nt">number</span> <span class="nt">of</span> <span class="o">(</span><span class="nt">amplifier</span> <span class="nt">or</span> <span class="nt">digital</span><span class="o">)</span> <span class="nt">samples</span> <span class="nt">estimated</span> <span class="nt">to</span> <span class="nt">be</span>
+        <span class="nt">in</span> <span class="nt">the</span> <span class="nt">file</span><span class="o">.</span>
+     <span class="nt">TOTAL_TIME</span> <span class="nt">-</span> <span class="nt">An</span> <span class="nt">estimate</span> <span class="nt">of</span> <span class="nt">the</span> <span class="nt">total</span> <span class="nt">duration</span> <span class="nt">of</span> <span class="nt">the</span> <span class="nt">time</span> <span class="nt">series</span> <span class="nt">data</span> <span class="nt">in</span> <span class="nt">the</span>
+        <span class="nt">recorded</span> <span class="nt">file</span><span class="o">,</span> <span class="nt">in</span> <span class="nt">seconds</span><span class="o">.</span>
+
+   <span class="nt">See</span> <span class="nt">also</span><span class="o">:</span> <span class="nt">ndr</span><span class="p">.</span><span class="nc">format</span><span class="p">.</span><span class="nc">ced</span><span class="p">.</span><span class="nc">read_SOMSMR_datafile</span><span class="o">,</span> <span class="nt">ndr</span><span class="p">.</span><span class="nc">format</span><span class="p">.</span><span class="nc">ced</span><span class="p">.</span><span class="nc">read_SOMSMR_header</span>
+</code></pre></div>
                 
               
               

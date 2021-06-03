@@ -1520,21 +1520,29 @@
                 
                 
                 <h1 id="ndrformatcedread_somsmr_header">ndr.format.ced.read_SOMSMR_header<a class="headerlink" href="#ndrformatcedread_somsmr_header" title="Permanent link">&para;</a></h1>
-<p>ndr.format.intan.read_SOMSMR_header - Read header information from a CED SOM or SMR file</p>
-<p>HEADER = ndr.format.ced.read_SOMSMR_header(FILENAME)</p>
-<p>Returns a structure HEADER with all of the information fields that
-  are stored in the CED SOM/SMR file FILENAME.</p>
-<p>CED stands for Cambridge Electronic Design, which makes the Spike2 data acquisition system.
-  This function reads header files for the SOM/SMR file formats.</p>
-<p>This function depends on sigTOOL by Malcolm Lidierth (http://sigtool.sourceforge.net).</p>
-<p>sigTOOL is also included in the https://github.com/VH-Lab/thirdparty bundle and
-  can be installed with instructions at http://code.vhlab.org.</p>
-<p>HEADER contains two substructures:</p>
-<hr />
-<p>fileinfo                |  Information about the file and its version
-  channelinfo             |  Information about the channels acquired in the file</p>
-<p>See also: ndr.format.ced.read_SOMSMR_datafile, ndr.format.ced.read_SOMSMR_sampleinterval,
-    SONFILEHEADER (documents HEADER.fileinfo),</p>
+<div class="codehilite"><pre><span></span><code>  <span class="n">ndr</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">intan</span><span class="o">.</span><span class="n">read_SOMSMR_header</span> <span class="o">-</span> <span class="n">Read</span> <span class="n">header</span> <span class="n">information</span> <span class="n">from</span> <span class="n">a</span> <span class="n">CED</span> <span class="n">SOM</span> <span class="ow">or</span> <span class="n">SMR</span> <span class="n">file</span>
+
+  <span class="n">HEADER</span> <span class="o">=</span> <span class="n">ndr</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">ced</span><span class="o">.</span><span class="n">read_SOMSMR_header</span><span class="p">(</span><span class="n">FILENAME</span><span class="p">)</span>
+
+  <span class="n">Returns</span> <span class="n">a</span> <span class="n">structure</span> <span class="n">HEADER</span> <span class="n">with</span> <span class="n">all</span> <span class="n">of</span> <span class="n">the</span> <span class="n">information</span> <span class="n">fields</span> <span class="n">that</span>
+  <span class="n">are</span> <span class="n">stored</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">CED</span> <span class="n">SOM</span><span class="o">/</span><span class="n">SMR</span> <span class="n">file</span> <span class="n">FILENAME</span><span class="o">.</span>
+
+  <span class="n">CED</span> <span class="n">stands</span> <span class="k">for</span> <span class="n">Cambridge</span> <span class="n">Electronic</span> <span class="n">Design</span><span class="p">,</span> <span class="n">which</span> <span class="n">makes</span> <span class="n">the</span> <span class="n">Spike2</span> <span class="n">data</span> <span class="n">acquisition</span> <span class="n">system</span><span class="o">.</span>
+  <span class="n">This</span> <span class="n">function</span> <span class="n">reads</span> <span class="n">header</span> <span class="n">files</span> <span class="k">for</span> <span class="n">the</span> <span class="n">SOM</span><span class="o">/</span><span class="n">SMR</span> <span class="n">file</span> <span class="n">formats</span><span class="o">.</span>
+
+  <span class="n">This</span> <span class="n">function</span> <span class="n">depends</span> <span class="n">on</span> <span class="n">sigTOOL</span> <span class="n">by</span> <span class="n">Malcolm</span> <span class="n">Lidierth</span> <span class="p">(</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">sigtool</span><span class="o">.</span><span class="n">sourceforge</span><span class="o">.</span><span class="n">net</span><span class="p">)</span><span class="o">.</span>
+
+  <span class="n">sigTOOL</span> <span class="k">is</span> <span class="n">also</span> <span class="n">included</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">VH</span><span class="o">-</span><span class="n">Lab</span><span class="o">/</span><span class="n">thirdparty</span> <span class="n">bundle</span> <span class="ow">and</span>
+  <span class="n">can</span> <span class="n">be</span> <span class="n">installed</span> <span class="n">with</span> <span class="n">instructions</span> <span class="n">at</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">code</span><span class="o">.</span><span class="n">vhlab</span><span class="o">.</span><span class="n">org</span><span class="o">.</span>
+
+  <span class="n">HEADER</span> <span class="n">contains</span> <span class="n">two</span> <span class="n">substructures</span><span class="p">:</span>
+  <span class="o">--------------------------------------------------------------------</span>
+  <span class="n">fileinfo</span>                <span class="o">|</span>  <span class="n">Information</span> <span class="n">about</span> <span class="n">the</span> <span class="n">file</span> <span class="ow">and</span> <span class="n">its</span> <span class="n">version</span>
+  <span class="n">channelinfo</span>             <span class="o">|</span>  <span class="n">Information</span> <span class="n">about</span> <span class="n">the</span> <span class="n">channels</span> <span class="n">acquired</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">file</span>
+
+  <span class="n">See</span> <span class="n">also</span><span class="p">:</span> <span class="n">ndr</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">ced</span><span class="o">.</span><span class="n">read_SOMSMR_datafile</span><span class="p">,</span> <span class="n">ndr</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">ced</span><span class="o">.</span><span class="n">read_SOMSMR_sampleinterval</span><span class="p">,</span>
+    <span class="n">SONFILEHEADER</span> <span class="p">(</span><span class="n">documents</span> <span class="n">HEADER</span><span class="o">.</span><span class="n">fileinfo</span><span class="p">),</span>
+</code></pre></div>
                 
               
               

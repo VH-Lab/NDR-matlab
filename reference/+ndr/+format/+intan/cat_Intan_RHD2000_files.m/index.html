@@ -1520,13 +1520,18 @@
                 
                 
                 <h1 id="ndrformatintancat_intan_rhd2000_files">ndr.format.intan.cat_Intan_RHD2000_files<a class="headerlink" href="#ndrformatintancat_intan_rhd2000_files" title="Permanent link">&para;</a></h1>
-<p>CAT_INTAN_RHD2000_FILES - Concatenate multiple RHD files together</p>
-<p>STATUS = CAT_INTAN_RHD2000_FILES(FILENAME1, FILENAME2, ...)</p>
-<p>Concatenate multiple RHD files together. Produces a large file
-  named ['cat' FILENAME1]. Note that the filename information in the
-  header of ['cat' FILENAME1] will still be FILENAME1.</p>
-<p>STATUS should always return 0 if there was no error.</p>
-<p>See also: READ_INTAN_RHD2000_DATAFILE, READ_INTAN_RHD2000_HEADER</p>
+<div class="codehilite"><pre><span></span><code>  <span class="nv">CAT_INTAN_RHD2000_FILES</span> <span class="o">-</span> <span class="nv">Concatenate</span> <span class="nv">multiple</span> <span class="nv">RHD</span> <span class="nv">files</span> <span class="nv">together</span>
+
+  <span class="nv">STATUS</span> <span class="o">=</span> <span class="nv">CAT_INTAN_RHD2000_FILES</span><span class="ss">(</span><span class="nv">FILENAME1</span>, <span class="nv">FILENAME2</span>, ...<span class="ss">)</span>
+
+  <span class="nv">Concatenate</span> <span class="nv">multiple</span> <span class="nv">RHD</span> <span class="nv">files</span> <span class="nv">together</span>. <span class="nv">Produces</span> <span class="nv">a</span> <span class="nv">large</span> <span class="nv">file</span>
+  <span class="nv">named</span> [<span class="s1">&#39;</span><span class="s">cat</span><span class="s1">&#39;</span> <span class="nv">FILENAME1</span>]. <span class="nv">Note</span> <span class="nv">that</span> <span class="nv">the</span> <span class="nv">filename</span> <span class="nv">information</span> <span class="nv">in</span> <span class="nv">the</span>
+  <span class="nv">header</span> <span class="nv">of</span> [<span class="s1">&#39;</span><span class="s">cat</span><span class="s1">&#39;</span> <span class="nv">FILENAME1</span>] <span class="nv">will</span> <span class="nv">still</span> <span class="nv">be</span> <span class="nv">FILENAME1</span>.
+
+  <span class="nv">STATUS</span> <span class="nv">should</span> <span class="nv">always</span> <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="nv">there</span> <span class="nv">was</span> <span class="nv">no</span> <span class="nv">error</span>.
+
+  <span class="nv">See</span> <span class="nv">also</span>: <span class="nv">READ_INTAN_RHD2000_DATAFILE</span>, <span class="nv">READ_INTAN_RHD2000_HEADER</span>
+</code></pre></div>
                 
               
               
