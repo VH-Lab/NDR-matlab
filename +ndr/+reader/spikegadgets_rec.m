@@ -302,7 +302,7 @@ end
 				else,
 					filename = filename{index};
 				end
-                end % filenamefromepoch
+    end % filenamefromepoch
 		
 		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions

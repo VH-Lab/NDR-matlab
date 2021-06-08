@@ -16,10 +16,10 @@ classdef reader
 				j = ndr.fun.ndrresource('ndr_reader_types.json');
 				match = 0;
 				for i=1:numel(j),
-					if any(strcmpi(ndr_reader_type, j(i).type)),
-						match = i;
-						break;
-					end;
+                    if any(strcmpi(ndr_reader_type, j(i).type)),
+                    	match = i;
+                        break;
+                    end;
 				end;
 				if match==0,
 					error(['Do not know how to make a reader of type ''' ndr_reader_type '''.']);
@@ -67,23 +67,23 @@ classdef reader
 
 				[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
 
-				channelstruct = ndr_reader_obj.ndr_reader_base.daqchannels2internalchannels(...
+				channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, ...
 					channelprefix, channelnumber, epochstreams, epoch_select);
 
 				[b,errormsg] =  ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct),
 
 				if b,
 					switch (channelstruct(1).ndr_type),
-						case {'analog_input','analog_output'},
+						case {'analog_in','analog_input','analog_output'},
 							if ~useSamples, % must compute the samples to be read
 								s0 = round(1+t0*channelstruct(1).samplerate);
 								s1 = round(1+t1*channelstruct(1).samplerate);
 							end;
 							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type,...
 								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
-							t = []; % how to read this in general??
+							time = []; % how to read this in general??
 						otherwise, % readevents
-							[data,t] = ndr_reader_obj.readevents({channelstruct.internal_type},...
+							[data,time] = ndr_reader_obj.readevents({channelstruct.internal_type},...
 								channelstruct.internal_number,epochstreams,epoch_select,t0,t1);
 					end;
 				else, % we can't do it, report an error
