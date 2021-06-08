@@ -193,55 +193,6 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % samplerate()
 
-		function [b,errormsg] = canbereadtogether(ndr_reader_base_obj, channelstruct)
-			% CANBEREADTOGETHER - can the channels in a channel struct be read in a single function call?
-			% 
-			% [B,ERRORMSG] = CANBEREADTOGETHER(NDR_READER_BASE_OBJ, CHANNELSTRUCT)
-			%
-			% Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
-			% CHANNELSTRUCT with a single function call. If they cannot be read together,
-			% a description is provided in ERRORMSG.
-			%
-			% In the abstract class, this returns 1 if all of the samplerate values are
-			% the same and none are NaNs.
-			%
-			% CHANNELSTRUCT is a structure with the following fields:
-			% ------------------------------------------------------------------------------
-			% | Parameter                   | Description                                  |
-			% |-----------------------------|----------------------------------------------|
-			% | internal_type               | Internal channel type; the type of channel as|
-			% |                             |   it is known to the device.                 |
-			% | internal_number             | Internal channel number, as known to device  |
-			% | internal_channelname        | Internal channel name, as known to the device|
-			% | ndr_type                    | The NDR type of channel; should be one of the|
-			% |                             |   types returned by                          |
-			% |                             |   ndr.reader.base.mfdaq_type                 |
-			% | samplerate                  | The sampling rate of this channel, or NaN if |
-			% |                             |   not applicable.
-			% ------------------------------------------------------------------------------
-			%
-				% in the abstract class, this returns 1 if all the samplerates are the same
-				% and none are NaNs
-				b  = 1;
-				errormsg = '';
-
-				sr = [channelstruct.samplerate];
-				if ~all(isnan(sr)),
-					% if all are not NaN, then none can be
-					if any(isnan(sr)),
-						b = 0;
-						errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
-					else,
-						sr_ = uniquetol(sr)
-						if numel(sr_)~=1,
-							b = 0;
-							errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
-						end;
-					end;
-				end;
-
-		end; % canbereadtogether()
-
 		function channelstruct = daqchannels2internalchannels(ndr_reader_cedsmr_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
 			%
@@ -347,7 +298,6 @@ classdef ced_smr < ndr.reader.base
 			end;
 
 		end % readercedsmrheadertype()
-
 
 	end % methods (Static)
 end

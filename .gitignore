@@ -2,3 +2,6 @@
 *.swp
 *.ndi
 *.nsd
+mkdocs.yml
+docs/reference
+site
