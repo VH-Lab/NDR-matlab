@@ -36,7 +36,6 @@ classdef ced_smr < ndr.reader.base
 			% 'type'             | The type of data stored in the channel
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
-
 				if nargin<3,
 				    epochselect = 1;
 				end;
@@ -194,58 +193,6 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % samplerate()
 
-	end % methods
-
-	methods (Static)  % helper functions
-
-		function smrfile = cedsmrfile(filelist)
-			% CEDSMRFILE - Identify the .SMR file out of a file list
-			% 
-			% FILENAME = CEDSMRFILE(FILELIST)
-			%
-			% Given a cell array of strings FILELIST with full-path file names,
-			% this function identifies the first file with an extension '.smr' (case insensitive)
-			% and returns the result in FILENAME (full-path file name).
-				for k=1:numel(filelist),
-					[pathpart,filenamepart,extpart] = fileparts(filelist{k});
-					if strcmpi(extpart,'.smr'),
-						smrfile = filelist{k}; % assume only 1 file
-						return;
-					end; % got the .smr file
-				end
-				error(['Could not find any .smr file in the file list.']);
-		end
-
-		function channeltype = cedsmrheader2readerchanneltype(cedsmrchanneltype)
-		% CEDSMRHEADER2READERCHANNELTYPE- Convert between Intan headers and the ndr.ndr.reader channel types 
-		%
-		% CHANNELTYPE = CEDSMRHEADER2READERCHANNELTYPE(CEDSMRCHANNELTYPE)
-		% 
-		% Given an Intan header file type, returns the standard ndr.ndr.reader channel type
-
-			switch (cedsmrchanneltype),
-				case {1,9},
-					% 1 is integer, 9 is single precision floating point
-					channeltype = 'analog_in';
-				case {2,3,4},
-					channeltype = 'event'; % event indicator
-						% 2 - positive-to-negative transition
-						% 3 - negative-to-positive transition
-						% 4 - either transition
-				case {5,6,7}, % various marker types
-					% 5 - generic mark
-					% 6 - wavemark, a Spike2-detected event
-					% 7 - real-valued marker
-					channeltype = 'mark';
-				case 8, % text mark
-					channeltype = 'text';
-				case {11},
-					error(['do not know this event yet--programmer should look it up.']);
-				otherwise,
-					error(['Could not convert channeltype ' cedspike2channeltype '.']);
-			end;
-
-		end % readercedsmrheadertype()
 		function [b,errormsg] = canbereadtogether(ndr_reader_base_obj, channelstruct)
 			% CANBEREADTOGETHER - can the channels in a channel struct be read in a single function call?
 			% 
@@ -325,22 +272,82 @@ classdef ced_smr < ndr.reader.base
 			% | ndr_type                    | The NDR type of channel; should be one of the|
 			% |                             |   types returned by                          |
 			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.                            |
 			% ------------------------------------------------------------------------------
 			%
  				channels = ndr_reader_cedsmr_obj.getchannelsepoch(epochstreams, epoch_select);
-								
+
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type','samplerate');                
+                
 				for i=1:numel(channels),
 					newentry.internal_type = channels(i).type;
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
 					newentry.internal_channelname = channels(i).name;
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+                    newentry.samplerate = ndr_reader_cedsmr_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
+                    if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
 						channelstruct(end+1) = newentry;
 					end;
 				end;					
 
 		end; % daqchannels2internalchannels
+        
+	end % methods
+
+	methods (Static)  % helper functions
+
+		function smrfile = cedsmrfile(filelist)
+			% CEDSMRFILE - Identify the .SMR file out of a file list
+			% 
+			% FILENAME = CEDSMRFILE(FILELIST)
+			%
+			% Given a cell array of strings FILELIST with full-path file names,
+			% this function identifies the first file with an extension '.smr' (case insensitive)
+			% and returns the result in FILENAME (full-path file name).
+				for k=1:numel(filelist),
+					[pathpart,filenamepart,extpart] = fileparts(filelist{k});
+					if strcmpi(extpart,'.smr'),
+						smrfile = filelist{k}; % assume only 1 file
+						return;
+					end; % got the .smr file
+				end
+				error(['Could not find any .smr file in the file list.']);
+		end
+
+		function channeltype = cedsmrheader2readerchanneltype(cedsmrchanneltype)
+		% CEDSMRHEADER2READERCHANNELTYPE- Convert between Intan headers and the ndr.ndr.reader channel types 
+		%
+		% CHANNELTYPE = CEDSMRHEADER2READERCHANNELTYPE(CEDSMRCHANNELTYPE)
+		% 
+		% Given an Intan header file type, returns the standard ndr.ndr.reader channel type
+
+			switch (cedsmrchanneltype),
+				case {1,9},
+					% 1 is integer, 9 is single precision floating point
+					channeltype = 'analog_in';
+				case {2,3,4},
+					channeltype = 'event'; % event indicator
+						% 2 - positive-to-negative transition
+						% 3 - negative-to-positive transition
+						% 4 - either transition
+				case {5,6,7}, % various marker types
+					% 5 - generic mark
+					% 6 - wavemark, a Spike2-detected event
+					% 7 - real-valued marker
+					channeltype = 'mark';
+				case 8, % text mark
+					channeltype = 'text';
+				case {11},
+					error(['do not know this event yet--programmer should look it up.']);
+				otherwise,
+					error(['Could not convert channeltype ' cedspike2channeltype '.']);
+			end;
+
+		end % readercedsmrheadertype()
+
 
 	end % methods (Static)
 end

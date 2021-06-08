@@ -89,11 +89,13 @@ classdef base
 			% | ndr_type                    | The NDR type of channel; should be one of the|
 			% |                             |   types returned by                          |
 			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.
 			% ------------------------------------------------------------------------------
 			%
 				% abstract class returns empty
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
-					'internal_channelname','ndr_type');
+					'internal_channelname','ndr_type','samplerate');
 		end; % daqchannels2internalchannels
 
 		function ec = epochclock(ndr_reader_base_obj, epochstreams, epoch_select)
@@ -320,6 +322,10 @@ classdef base
 						type = 'mark';
 					case {'event','e'},
 						type = 'event';
+                    case {'text'},
+                        type = 'text';
+                    otherwise,
+                        error(['Type ' channeltype ' is unknown.']);
 				end;
 		end;
 	
