@@ -334,6 +334,7 @@ end
 			% | ndr_type                    | The NDR type of channel; should be one of the|
 			% |                             |   types returned by                          |
 			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate			| Rate of sampling			       |
 			% ------------------------------------------------------------------------------
 			%	
 				% abstract class returns empty
@@ -348,7 +349,8 @@ end
 					newentry.internal_number = numericchannel;
 					newentry.internal_channelname = channels(i).name;
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+			newentry.samplerate = ndr_reader_spikegadgets_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);		
+			if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
 						channelstruct(end+1) = newentry;
 					end;
 				end;					
