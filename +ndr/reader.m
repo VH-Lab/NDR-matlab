@@ -81,7 +81,8 @@ classdef reader
 							end;
 							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type,...
 								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
-							time = []; % how to read this in general??
+							time = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).time,...
+								[channelstruct.internal_number],epochstreams,epoch_select,t0,t1); % how to read this in general??
 						otherwise, % readevents
 							[data,time] = ndr_reader_obj.readevents({channelstruct.internal_type},...
 								channelstruct.internal_number,epochstreams,epoch_select,t0,t1);
