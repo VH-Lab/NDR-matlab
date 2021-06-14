@@ -14,8 +14,6 @@ end
 		
 		end; % READER()
 		
-		
-        
         % extract times, spikes
 
 
@@ -300,7 +298,7 @@ end
 				else,
 					filename = filename{index};
 				end
-    end % filenamefromepoch
+		end % filenamefromepoch
 		
 		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
@@ -342,13 +340,13 @@ end
  				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochstreams, epoch_select);
 					
 				for i=1:numel(channels),
-                    [CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
+					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
-                    if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
-     			        newentry.internal_type = channels(i).type;
-    					newentry.internal_channelname = channels(i).name;
-        				newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
-                        newentry.samplerate = ndr_reader_base_spikegadgets_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+						newentry.internal_type = channels(i).type;
+						newentry.internal_channelname = channels(i).name;
+						newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
+						newentry.samplerate = ndr_reader_base_spikegadgets_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
 						channelstruct(end+1) = newentry;
 					end;
 				end;					
