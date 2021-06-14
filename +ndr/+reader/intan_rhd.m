@@ -64,10 +64,21 @@ classdef intan_rhd < ndr.reader.base
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
-            for i=1:length(header),
-                [channelnameprefix, channelnumber] = ndr.string.channelstring2channels(header(i).amplifier_channels.native_channel_name);
+            for c=1:numel(channelnumber),
+                channelstruct_here.internal_type = intanchannelbank2intanchanneltype(channelprefix{c});
+                intan_channel_name = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
+                index = find(strcmp(intan_channel_name, {header.amplifier_channels.native_channel_name}));
+                if isempty(index),
+                    % try other channel types
+                    % if you don't find one, then it's an error
+                else,
+                    channelstruct_here.internal_number = index;
+                    channelstruct_here.ndr_type = 'analog_input';
+                end;
+                channelstruct_here.internal_channelname = intan_channel_name;
+                channelstruct(end+1) = channelstruct_here;
             end;
-        end; % ndr.reader.intan_rhd.daqchannels2internalchannels
+        end % ndr.reader.intan_rhd.daqchannels2internalchannels
         
         function t0t1 = t0_t1(intan_rhd_obj, epochstreams, epoch_select)
         % EPOCHCLOCK - Return the beginning and end epoch times for an
@@ -360,6 +371,27 @@ classdef intan_rhd < ndr.reader.base
                     error(['Do not know frequency header for channel type ' channeltype '.']);
             end;
         end % ndr.reader.intan_rhd.mfdaqchanneltype2intanfreqheader
+        
+        function intanchanneltype = intanchannelbank2intanchanneltype(intanchannelbank)
+        % INTANCHANNELBANK2INTANCHANNELTYPE - Converts a channel bank from Intan native format to the appropriate Intan channel type
+        %
+        %  INTANCHANNELTYPE = INTANCHANNELBANK2INTANCHANNELTYPE(INTANCHANNELBANK)
+        %
+        %  The intanchanneltype is a string of the specific channel type for Intan.
+        %
+            switch intanchannelbank,
+                case {'A','B','C','D','ai'}, % Is there a better way to do this?
+                    intanchanneltype = 'amp';
+                case {'DIN','di'},
+                    intanchanneltype = 'din';
+                case {'DOUT','do'},
+                    intanchanneltype = 'dout';
+                case {'AAUX','BAUX','CAUX','DAUX','aux'},
+                    intanchanneltype = 'aux';
+                otherwise,
+                    error(['Do not know how to convert channel bank ' intanchannelbank '.']);
+            end;
+        end % ndr.reader.intan_rhd.intanchannelbank2intanchanneltype
         
     end % methods (Static)
     
