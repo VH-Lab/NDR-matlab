@@ -15,4 +15,4 @@ r,
 [d,t] = r.read({filename}, 'ai21');
 
 figure;
-plot(t,d),
+plot(t,d);
