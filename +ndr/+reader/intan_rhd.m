@@ -380,7 +380,7 @@ classdef intan_rhd < ndr.reader.base
         %  The intanchanneltype is a string of the specific channel type for Intan.
         %
             switch intanchannelbank,
-                case {'A','B','C','D','ai'}, % Is there a better way to do this?
+                case {'A','B','C','D','ai'},
                     intanchanneltype = 'amp';
                 case {'DIN','di'},
                     intanchanneltype = 'din';
@@ -388,6 +388,8 @@ classdef intan_rhd < ndr.reader.base
                     intanchanneltype = 'dout';
                 case {'AAUX','BAUX','CAUX','DAUX','aux'},
                     intanchanneltype = 'aux';
+                case {'AVDD1','BVDD1','CVDD1','DVDD1'},
+                    intanchanneltype = 'supply';
                 otherwise,
                     error(['Do not know how to convert channel bank ' intanchannelbank '.']);
             end;
