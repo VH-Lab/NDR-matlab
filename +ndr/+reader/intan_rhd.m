@@ -61,11 +61,14 @@ classdef intan_rhd < ndr.reader.base
         % |                             |   ndr.reader.base.mfdaq_type                 |
         % ------------------------------------------------------------------------------
         %
+            channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+                'internal_channelname','ndr_type','samplerate');
+            
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
             
             for c=1:numel(channelnumber),
-                channelstruct_here.internal_type = intanchannelbank2intanchanneltype(channelprefix{c});
+                channelstruct_here.internal_type = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
                 intan_channel_name = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
                 index = find(strcmp(intan_channel_name, {header.amplifier_channels.native_channel_name}));
                 if isempty(index),
