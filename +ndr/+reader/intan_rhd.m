@@ -62,7 +62,7 @@ classdef intan_rhd < ndr.reader.base
         % ------------------------------------------------------------------------------
         %
             channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
-                'internal_channelname','ndr_type','samplerate');
+                'ndr_type','internal_channelname','samplerate');
             
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
@@ -79,6 +79,7 @@ classdef intan_rhd < ndr.reader.base
                     channelstruct_here.ndr_type = 'analog_input';
                 end;
                 channelstruct_here.internal_channelname = intan_channel_name;
+                channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
                 channelstruct(end+1) = channelstruct_here;
             end;
         end % ndr.reader.intan_rhd.daqchannels2internalchannels
