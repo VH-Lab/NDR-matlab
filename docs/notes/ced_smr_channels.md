@@ -16,7 +16,7 @@
 
 | Example input to `ndr.read` | Meaning |
 | --- | --- | 
-| 'A000-015' | Traditional analog input channels A-000 through A-021 (total of 20 channels) |
+| 'A000-015' | Traditional analog input channels A-001 through A-021 (total of 20 channels) |
 | 'A000-010;B023-035' | Traditional analog input channels A-001 through A-010 and channels B-023 through 035 (total of 23 channels) |
 | 'DIN00-15' | Digital input channels 00 - 15 |
 | 'AAUX1-3' | Auxillary inputs 1-3 from bank A |
