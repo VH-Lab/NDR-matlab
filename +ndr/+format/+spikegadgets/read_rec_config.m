@@ -41,13 +41,15 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     fclose(fid);
 
     %Temporary xml file to easily access information
-    fid = fopen('tmpheaderfile.xml','w');
+    X = randi(10);
+    Y = int2str(X);
+    fid = fopen('Y.xml','w');
     fwrite(fid,headerText);
 
     fclose(fid);
 
     %Parses xml to DOM node saved in tree
-    tree = xmlread('tmpheaderfile.xml');
+    tree = xmlread('Y.xml');
 
     %Starts parsing child nodes
     try
@@ -55,8 +57,8 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     catch
        error('Unable to parse XML');
     end
-    delete('tmpheaderfile.xml');
-
+    delete('Y.xml');
+    
     %Variables where child index is stored
     globalOptionsInd = [];
     streamingInd = [];
