@@ -59,27 +59,41 @@ classdef intan_rhd < ndr.reader.base
         % | ndr_type                    | The NDR type of channel; should be one of the|
         % |                             |   types returned by                          |
         % |                             |   ndr.reader.base.mfdaq_type                 |
+        % | samplerate                  | The sampling rate of this channel, or NaN if |
+        % |                             |   not applicable.                            |
         % ------------------------------------------------------------------------------
         %
             channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
-                'ndr_type','internal_channelname','samplerate');
+                'internal_channelname','ndr_type','samplerate');
             
             filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+            
+            % make sure that the fields are in the correct order
+            channelstruct_here.internal_type = [];
+            channelstruct_here.internal_number = [];
+            channelstruct_here.internal_channelname = [];
+            channelstruct_here.ndr_type = [];
+            channelstruct_here.samplerate = [];
             
             for c=1:numel(channelnumber),
                 channelstruct_here.internal_type = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
                 intan_channel_name = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
                 index = find(strcmp(intan_channel_name, {header.amplifier_channels.native_channel_name}));
-                if isempty(index),
-                    % try other channel types
-                    % if you don't find one, then it's an error
-                else,
-                    channelstruct_here.internal_number = index;
-                    channelstruct_here.ndr_type = 'analog_input';
+                switch channelprefix,
+                    case {'ai','di','do','aux'},
+                        channelstruct_here.internal_number = channelnumber;
+                        channelstruct_here.ndr_type = ndr.reader.base.mfdaq_type(channelprefix);
+                        channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
+                    case {'A','B','C','D'},
+                        channelstruct_here.internal_number = index;
+                        channelstruct_here.ndr_type = 'analog_in';
+                        channelprefix_relative = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix);
+                        channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix_relative,channelnumber);
+                    otherwise,
+                        error(['Do not know how to interpret channel type ' channelprefix '.']);
                 end;
                 channelstruct_here.internal_channelname = intan_channel_name;
-                channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
                 channelstruct(end+1) = channelstruct_here;
             end;
         end % ndr.reader.intan_rhd.daqchannels2internalchannels
