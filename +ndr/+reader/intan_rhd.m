@@ -80,15 +80,15 @@ classdef intan_rhd < ndr.reader.base
                 channelstruct_here.internal_type = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
                 intan_channel_name = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
                 index = find(strcmp(intan_channel_name, {header.amplifier_channels.native_channel_name}));
-                switch channelprefix,
+                switch channelprefix{c},
                     case {'ai','di','do','aux'},
                         channelstruct_here.internal_number = channelnumber;
-                        channelstruct_here.ndr_type = ndr.reader.base.mfdaq_type(channelprefix);
+                        channelstruct_here.ndr_type = ndr.reader.base.mfdaq_type(channelprefix{c});
                         channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
                     case {'A','B','C','D'},
                         channelstruct_here.internal_number = index;
                         channelstruct_here.ndr_type = 'analog_in';
-                        channelprefix_relative = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix);
+                        channelprefix_relative = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
                         channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix_relative,channelnumber);
                     otherwise,
                         error(['Do not know how to interpret channel type ' channelprefix '.']);
