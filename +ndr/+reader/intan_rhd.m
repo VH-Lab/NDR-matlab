@@ -89,11 +89,11 @@ classdef intan_rhd < ndr.reader.base
                         channelstruct_here.internal_number = index;
                         channelstruct_here.ndr_type = 'analog_in';
                         channelprefix_relative = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
-                        channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix_relative,channelnumber);
+                        channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelstruct_here.ndr_type,channelnumber);
                     otherwise,
                         error(['Do not know how to interpret channel type ' channelprefix '.']);
                 end;
-                channelstruct_here.internal_channelname = intan_channel_name;
+                channelstruct_here.internal_channelname = intan_channel_name; %% NO, this should always be an ndr channel type
                 channelstruct(end+1) = channelstruct_here;
             end;
         end % ndr.reader.intan_rhd.daqchannels2internalchannels
