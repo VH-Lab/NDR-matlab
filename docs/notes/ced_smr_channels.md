@@ -8,7 +8,7 @@
 | Event- | Fill in |Fill in | Fill in|
 | Event+ | Fill in |Fill in | Fill in|
 | Level  | FIll in | Fill in | fill in |
-| Marker | Fill in |Fill in | Fill in|
+| Marker | mk30 | 30 | marker on channel 30 |
 | TextMark | Fill in |Fill in | Fill in|
 | | Fill in |Fill in | Fill in|
 
