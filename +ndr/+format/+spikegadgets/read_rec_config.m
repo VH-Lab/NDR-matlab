@@ -41,12 +41,12 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     fclose(fid);
 
     ndr.globals
-    filename = [ndr_globals.path.testpath filesep Y '.xml'];
     
     %Temporary xml file to easily access information
     X = randi(100000);
     Y = int2str(X);
-    fid = fopen([Y '.xml'],'w');
+    filename = [ndr_globals.path.testpath filesep Y '.xml'];
+    fid = fopen([filename '.xml'],'w');
     fwrite(fid,headerText);
 
     fclose(fid);
