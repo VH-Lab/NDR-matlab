@@ -4,22 +4,21 @@
 
 | CED Type | How specified | Example native channel name | Example meaning |
 | -- | -- | -- | --- | 
-|Waveforms| Specified according to type and number | ai21 | Analog input channel 21 |
-| Event- | Fill in |Fill in | Fill in|
-| Event+ | Fill in |Fill in | Fill in|
-| Level  | FIll in | Fill in | fill in |
-| Marker | mk30 | 30 | marker on channel 30 |
-| TextMark | Fill in |Fill in | Fill in|
-| | Fill in |Fill in | Fill in|
+|Waveforms| Specified according to type and number | ai21 | Reads waveform data on channel 21 |
+| Event- | NDR events can go up or down, so it is specified as an event and channel number only | e24 | All events on channel 24, either positive going or negative going|
+| Event+ | NDR events can go up or down, so it is specified as an event and channel number only | e24 | All events on channel 24, either positive going or negative going|
+| Level  | To be filled in | To be filled in | To be filled in |
+| Marker | Specify a numeric marker with the channel number | mk20 | numeric marker on channel 20 |
+| TextMark | Specify a text marker with the channel number | text30  | Text marker on channel 30|
 
  (change the below for ced_smr)
 
 | Example input to `ndr.read` | Meaning |
 | --- | --- | 
-| 'A000-015' | Traditional analog input channels A-001 through A-021 (total of 20 channels) |
-| 'A000-010;B023-035' | Traditional analog input channels A-001 through A-010 and channels B-023 through 035 (total of 23 channels) |
-| 'DIN00-15' | Digital input channels 00 - 15 |
-| 'AAUX1-3' | Auxillary inputs 1-3 from bank A |
+| 'ai1-3' | Waveforms on channels 1 through 3 (total of 3 channels) |
+| 'e10' | Digital events on channel 10 |
+| 'text30' | Text marker events on channel 30|
+
 
 
 
