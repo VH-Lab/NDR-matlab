@@ -14,5 +14,9 @@ r,
 
 [d,t] = r.read({filename}, 'ai21');
 
+[d_e,t_e] = r.read({filename},'e22');
+
 figure;
 plot(t,d);
+hold on
+plot(t_e,0,'ro');
