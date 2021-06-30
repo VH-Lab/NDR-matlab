@@ -11,7 +11,7 @@
 | Marker | Specify a numeric marker with the channel number | mk20 | numeric marker on channel 20 |
 | TextMark | Specify a text marker with the channel number | text30  | Text marker on channel 30|
 
- (change the below for ced_smr)
+
 
 | Example input to `ndr.read` | Meaning |
 | --- | --- | 
