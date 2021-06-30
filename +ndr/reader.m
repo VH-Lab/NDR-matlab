@@ -70,7 +70,7 @@ classdef reader
 				channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, ...
 					channelprefix, channelnumber, epochstreams, epoch_select);
 
-				[b,errormsg] =  ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct),
+				[b,errormsg] =  ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct);
 
 				if b,
 					switch (channelstruct(1).ndr_type),
@@ -79,12 +79,12 @@ classdef reader
 								s0 = round(1+t0*channelstruct(1).samplerate);
 								s1 = round(1+t1*channelstruct(1).samplerate);
 							end;
-							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type,...
-								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
+							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type, ...
+                                [channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
 							time = ndr_reader_obj.readchannels_epochsamples('time',...
-								[channelstruct.internal_number],epochstreams,epoch_select,t0,t1); % how to read this in general??
+								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1); % how to read this in general??
 						otherwise, % readevents
-							[data,time] = ndr_reader_obj.readevents({channelstruct.internal_type},...
+							[data,time] = ndr_reader_obj.readevents_epochsamples({channelstruct.internal_type},...
 								channelstruct.internal_number,epochstreams,epoch_select,t0,t1);
 					end;
 				else, % we can't do it, report an error
