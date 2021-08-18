@@ -32,13 +32,19 @@ end
  time = r.readchannels_epochsamples('time',channel,{filename},epoch_select,1,10000);
 
  % each epoch begins at T0 and ends at T1
- ec = r.epochclock({filename}, epoch_select), % no epochclock function still work, why?
+ ec = r.epochclock({filename}, epoch_select);
  t0t1 = r.t0_t1({filename}, epoch_select);
 
  disp(['These are the clocktypes we know and how long the recording lasted:'])
  	for i=1:numel(ec),
 		disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0t1{i}(1)) ' and ended at ' num2str(t0t1{i}(2)) '.']);
 	end;
+ 
+ channelstruct = r.ndr_reader_base.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
+ 
+ % Unrecognized method, property, or field 'daqchannels2internalchannels' for class 'ndr.reader'.
+ 
+ channelstruct % add function as base results in empty struct array 
  
 
 if plotit, 
