@@ -4,7 +4,6 @@ classdef spikegadgets_rec < ndr.reader.base
 properties
 end
 	
-
 	methods
   	  	function ndr_reader_base_spikegadgets_obj = spikegadgets_rec() % input = filename(?)
 		% READER - create a new Neuroscience Data Reader object
@@ -14,7 +13,7 @@ end
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 		
 		end; % READER()
-        
+		
         % extract times, spikes
 
 
@@ -22,6 +21,12 @@ end
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
 			%
 			% CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES)
+			%
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 			%
 			% Returns the channel list of acquired channels in this epoch
 			%
@@ -106,7 +111,13 @@ end
 			%
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
 			%
-			% SR is the list of sample rate from specified channels
+			% SR is the list of sample rate from specified channels			
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
 			%
 			% CHANNELTYPE and CHANNEL not used in this case since it is the
 			% same for all channels in this device
@@ -124,6 +135,12 @@ end
 			% EPOCHCLOCK - return the t0_t1 (beginning and end) epoch times for an epoch
 			%
 			% T0T1 = T0_T1(NDI_EPOCHSET_OBJ, EPOCHFILES)
+			%
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
 			%
 			% Return the beginning (t0) and end (t1) times of the epoch EPOCH_NUMBER
 			% in the same units as the ndi.time.clocktype objects returned by EPOCHCLOCK.
@@ -160,6 +177,12 @@ end
 		function epochprobemap = getepochprobemap(ndr_reader_base_spikegadgets_obj, epochmapfilename, epochfiles, epoch_select)
 		        % GETEPOCHPROBEMAP returns struct with probe information
 		        % name, reference, n-trode, channels
+			% EPOCHFILES is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
 		        %
 				filename = ndr_reader_base_spikegadgets_obj.filenamefromepochfiles(epochfiles);
 				fileconfig = ndr.format.spikegadgets.read_rec_config(filename);
@@ -220,9 +243,7 @@ end
 				%read_SpikeGadgets_trodeChannels(filename,NumChannels, channels,samplingRate,headerSize, configExists)
 				%reading from channel 1 in list returned
 				%Reads nTrodes
-				%WARNING channeltype hard coded, ask Steve
-				channeltype
-                		if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
+           		if (strcmp(channeltype, 'analog_in') || strcmp(channeltype, 'analog_out'))
 					data = ndr.format.spikegadgets.read_rec_trodeChannels(filename,header.numChannels,channels-1,sr, header.headerSize,s0,s1);
 
                     
@@ -277,7 +298,107 @@ end
 				else,
 					filename = filename{index};
 				end
-                end % filenamefromepoch
+		end % filenamefromepoch
+		
+		function channelstruct = daqchannels2internalchannels(ndr_reader_base_spikegadgets_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
+			%
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
+			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHFILES, EPOCH_SELECT)
+			%
+			% Inputs:
+			% For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
+			% this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
+			% and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
+			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
+			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+			%
+			% EPOCHSTREAMS is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			% Output: CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate			        | Rate of sampling			                   |
+			% ------------------------------------------------------------------------------
+			%	
+				% abstract class returns empty
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type','samplerate');
+					
+ 				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochstreams, epoch_select);
+					
+				for i=1:numel(channels),
+					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
+					newentry.internal_number = numericchannel;
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+						newentry.internal_type = channels(i).type;
+						newentry.internal_channelname = channels(i).name;
+						newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
+						newentry.samplerate = ndr_reader_base_spikegadgets_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
+						channelstruct(end+1) = newentry;
+					end;
+				end;					
+
+		end; % daqchannels2internalchannels
+		
+		function test(varargin)
+		% ndr.test.reader.spikegadgets_rec.test - test reading using NDR reader
+		%
+
+		plotit = 1;
+
+		assign(varargin{:});
+
+		ndr.globals
+
+		example_dir = [ndr_globals.path.path filesep 'example_data'];
+
+		filename = [example_dir filesep 'example.rec'];
+
+		r = ndr.reader('rec'); % open a rec reader
+
+		channels = r.getchannelsepoch({filename});
+
+		for i=1:numel(channels),
+		    disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
+		end
+
+		% here, use r.readchannel_epochsamples to create variables d and t
+		epoch_select = 1; % which epoch in the file? For most file systems, there is just 1 epoch per file
+		channel = 120; % the waveform channel in our example file
+		d = r.readchannels_epochsamples('analog_in',120,{filename},epoch_select,1,10000);
+		t = r.readchannels_epochsamples('time',120,{filename},epoch_select,1,10000);
+
+		% each epoch begins at T0 and ends at T1
+		ec = r.epochclock({filename}, epoch_select),
+		t0_t1 = r.t0_t1({filename}, epoch_select);
+
+		disp(['These are the clocktypes we know and how long the recording lasted:'])
+		for i=1:numel(ec),
+		    disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0_t1{i}(1)) ' and ended at ' num2str(t0_t1{i}(2)) '.']);
+		end;
+
+
+		if plotit,
+		    figure (1);
+		    plot(t,d);
+		    xlabel('Time(s)');
+		    ylabel('Data values');
+		    title(['Spikegadgets Example Data']);
+		end;
+		end % test
 
     end % methods
 

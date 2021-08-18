@@ -23,7 +23,7 @@ classdef ced_smr < ndr.reader.base
 			%
 		end; % ced_smr() creator
 
-		function channels = getchannelsepoch(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect)
+		function channels = getchannelsepoch(ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% GETCHANNELS - List the channels that are available on this device
 			%
 			%  CHANNELS = GETCHANNELS(THEDEV, EPOCHFILES, EPOCHSELECT)
@@ -36,7 +36,6 @@ classdef ced_smr < ndr.reader.base
 			% 'type'             | The type of data stored in the channel
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
-
 				if nargin<3,
 				    epochselect = 1;
 				end;
@@ -48,7 +47,7 @@ classdef ced_smr < ndr.reader.base
 				% open SMR files, and examine the headers for all channels present
 				%   for any new channel that hasn't been identified before,
 				%   add it to the list
-				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
+				filename = ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
@@ -57,7 +56,7 @@ classdef ced_smr < ndr.reader.base
 				end;
 
 				for k=1:length(header.channelinfo),
-                    header.channelinfo(k).kind
+					%header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
 					channels(end+1) = newchannel;
@@ -194,6 +193,59 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % samplerate()
 
+		function channelstruct = daqchannels2internalchannels(ndr_reader_cedsmr_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
+			%
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_CEDSMR_OBJ, ...
+			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Inputs:
+			% For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
+			% this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
+			% and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
+			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
+			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+			%
+			% EPOCHSTREAMS is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			% Output: CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.                            |
+			% ------------------------------------------------------------------------------
+			%
+ 				channels = ndr_reader_cedsmr_obj.getchannelsepoch(epochstreams, epoch_select);
+
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type','samplerate');                
+                
+				for i=1:numel(channels),
+					newentry.internal_type = channels(i).type;
+					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
+					newentry.internal_number = numericchannel;
+					newentry.internal_channelname = channels(i).name;
+					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
+                    newentry.samplerate = ndr_reader_cedsmr_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
+                    if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+						channelstruct(end+1) = newentry;
+					end;
+				end;					
+
+		end; % daqchannels2internalchannels
+        
 	end % methods
 
 	methods (Static)  % helper functions

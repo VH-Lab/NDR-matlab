@@ -63,4 +63,10 @@ recData = recData';
 
 fclose(fid);
 
+if nargout > 1,
+    if numel(timestamps) > size(recData,1),
+        timestamps = timestamps(1:size(recData,1));
+    end;
+end;
+
 end

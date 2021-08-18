@@ -10,6 +10,94 @@ classdef base
 			%
 		end; % READER()
 
+		function [b,errormsg] = canbereadtogether(ndr_reader_base_obj, channelstruct)
+			% CANBEREADTOGETHER - can the channels in a channel struct be read in a single function call?
+			% 
+			% [B,ERRORMSG] = CANBEREADTOGETHER(NDR_READER_BASE_OBJ, CHANNELSTRUCT)
+			%
+			% Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
+			% CHANNELSTRUCT with a single function call. If they cannot be read together,
+			% a description is provided in ERRORMSG.
+			%
+			% In the abstract class, this returns 1 if all of the samplerate values are
+			% the same and none are NaNs.
+			%
+			% CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.
+			% ------------------------------------------------------------------------------
+			%
+				% in the abstract class, this returns 1 if all the samplerates are the same
+				% and none are NaNs
+				b  = 1;
+				errormsg = '';
+
+				sr = [channelstruct.samplerate];
+				if ~all(isnan(sr)),
+					% if all are not NaN, then none can be
+					if any(isnan(sr)),
+						b = 0;
+						errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
+					else,
+						sr_ = uniquetol(sr)
+						if numel(sr_)~=1,
+							b = 0;
+							errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
+						end;
+					end;
+				end;
+
+		end; % canbereadtogether()
+
+		function channelstruct = daqchannels2internalchannels(ndr_reader_base_obj, channelprefix, channelnumber, epochstreams, epoch_select)
+			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
+			%
+			% CHANNELSTRUCT = DAQCHANNELS2INTERNALCHANNELS(NDR_READER_BASE_OBJ, ...
+			%    CHANNELPREFIX, CHANNELNUMBERS, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Inputs:
+			% For a set of CHANNELPREFIX (cell array of channel prefixes that describe channels for
+			% this device) and CHANNELNUMBER (array of channel numbers, 1 for each entry in CHANNELPREFIX),
+			% and for a given recording epoch (specified by EPOCHSTREAMS and EPOCH_SELECT), this function
+			% returns a structure CHANNELSTRUCT describing the channel information that should be passed to
+			% READCHANNELS_EPOCHSAMPLES or READEVENTS_EPOCHSAMPLES.
+			%
+			% EPOCHSTREAMS is a cell array of full path file names or remote
+			% access streams that comprise the epoch of data
+			%
+			% EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
+			% if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
+			%
+			% Output: CHANNELSTRUCT is a structure with the following fields:
+			% ------------------------------------------------------------------------------
+			% | Parameter                   | Description                                  |
+			% |-----------------------------|----------------------------------------------|
+			% | internal_type               | Internal channel type; the type of channel as|
+			% |                             |   it is known to the device.                 |
+			% | internal_number             | Internal channel number, as known to device  |
+			% | internal_channelname        | Internal channel name, as known to the device|
+			% | ndr_type                    | The NDR type of channel; should be one of the|
+			% |                             |   types returned by                          |
+			% |                             |   ndr.reader.base.mfdaq_type                 |
+			% | samplerate                  | The sampling rate of this channel, or NaN if |
+			% |                             |   not applicable.
+			% ------------------------------------------------------------------------------
+			%
+				% abstract class returns empty
+				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
+					'internal_channelname','ndr_type','samplerate');
+		end; % daqchannels2internalchannels
+
 		function ec = epochclock(ndr_reader_base_obj, epochstreams, epoch_select)
 			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
 			%
@@ -25,20 +113,6 @@ classdef base
 			%
 				ec = {ndr.time.clocktype('dev_local_time')};
 		end % epochclock
-
-		function t0t1 = t0_t1(ndr_reader_base_obj, epochstreams, epoch_select)
-			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
-			%
-			% T0T1 = T0_T1(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
-			%
-			% Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.
-			%
-			% The abstract class always returns {[NaN NaN]}.
-			%
-			% See also: ndr.time.clocktype, ndr.reader.base/epochclock
-			%
-				t0t1 = {[NaN NaN]};
-		end % t0_t1()
 
 		function channels = getchannelsepoch(ndr_reader_base_obj, epochstreams, epoch_select)
 			% GETCHANNELSEPOCH - List the channels that are available on this device for a given epoch
@@ -76,63 +150,6 @@ classdef base
 				data = []; % abstract class
 		end % readchannels_epochsamples()
 
-		function [data] = readevents_epochsamples(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
-			%  READEVENTS_EPOCHSAMPLES - read events, markers, and digital events of specified channels for a specified epoch
-			%
-			%  [DATA] = READEVENTS_EPOCHSAMPLES(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T0, T1)
-			%
-			%  CHANNELTYPE is the type of channel to read
-			%  ('event','marker', 'dep', 'dimp', 'dimn', etc). It must be a a cell array of strings.
-			%
-			%  CHANNEL is a vector with the identity of the channel(s) to be read.
-			%
-			%  EPOCH is the epoch number or epochID
-			%
-			%  DATA is a two-column vector; the first column has the time of the event. The second
-			%  column indicates the marker code. In the case of 'events', this is just 1. If more than one channel
-			%  is requested, DATA is returned as a cell array, one entry per channel.
-
-				if ~isempty(intersect(channeltype,{'dep','den','dimp','dimn'})),
-					data = {};
-					for i=1:numel(channel),
-						% optimization speed opportunity
-						srd = ndr_reader_base_obj.samplerate(epochfiles,{'di'}, channel(i));
-						s0d = 1+round(srd*t0);
-						s1d = 1+round(srd*t1);
-						data_here = ndr_reader_base_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochfiles,s0d,s1d);
-						time_here = ndr_reader_base_obj.readchannels_epochsamples(repmat({'time'},1,numel(channel(i))),channel(i),epochfiles,s0d,s1d);
-						if any(strcmp(channeltype{i},{'dep','dimp'})), % look for 0 to 1 transitions
-							transitions_on_samples = find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
-							if strcmp(channeltype{i},'dimp'),
-								transitions_off_samples = 1+ find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
-							else,
-								transitions_off_samples = [];
-							end;
-						elseif any(strcmp(channeltype{i},{'den','dimn'})), % look for 1 to 0 transitions
-							transitions_on_samples = find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
-							if strcmp(channeltype{i},'dimp'),
-								transitions_off_samples = 1+ find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
-							else,
-								transitions_off_samples = [];
-							end;
-						end;
-						data{i} = [ [vlt.data.colvec(time_here(transitions_on_samples)); vlt.data.colvec(time_here(transitions_off_samples)) ] ...
-								[ones(numel(transitions_on_samples),1); -ones(numel(transitions_off_samples),1) ] ];
-						if ~isempty(transitions_off_samples),
-							[dummy,order] = sort(data{i}(:,1));
-							data{i} = data{i}(order,:); % sort by on/off
-						end;
-					end;
-
-					if numel(channel)==1,
-						data = data{1};
-					end;
-				else,
-					data = ndr_reader_base_obj.readevents_epochsamples_native(channeltype, ...
-						channel, epochfiles, t0, t1); % abstract class
-				end;
-		end; % readevents_epochsamples()
-
 		function [data] = readevents_epochsamples_native(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events or markers of specified channels for a specified epoch
 			%
@@ -167,6 +184,20 @@ classdef base
 			% that CHANNELTYPE applies to every entry of CHANNEL.
 				sr = []; % abstract class;
 		end;
+
+		function t0t1 = t0_t1(ndr_reader_base_obj, epochstreams, epoch_select)
+			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
+			%
+			% T0T1 = T0_T1(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Return the beginning (t0) and end (t1) times of the epoch defined by EPOCHSTREAMS and EPOCH_SELECT.
+			%
+			% The abstract class always returns {[NaN NaN]}.
+			%
+			% See also: ndr.time.clocktype, ndr.reader.base/epochclock
+			%
+				t0t1 = {[NaN NaN]};
+		end % t0_t1()
 
 	end; % methods
 
@@ -291,6 +322,10 @@ classdef base
 						type = 'mark';
 					case {'event','e'},
 						type = 'event';
+                    case {'text'},
+                        type = 'text';
+                    otherwise,
+                        error(['Type ' channeltype ' is unknown.']);
 				end;
 		end;
 	
