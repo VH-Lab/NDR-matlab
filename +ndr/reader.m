@@ -74,7 +74,7 @@ classdef reader
 
 				if b,
 					switch (channelstruct(1).ndr_type),
-						case {'analog_in','analog_input','analog_output'},
+						case {'analog_input','analog_output','analog_in','analog_out','ai','ao'},
 							if ~useSamples, % must compute the samples to be read
 								s0 = round(1+t0*channelstruct(1).samplerate);
 								s1 = round(1+t1*channelstruct(1).samplerate);
