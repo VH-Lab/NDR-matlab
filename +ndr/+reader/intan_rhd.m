@@ -53,7 +53,8 @@ classdef intan_rhd < ndr.reader.base
 			% | Parameter                   | Description                                  |
 			% |-----------------------------|----------------------------------------------|
 			% | internal_type               | Internal channel type; the type of channel as|
-			% |                             |   it is known to the device.                 |
+			% |                             |   it is known to the device. This is the type|
+			% |                             |   that readepoch_samples takes               |
 			% | internal_number             | Internal channel number, as known to device  |
 			% | internal_channelname        | Internal channel name, as known to the device|
 			% | ndr_type                    | The NDR type of channel; should be one of the|
@@ -71,7 +72,7 @@ classdef intan_rhd < ndr.reader.base
 			% Example: 
 			%   % absolute reference
 			%   channelstruct_1 = daqchannels2internalchannels(intan_rhd_obj, 'A', 0, epochstreams, epoch_select)
-			%   % channelstruct_1.internal_type = 'amp';
+			%   % channelstruct_1.internal_type = 'ai';
 			%   % channelstruct_1.internal_number = 1; % assuming A-000 is the first channel acquired
 			%   % channelstruct_1.internal_channelname = 'A-000'; 
 			%   % channelstruct_1.ndr_type = 'ai'; % analog input
@@ -79,7 +80,7 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%   % relative reference
 			%   channelstruct_2 = daqchannels2internalchannels(intan_rhd_obj, 'ai', 1, epochstreams, epoch_select)
-			%   % channelstruct_2.internal_type = 'amp';
+			%   % channelstruct_2.internal_type = 'ai';
 			%   % channelstruct_2.internal_number = 1; % we asked for the first internal/relative channel
 			%   % channelstruct_2.internal_channelname = 'A-000'; % assuming A-000 is the first channel acquired 
 			%   % channelstruct_2.ndr_type = 'ai'; % analog input
@@ -100,25 +101,26 @@ classdef intan_rhd < ndr.reader.base
 				channelstruct_here.samplerate = [];
 			    
 				for c=1:numel(channelnumber),
-					[channelstruct_here.internal_type,absolute] = ndr.reader.intan_rhd.intananychannelbank2intanchanneltype(channelprefix{c});
+					[intan_type,absolute] = ndr.reader.intan_rhd.intananychannelname2intanchanneltype(channelprefix{c});
+					channelstruct_here.internal_type = ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype(intan_type);
+					channelstruct_here.ndr_type = ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype(intan_type);
+					header_name = ndr.reader.intan_rhd.mfdaqchanneltype2intanheadertype(channelstruct_here.ndr_type);
+					header_chunk = getfield(header,header_name);
 					if ~absolute, % relative reference
 						channelstruct_here.internal_number = channelnumber;
-						%%% NOAH: need to look up the name/absolute number of this channel in the "channelnumber(c)"th entry in the header
-						%%% replace following:
-						%%%% channelstruct_here.internal_channelname = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
-						channelstruct_here.ndr_type = ndr.reader.base.mfdaq_type(channelprefix{c});
+						native_names = {header_chunk.native_channel_name};
+						channelstruct_here.internal_channelname = native_names{channelstruct_here.internal_number};
 						channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
 					elseif absolute, % absolute reference
 						channelstruct_here.internal_channelname = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
-						%%% NOAH: the following line won't work; you need to lookup the header structure name; it might be 'amplifier_channels' but it could also be one of the power channels or auxillary channels
-						%%% index = find(strcmp(intan_channel_name, {header.amplifier_channels.native_channel_name}));
+						index = find(strcmp(channelstruct_here.internal_channelname,{header_chunk.native_channel_name}));
+						if isempty(index),
+							error(['Requested channel ' channelstruct_here.internal_channelname ' was not recorded in this file.']);
+						end;
 						channelstruct_here.internal_number = index; % make sure to fix index line above
-						channelstruct_here.ndr_type = ndr.reader.intan_rhd.intanheadertype2mfdaqchanneltype(channelstruct_here.internal_type);
-						channelprefix_relative = ndr.reader.intan_rhd.intanchannelbank2intanchanneltype(channelprefix{c});
 						channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,...
 							channelstruct_here.ndr_type,channelstruct_here.internal_number);
 					end; % switch
-					channelstruct_here.internal_channelname = intan_channel_name; %% NO, this should always be an ndr channel type
 					channelstruct(end+1) = channelstruct_here;
 				end;
 		end % ndr.reader.intan_rhd.daqchannels2internalchannels
@@ -379,7 +381,31 @@ classdef intan_rhd < ndr.reader.base
 						error(['Do not know how to convert channel type ' channeltype '.']);
 				end;
 		end; % ndr.reader.intan_rhd.mfdaqchanneltype2intanchanneltype
-		
+
+		function mfdaqchanneltype = intanchanneltype2mfdaqchanneltype(channeltype)
+			% INTANCHANNELTYPE2MFDAQCHANNELTYPE - Convert the channel type to generic format of multifuncdaqchannel
+			%                                       from the specific Intan channel type
+			%
+			%  INTANCHANNELTYPE = MFDAQCHANNELTYPE2INTANCHANNELTYPE(CHANNELTYPE)
+			%
+			%  The intanchanneltype is a string of the specific channel type for Intan.
+			%
+				switch lower(channeltype),
+					case 'amp',
+						mfdaqchanneltype = 'ai';
+					case 'din',
+						mfdaqchanneltype = 'di';
+					case 'dout',
+						mfdaqchanneltype = 'do';
+					case 'time',
+						mfdaqchanneltype = 'time';
+					case 'aux',
+						mfdaqchanneltype = 'ai';
+					otherwise,
+						error(['Do not know how to convert channel type ' channeltype '.']);
+				end;
+		end; % ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype()
+	
 		function [channame] = intanname2mfdaqname(intan_rhd_obj, type, name)
 			% INTANNAME2MFDAQNAME - Converts a channel name from Intan native format to ndr.ndr.reader.mfdaq format
 			%
@@ -439,7 +465,7 @@ classdef intan_rhd < ndr.reader.base
 				% if we are still here, we did not get an answer and need to see if it is Intan channel format
 
 				absolute = 1;
-				switch lower(intanchannelbank),
+				switch lower(intananychannelname),
 					case {'a','b','c','d'},
 					    intanchanneltype = 'amp';
 					case {'aaux','baux','caux','daux'},
@@ -447,7 +473,7 @@ classdef intan_rhd < ndr.reader.base
 					case {'avdd1','bvdd1','cbdd1','dvdd1'},
 					    intanchanneltype = 'supply';
 					otherwise,
-						error(['Do not know how to convert channel bank ' intanchannelbank '.']);
+						error(['Do not know how to convert channel bank ' intananychannelname'.']);
 				end;
 		end % ndr.reader.intan_rhd.intanchannelbank2intanchanneltype
 		
