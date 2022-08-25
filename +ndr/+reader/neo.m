@@ -20,27 +20,15 @@ classdef neo < ndr.reader.base
     end
 
     function channels = getchannelsepoch(ndr_reader_cedsmr_obj, epochfiles, epochselect)
-      % channels = vlt.data.emptystruct('name', 'type');
-      % % We map NEO channel.type to NDR channel.type for each format
-      % for k=1:length(header.channelinfo),
-      %   % new_channel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
-      %   % new_channel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
-      %   new_channel.type = "hello_type";
-      %   new_channel.name = "hi_nammme";
-      %   channels(end+1) = newchannel;
-      % end
-      filename = "/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"
+      filename = "/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec";
+      py_channels = py.neo_python.get_channels(filename, 0);
 
-
-
-      py_channels = py.neo_python.get_channels(filename)
-
-
-
-
-      % Now we need some way to turn:
-      %   from ('Ain1', 'Ain1', 30000., 'int16', '', 1., 0., 'ECU')
-      %   to   { type: 'analog_in', name: 'ain1' }
+      channels = vlt.data.emptystruct('name', 'type');
+      for k = 1:length(py_channels)
+        new_channel.type = char(py_channels{k}{'type'});
+        new_channel.name = char(py_channels{k}{'name'});
+        channels(end + 1) = new_channel;
+      end
     end
 
     function check(self)

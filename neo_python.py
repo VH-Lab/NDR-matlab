@@ -9,18 +9,26 @@ import numpy as np
 # print(get_channels("/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"));
 # getchannelsepoch(epochfiles, epochselect)
 # => [{ type: '', name, '' }, ~]
-def get_channels(filename):
+def get_channels(filename, segment_index):
   # => e.g. CedRawIO or SpikeGadgetsRawIO
   Klass = neo.rawio.get_rawio_class(filename)
   reader = Klass(filename=filename)
   reader.parse_header()
-  return {
-    'signal_channels': reader.header['signal_channels'],
-    'spike_channels':  reader.header['spike_channels'],
-    'event_channels':  reader.header['event_channels']
-  }
+  # return {
+  #   'signal_channels': reader.header['signal_channels'],
+  #   'spike_channels':  reader.header['spike_channels'],
+  #   'event_channels':  reader.header['event_channels']
+  # }
+  # print(reader.header['signal_channels'].dtype)
+  # print(reader.header['signal_channels'])
+
+  signal_channels = reader.header['signal_channels']
+  mapped = list(map(lambda channel: { 'name': channel['name'], 'type': 'hi' }, signal_channels))
+  return mapped
 
 
+
+# get_channels("/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec", 0);
 
 def from_channel_ids_to_stream_index(reader, channel_ids):
   '''
@@ -77,12 +85,9 @@ def read_channel(channel_type, channel_ids, filenames, segment_index, start_samp
   rescaled = reader.rescale_signal_raw_to_float(raw, stream_index=stream_index, channel_ids=channel_ids)
   return rescaled
 
-data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
-print(data)
+# data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
+# print(data)
 
-# intan.rhd - channel 1
-# r.readchannels_epochsamples('ai',1,{filename},epoch_select,1,10);
-# Neo - channel with id '0'
 
 # samplerate(epochstreams, epoch_select, channeltype, channel)
 def sample_rate(filename, epoch_select, channel_type, channel_index):
