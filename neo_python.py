@@ -52,20 +52,20 @@ def from_channel_ids_to_stream_index(reader, channel_ids):
     for index, stream in enumerate(all_streams):
       if stream_id == stream['id']: return index
 
+def get_reader(filenames):
+  # NDI passes an array of strings, however Neo always expects a single string, even for multi-file readers.
+  filename = filenames[0]
+  Klass = neo.rawio.get_rawio_class(filename)
+  if (Klass.rawmode == 'one-file' or Klass.rawmode == 'multi-file'):
+    reader = Klass(filename=filename)
+  elif (Klass.rawmode == 'one-dir'):
+    reader = Klass(dirname=filename)
+  return reader
 
 # readchannels_epochsamples(channeltype, channel, epochfiles, epochselect, s0, s1)
-def read_channel(channel_type, channel_ids, filename, segment_index, start_sample, end_sample, block_index):
-  Klass = neo.rawio.get_rawio_class(filename)
-  reader = Klass(filename=filename)
-
-  reader.parse_header()
-
-  print(reader.header['signal_channels'][0].dtype.names)
-  print(reader.header['signal_channels'])
-  print("\n\n\n")
-
-  print(reader.header['signal_streams'].dtype.names)
-  print(reader.header['signal_streams'])
+# Additional arguments: block_index
+def read_channel(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=0):
+  reader = get_reader(filenames)
 
   stream_index = from_channel_ids_to_stream_index(reader, channel_ids)
   raw = reader.get_analogsignal_chunk(
@@ -77,13 +77,12 @@ def read_channel(channel_type, channel_ids, filename, segment_index, start_sampl
   rescaled = reader.rescale_signal_raw_to_float(raw, stream_index=stream_index, channel_ids=channel_ids)
   return rescaled
 
-# [channel_ids=['Ain7'], stream_index=0] works,
-# [channel_ids=['57'], stream_index=1] works
-# data = read_channel("smth", ['Ain1'], "/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec", segment_index=0, start_sample=0, end_sample=10, block_index=0)
-data = read_channel("smth", ['0'], "/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd", segment_index=0, start_sample=1, end_sample=10, block_index=0)
+data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
 print(data)
 
-
+# intan.rhd - channel 1
+# r.readchannels_epochsamples('ai',1,{filename},epoch_select,1,10);
+# Neo - channel with id '0'
 
 # samplerate(epochstreams, epoch_select, channeltype, channel)
 def sample_rate(filename, epoch_select, channel_type, channel_index):
