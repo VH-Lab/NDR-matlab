@@ -10,6 +10,9 @@
 	{
 		"type": ["SpikeGadgets", "SpikeGadgetsREC","rec"],
 		"classname": "ndr.reader.spikegadgets_rec"
+        },
+        {
+        	"type": ["neo"],
+        	"classname": "ndr.reader.neo"
         }
 ]
-
