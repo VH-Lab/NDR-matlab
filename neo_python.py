@@ -9,10 +9,8 @@ import numpy as np
 # print(get_channels("/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"));
 # getchannelsepoch(epochfiles, epochselect)
 # => [{ type: '', name, '' }, ~]
-def get_channels(filename, segment_index):
-  # => e.g. CedRawIO or SpikeGadgetsRawIO
-  Klass = neo.rawio.get_rawio_class(filename)
-  reader = Klass(filename=filename)
+def get_channels(filenames, segment_index):
+  reader = get_reader(filenames)
   reader.parse_header()
   # return {
   #   'signal_channels': reader.header['signal_channels'],
@@ -25,10 +23,6 @@ def get_channels(filename, segment_index):
   signal_channels = reader.header['signal_channels']
   mapped = list(map(lambda channel: { 'name': channel['name'], 'type': 'hi' }, signal_channels))
   return mapped
-
-
-
-# get_channels("/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec", 0);
 
 def from_channel_ids_to_stream_index(reader, channel_ids):
   '''
@@ -63,6 +57,7 @@ def from_channel_ids_to_stream_index(reader, channel_ids):
 def get_reader(filenames):
   # NDI passes an array of strings, however Neo always expects a single string, even for multi-file readers.
   filename = filenames[0]
+  # => e.g. CedRawIO or SpikeGadgetsRawIO
   Klass = neo.rawio.get_rawio_class(filename)
   if (Klass.rawmode == 'one-file' or Klass.rawmode == 'multi-file'):
     reader = Klass(filename=filename)
@@ -77,12 +72,16 @@ def read_channel(channel_type, channel_ids, filenames, segment_index, start_samp
 
   stream_index = from_channel_ids_to_stream_index(reader, channel_ids)
   raw = reader.get_analogsignal_chunk(
-    block_index=block_index, seg_index=segment_index,
-    i_start=start_sample, i_stop=end_sample,
+    block_index=int(block_index), seg_index=int(segment_index),
+    i_start=int(start_sample - 1), i_stop=int(end_sample),
     channel_ids=channel_ids,
-    stream_index=stream_index
+    stream_index=int(stream_index)
   )
-  rescaled = reader.rescale_signal_raw_to_float(raw, stream_index=stream_index, channel_ids=channel_ids)
+  rescaled = reader.rescale_signal_raw_to_float(
+    raw,
+    channel_ids=channel_ids,
+    stream_index=int(stream_index)
+  )
   return rescaled
 
 # data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
@@ -109,19 +108,6 @@ def t0_t1(filename, epoch_select):
     segment = block.segments[epoch_select - 1]
     return segment.end_time # TODO find how to find segment end_time in Neo
 
-
-
-
-# Google [x]: cell array
-# Google [x]: what's "{[t0 t1]};" object in Matlab
-# Google [x]: how to use : (colon) in Matlab, e.g. "time(:)"
-# Google [x]: ced_smr determines time by "dTimeBase * maxFTime * usPerTime". What are these?
-# Google [x]: what's "{ 'analog_in', 'aux_in', 'analog_out', 'digital_in', 'digital_out', 'marker', 'event', 'time' };" object in Matlab
-# Google [x]: what's the "case {2,3,4}," object in Matlab
-# Google [x]: what's numel in Matlab "for i=1:numel(channel),"
-# Google [x]: what's ... in Matlab
-#     [data] = SONGetEventChannel(fid,header.channelinfo(channel_index).number,...
-#              block_start,block_end);
 
 
 
