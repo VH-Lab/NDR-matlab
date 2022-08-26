@@ -16,7 +16,7 @@ function test_getchannelsepoch(test_case)
 
   % Setup neo
   neo_reader = ndr.reader('neo');
-  neo_channels = neo_reader.getchannelsepoch({ filename }, 0);
+  neo_channels = neo_reader.getchannelsepoch({ filename }, 'all');
 
   % Tests
   % 1. Note that intan and neo return different channel names

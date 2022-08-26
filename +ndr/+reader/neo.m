@@ -6,10 +6,14 @@ classdef neo < ndr.reader.base
     function obj = neo(varargin)
     end
 
+    % Get all channels from a file: py.get_channels().
+    %
+    % getchannelsepoch(epochfiles, 1) - to get channels from epoch 1
+    % getchannelsepoch(epochfiles, 'all') - to get all channels
     function channels = getchannelsepoch(self, epochfiles, epochselect)
-      py_channels = py.neo_python.get_channels(epochfiles, 0);
+      py_channels = py.neo_python.get_channels(epochfiles, epochselect);
 
-      % Just a simple python=>matlab object conversion
+      % Formatting objects from python to matlab
       channels = vlt.data.emptystruct('name', 'type');
       for k = 1:length(py_channels)
         new_channel.type = char(py_channels{k}{'type'});
@@ -18,22 +22,22 @@ classdef neo < ndr.reader.base
       end
     end
 
+    % Read the channel: py.read_channel().
+    %
     % Matlab      Python         Example
     % _________________________________________
-    % channeltype channel_type   'anything'
-    % channel     channel_ids     [ '0', '1' ]
-    % epochfiles  filenames       { '/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd' }
-    % epochselect segment_index   1
-    % s0          start_sample    1
-    % s1          end_sample      10
+    % channeltype  channel_type   'anything'
+    % channel      channel_ids     [ '0', '1' ]
+    % epochfiles   filenames       { '/Users/Me/NDR-matlab/example_data/example.rhd' }
+    % epochselect  segment_index   1
+    % s0           start_sample    1
+    % s1           end_sample      10
     function data = readchannels_epochsamples(self, channeltype, channel, epochfiles, epochselect, s0, s1)
       py_data = py.neo_python.read_channel(channeltype, channel, epochfiles, epochselect, s0, s1);
 
-      % Just a simple python=>matlab object conversion
+      % Formatting objects from python to matlab
       data = double(py_data);
     end
-
-
   end
 
   methods (Static)

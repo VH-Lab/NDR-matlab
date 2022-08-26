@@ -6,23 +6,6 @@ from neo.rawio.spikegadgetsrawio import SpikeGadgetsRawIO
 import quantities as pq
 import numpy as np
 
-# print(get_channels("/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"));
-# getchannelsepoch(epochfiles, epochselect)
-# => [{ type: '', name, '' }, ~]
-def get_channels(filenames, segment_index):
-  reader = get_reader(filenames)
-  reader.parse_header()
-  # return {
-  #   'signal_channels': reader.header['signal_channels'],
-  #   'spike_channels':  reader.header['spike_channels'],
-  #   'event_channels':  reader.header['event_channels']
-  # }
-  # print(reader.header['signal_channels'].dtype)
-  # print(reader.header['signal_channels'])
-
-  signal_channels = reader.header['signal_channels']
-  mapped = list(map(lambda channel: { 'name': channel['name'], 'type': 'hi' }, signal_channels))
-  return mapped
 
 def from_channel_ids_to_stream_index(reader, channel_ids):
   '''
@@ -65,9 +48,47 @@ def get_reader(filenames):
     reader = Klass(dirname=filename)
   return reader
 
+# => [{ type: '', name, '' }, ~]
+def get_channels(filenames, segment_index, block_index=1):
+  # 1. If the user cares about all channels in this file, simply parse the header
+  if segment_index == 'all':
+    reader = get_reader(filenames)
+    reader.parse_header()
+    def format(channels):
+      # We can find the Neo type in "mfdaq_prefix(channeltype)" if we like
+      return list(map(lambda channel: { 'name': channel['name'], 'type': 'neo' }, channels))
+
+    a = format(reader.header['signal_channels'])
+    b = format(reader.header['spike_channels'])
+    c = format(reader.header['event_channels'])
+
+    return a + b + c
+  # 2. If the user passed segment_index, gather the channel info from every signal!
+  else:
+    reader = neo.io.get_io(filenames[0])
+    blocks = reader.read(lazy=True)
+    block = blocks[int(block_index) - 1]
+    segment = block.segments[int(segment_index) - 1]
+
+    def format(signals):
+      channels = []
+      for signal in signals:
+        channels += list(map(lambda name: { 'name': name, 'type': 'neo' }, signal.array_annotations['channel_names']))
+      return channels
+
+    a = format(segment.analogsignals)
+    b = format(segment.spiketrains)
+    c = format(segment.irregularlysampledsignals)
+
+    return a + b + c
+
+
+
+get_channels(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 0, 0);
+
 # readchannels_epochsamples(channeltype, channel, epochfiles, epochselect, s0, s1)
 # Additional arguments: block_index
-def read_channel(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=0):
+def read_channel(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=1):
   reader = get_reader(filenames)
 
   stream_index = from_channel_ids_to_stream_index(reader, channel_ids)
