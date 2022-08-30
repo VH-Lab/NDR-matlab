@@ -38,6 +38,27 @@ classdef neo < ndr.reader.base
       % Formatting objects from python to matlab
       data = double(py_data);
     end
+
+    % channelprefix { 'ai', 'ai', 'ai' }
+    % channelnumber [ 21, 120, 5 ]
+    % epochstreams  { '/Users/Me/NDR-matlab/example_data/example.rhd' }
+    % epochselect   1
+    function channelstruct = daqchannels2internalchannels(self, channelprefix, channelnumber, epochstreams, epochselect)
+        py_channels = py.neo_python.convert_channels_from_neo_to_ndi(channelprefix, channelnumber, epochstreams, epochselect);
+
+        % Formatting objects from python to matlab
+        channels = vlt.data.emptystruct('internal_type','internal_number',...
+          'internal_channelname','ndr_type','samplerate');
+        for k = 1:length(py_channels)
+          new_channel.internal_type = char(py_channels{k}{'internal_type'});
+          new_channel.internal_number = char(py_channels{k}{'internal_number'});
+          new_channel.internal_channelname = char(py_channels{k}{'internal_channelname'});
+          new_channel.ndr_type = char(py_channels{k}{'ndr_type'});
+          new_channel.samplerate = char(py_channels{k}{'samplerate'});
+          channels(end + 1) = new_channel;
+        end
+    end;
+
   end
 
   methods (Static)
