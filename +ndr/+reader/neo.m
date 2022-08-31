@@ -59,6 +59,15 @@ classdef neo < ndr.reader.base
         end
     end;
 
+    function [b, errormsg] = canbereadtogether(self, channelstruct)
+      % Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
+      % CHANNELSTRUCT with a single function call. If they cannot be read together,
+      % a description is provided in ERRORMSG.
+      py_response = py.neo_python.can_be_read_together(channelstruct);
+
+      b = py_response{'b'};
+      errormsg = [py_response{'errormsg'}];
+    end
   end
 
   methods (Static)

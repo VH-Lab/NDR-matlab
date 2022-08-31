@@ -50,22 +50,12 @@ class Utils:
     reader.parse_header()
 
     all_channels = reader.header['signal_channels']
-    channels = list(filter(lambda channel: channel['id'] in channel_ids, all_channels))
+    channel = list(filter(lambda channel: channel['id'] == channel_ids[0], all_channels))[0]
+    stream_id = channel['stream_id']
 
-    stream_ids = list(map(lambda channel: channel['stream_id'], channels))
-
-    unique_stream_ids = np.unique(stream_ids)
-
-    if (len(unique_stream_ids) != 1):
-      error_message = ''
-      for channel in channels:
-        error_message += (f"\nChannel_id: '{channel['id']}', stream_id: '{channel['stream_id']}'.")
-      raise ValueError(f"All of your channels should belong to a single signal_stream in Neo.\n{error_message}\n")
-    else:
-      stream_id = unique_stream_ids[0]
-      all_streams = reader.header['signal_streams']
-      for index, stream in enumerate(all_streams):
-        if stream_id == stream['id']: return index
+    all_streams = reader.header['signal_streams']
+    for index, stream in enumerate(all_streams):
+      if stream_id == stream['id']: return index
 
   def get_reader(filenames):
     # NDI passes an array of strings, however Neo always expects a single string, even for multi-file readers.
@@ -93,13 +83,34 @@ def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filename
     'internal_number':      channel['id'],
     'internal_channelname': channel['name'],
     'ndr_type':             'neo',
-    'samplerate':           channel['sampling_rate']
+    'samplerate':           channel['sampling_rate'],
+    # This is a nonstandard Neo-only field
+    'stream_id':            channel['stream_id']
   }, needed_channels))
 
   return formatted_channels
 
 # a = convert_channels_from_neo_to_ndi(['Ain'], ['1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
 # print(a)
+
+def can_be_read_together(channelstruct):
+  stream_ids = list(map(lambda channel: channel['stream_id'], channelstruct))
+  unique_stream_ids = np.unique(stream_ids)
+
+  if (len(unique_stream_ids) > 1):
+    error_message = ''
+    for channel in channelstruct:
+      error_message += f"\nChannel_id: '{channel['id']}', stream_id: '{channel['stream_id']}'."
+
+    return {
+      'b': 0,
+      'errormsg': f"All of your channels should belong to a single signal_stream in Neo.\n{error_message}\n"
+    }
+  else:
+    return {
+      'b': 1,
+      'errormsg': None
+    }
 
 # => [{ type: '', name, '' }, ~]
 def get_channels(filenames, segment_index, block_index=1):
