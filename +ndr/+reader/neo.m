@@ -41,10 +41,10 @@ classdef neo < ndr.reader.base
 
     % channelprefix { 'ai', 'ai', 'ai' }
     % channelnumber [ 21, 120, 5 ]
-    % epochstreams  { '/Users/Me/NDR-matlab/example_data/example.rhd' }
+    % epochfiles  { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect   1
-    function channelstruct = daqchannels2internalchannels(self, channelprefix, channelnumber, epochstreams, epochselect)
-        py_channels = py.neo_python.convert_channels_from_neo_to_ndi(channelprefix, channelnumber, epochstreams, epochselect);
+    function channelstruct = daqchannels2internalchannels(self, channelprefix, channelnumber, epochfiles, epochselect)
+        py_channels = py.neo_python.convert_channels_from_neo_to_ndi(channelprefix, channelnumber, epochfiles, epochselect);
 
         % Formatting objects from python to matlab
         channels = vlt.data.emptystruct('internal_type','internal_number',...
@@ -69,14 +69,22 @@ classdef neo < ndr.reader.base
       errormsg = [py_response{'errormsg'}];
     end
 
-    function sr = samplerate(self, epochstreams, epoch_select, channeltype, channel)
+    function sr = samplerate(self, epochfiles, epochselect, channeltype, channel)
       % SR is an array of sample rates from the specified channels
       %
       % CHANNELTYPE can be either a string or a cell array of
       % strings the same length as the vector CHANNEL.
       % If CHANNELTYPE is a single string, then it is assumed that
       % that CHANNELTYPE applies to every entry of CHANNEL.
-      sr = py.neo_python.get_sample_rates_for_channel_ids(epochstreams, channel);
+      sr = py.neo_python.get_sample_rates_for_channel_ids(epochfiles, channel);
+    end
+
+    function t0t1 = t0_t1(self, epochfiles, epochselect)
+      py_t0t1 = py.neo_python.get_t0t1(epochfiles, epochselect);
+
+      % Formatting objects from python to matlab
+      t0t1 = {py_t0t1};
+      % t0t1 = {[NaN NaN]};
     end
   end
 

@@ -68,6 +68,19 @@ class Utils:
       reader = Klass(dirname=filename)
     return reader
 
+def get_t0t1(filenames, segment_index, block_index=1):
+  reader = neo.io.get_io(filenames[0])
+  block = reader.read()[block_index - 1]
+  segment = block.segments[segment_index - 1]
+
+  def get_magnitude(q):
+    return q.rescale('s').item()
+
+  return [get_magnitude(segment.t_start), get_magnitude(segment.t_stop)]
+
+# a = get_t0t1(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
+# print(a)
+
 # daqchannels2internalchannels(channelprefix, channelnumber, epochstreams, epochselect)
 def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filenames, segment_index, block_index=1):
   # 1. Get all channels from the segment
@@ -188,30 +201,3 @@ def read_channel(channel_type, channel_ids, filenames, segment_index, start_samp
 
 # data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
 # print(data)
-
-
-# samplerate(epochstreams, epoch_select, channeltype, channel)
-def sample_rate(filename, epoch_select, channel_type, channel_id):
-  reader = neo.io.get_io(filename)
-  blocks = reader.read(lazy=True)
-  for block in blocks:
-    segment = block.segments[epoch_select - 1]
-    for analog_signal in segment.analogsignals:
-      mm = analog_signal.load(channel_indexes=[channel_index])
-      # How do we use channel_type here?
-      return mm.sampling_rate
-
-# t0_t1(epochfiles, epochselect)
-# When did this epoch begin, and when did it end?
-def t0_t1(filename, epoch_select):
-  reader = neo.io.get_io(filename)
-  blocks = reader.read(lazy=True)
-  for block in blocks:
-    segment = block.segments[epoch_select - 1]
-    return segment.end_time # TODO find how to find segment end_time in Neo
-
-
-
-
-
-
