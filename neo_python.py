@@ -93,6 +93,24 @@ def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filename
 # a = convert_channels_from_neo_to_ndi(['Ain'], ['1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
 # print(a)
 
+def get_sample_rates_for_channel_ids(filenames, channel_ids):
+  header_channels = Utils.get_header_channels(filenames)
+  our_channels = list(filter(lambda channel: channel['id'] in channel_ids, header_channels))
+
+  def channel_to_sample_rate(channel):
+    if channel['_type'] == 'signal_channels':
+      return channel['sampling_rate']
+    elif channel['_type'] == 'spike_channels':
+      return channel['wf_sampling_rate']
+    elif channel['_type'] == 'event_channels':
+      return None
+
+  sample_rates = list(map(channel_to_sample_rate, our_channels))
+  return sample_rates
+
+# a = get_sample_rates_for_channel_ids(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], ['Ain1', 'Aout1'])
+# print(a)
+
 def can_be_read_together(channelstruct):
   stream_ids = list(map(lambda channel: channel['stream_id'], channelstruct))
   unique_stream_ids = np.unique(stream_ids)

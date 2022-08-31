@@ -68,6 +68,16 @@ classdef neo < ndr.reader.base
       b = py_response{'b'};
       errormsg = [py_response{'errormsg'}];
     end
+
+    function sr = samplerate(self, epochstreams, epoch_select, channeltype, channel)
+      % SR is an array of sample rates from the specified channels
+      %
+      % CHANNELTYPE can be either a string or a cell array of
+      % strings the same length as the vector CHANNEL.
+      % If CHANNELTYPE is a single string, then it is assumed that
+      % that CHANNELTYPE applies to every entry of CHANNEL.
+      sr = py.neo_python.get_sample_rates_for_channel_ids(epochstreams, channel);
+    end
   end
 
   methods (Static)
