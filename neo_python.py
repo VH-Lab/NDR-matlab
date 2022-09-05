@@ -85,18 +85,21 @@ def get_t0t1(filenames, segment_index, block_index=1):
 def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filenames, segment_index, block_index=1):
   # 1. Get all channels from the segment
   channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
+
   # 2. Filter for the channels we're interested in by channelprefix and channelnumber
   channel_names = []
   for i in range(len(channel_prefixes)):
     channel_names.append(channel_prefixes[i] + channel_numbers[i])
   needed_channels = filter(lambda channel: channel['name'] in channel_names, channels)
+
   # 3. Format from neo to ndi format
   formatted_channels = list(map(lambda channel: {
     'internal_type':        channel['_type'],
     'internal_number':      channel['id'],
     'internal_channelname': channel['name'],
     'ndr_type':             'neo',
-    'samplerate':           channel['sampling_rate'],
+    # TODO hieroglyph prints out if we don't convert to str
+    'samplerate':           str(channel['sampling_rate']),
     # This is a nonstandard Neo-only field
     'stream_id':            channel['stream_id']
   }, needed_channels))
