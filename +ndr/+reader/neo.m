@@ -47,7 +47,7 @@ classdef neo < ndr.reader.base
         py_channels = py.neo_python.convert_channels_from_neo_to_ndi(channelprefix, channelnumber, epochfiles, epochselect);
 
         % Formatting objects from python to matlab
-        channels = vlt.data.emptystruct('internal_type','internal_number',...
+        channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
           'internal_channelname','ndr_type','samplerate');
         for k = 1:length(py_channels)
           new_channel.internal_type = char(py_channels{k}{'internal_type'});
@@ -55,7 +55,7 @@ classdef neo < ndr.reader.base
           new_channel.internal_channelname = char(py_channels{k}{'internal_channelname'});
           new_channel.ndr_type = char(py_channels{k}{'ndr_type'});
           new_channel.samplerate = char(py_channels{k}{'samplerate'});
-          channels(end + 1) = new_channel;
+          channelstruct(end + 1) = new_channel;
         end
     end;
 

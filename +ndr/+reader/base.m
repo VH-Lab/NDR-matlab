@@ -49,7 +49,7 @@ classdef base
 						b = 0;
 						errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
 					else,
-						sr_ = uniquetol(sr)
+						sr_ = uniquetol(sr);
 						if numel(sr_)~=1,
 							b = 0;
 							errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
