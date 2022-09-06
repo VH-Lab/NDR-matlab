@@ -55,6 +55,21 @@ function test_readchannels_epochsamples(test_case)
   verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.001);
 end
 
+function test_readchannels_epochsamples_time(test_case)
+  filename = utils_get_example('example.rhd');
+
+  % Setup intan
+  intan_reader = ndr.reader('intan');
+
+  % Setup neo
+  neo_reader = ndr.reader('neo');
+
+  % Tests
+  intan_data = intan_reader.readchannels_epochsamples('time', [ 1, 2 ], { filename }, 1, 1, 10);
+  neo_data = neo_reader.readchannels_epochsamples('time', [ '0', '1' ], { filename }, 1, 1, 10);
+  verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.0000001);
+end
+
 % Utils
 function utils_disp_channels(channels)
   for i=1:numel(channels),

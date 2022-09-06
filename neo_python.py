@@ -186,21 +186,31 @@ def get_channels(filenames, segment_index, block_index=1):
 # readchannels_epochsamples(channeltype, channel, epochfiles, epochselect, s0, s1)
 # Additional arguments: block_index
 def read_channel(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=1):
-  reader = Utils.get_reader(filenames)
+  if channel_type == 'time':
+    sample_rate = get_sample_rates_for_channel_ids(filenames, channel_ids)[0]
+    sample_interval = 1/sample_rate
 
-  stream_index = Utils.from_channel_ids_to_stream_index(reader, channel_ids)
-  raw = reader.get_analogsignal_chunk(
-    block_index=int(block_index), seg_index=int(segment_index),
-    i_start=int(start_sample - 1), i_stop=int(end_sample),
-    channel_ids=channel_ids,
-    stream_index=int(stream_index)
-  )
-  rescaled = reader.rescale_signal_raw_to_float(
-    raw,
-    channel_ids=channel_ids,
-    stream_index=int(stream_index)
-  )
-  return rescaled
+    times = []
+    for sample in range(int(start_sample) - 1, int(end_sample)):
+      times.append([sample * sample_interval])
+    return np.array(times, np.float32)
+  else:
+    reader = Utils.get_reader(filenames)
 
-# data = read_channel("smth", ['0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
+    stream_index = Utils.from_channel_ids_to_stream_index(reader, channel_ids)
+    raw = reader.get_analogsignal_chunk(
+      block_index=int(block_index), seg_index=int(segment_index),
+      i_start=int(start_sample) - 1, i_stop=int(end_sample),
+      channel_ids=channel_ids,
+      stream_index=int(stream_index)
+    )
+    rescaled = reader.rescale_signal_raw_to_float(
+      raw,
+      channel_ids=channel_ids,
+      stream_index=int(stream_index)
+    )
+
+    return rescaled
+
+# data = read_channel("time", ['0', '1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
 # print(data)
