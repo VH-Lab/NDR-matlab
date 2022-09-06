@@ -7,17 +7,21 @@ function setupOnce(test_case)
   ndr_Init();
 end
 
-% function test_read(test_case)
-%   filename = utils_get_example('example.rhd');
-%   intan_reader = ndr.reader('intan');
-%   [data, time] = intan_reader.read({ filename }, ['A021+A022'], { 'useSamples', 1, 's0', 1, 's1', 5 });
-%   % channelprefix = ['a', 'a'], channelnumber = [21, 22]
-%   % disp(data);
-%   % disp(time);
+function test_read(test_case)
+  filename = utils_get_example('example.rhd');
 
-%   intan_channels = intan_reader.getchannelsepoch({ filename });
-%   utils_disp_channelstruct()
-% end
+  % Setup intan
+  intan_reader = ndr.reader('intan');
+  [intan_data, intan_time] = intan_reader.read({ filename }, 'A000+A001', { 'useSamples', 1, 's0', 5, 's1', 8 });
+
+  % Setup neo
+  neo_reader = ndr.reader('neo');
+  [neo_data, neo_time] = neo_reader.read({ filename }, { 'A-000', 'A-001' }, { 'useSamples', 1, 's0', 5, 's1', 8 });
+
+  % Tests
+  verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.001);
+  verifyEqual(test_case, intan_time, neo_time, "AbsTol", 0.001);
+end
 
 function test_getchannelsepoch(test_case)
   filename = utils_get_example('example.rhd');

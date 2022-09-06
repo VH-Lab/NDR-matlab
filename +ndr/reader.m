@@ -30,9 +30,12 @@ classdef reader
 		function [data, time] = read(ndr_reader_obj, epochstreams, channelstring, varargin)
 			% READ - read data from an ndr.reader object
 			%
+			% CHANNELSTRING can be multiple things.
+			%   For most readers, it should be a string of NDR channel names, e.g. 'ai1-3+b2-4'.
+			%   Intan reader accepts both the NDR channel names, e.g. 'ai1-3+b2-4', and device channel names, e.g. 'A021+A022'.
+			%   Neo reader stands as an exception - it expects device channel names, but as a cell array, e.g. { 'A-000', 'A-001' }.
+			% 
 			% [DATA, TIME] = READ(NDR_READER_OBJ, EPOCHSTREAMS, CHANNELSTRING, ...)
-			%
-			
 			%
 			% This function takes additional arguments in the form of name/value pairs.
 			% -------------------------------------------------------------------------
@@ -65,7 +68,12 @@ classdef reader
 
 				ndr.data.assign(varargin{:});
 
-				[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
+				if strcmp(class(ndr_reader_obj.ndr_reader_base), 'ndr.reader.neo'),
+					channelprefix = {};
+					channelnumber = channelstring;
+				else,
+					[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
+				end;
 
 				channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, ...
 					channelprefix, channelnumber, epochstreams, epoch_select);

@@ -73,6 +73,14 @@ class Utils:
       reader = Klass(dirname=filename)
     return reader
 
+  def channel_to_sample_rate(channel):
+    if channel['_type'] == 'signal_channels':
+      return channel['sampling_rate']
+    elif channel['_type'] == 'spike_channels':
+      return channel['wf_sampling_rate']
+    elif channel['_type'] == 'event_channels':
+      return None
+
 def get_t0t1(filenames, segment_index, block_index=1):
   reader = neo.io.get_io(filenames[0])
   block = reader.read()[block_index - 1]
@@ -86,15 +94,24 @@ def get_t0t1(filenames, segment_index, block_index=1):
 # a = get_t0t1(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
 # print(a)
 
+def channel_type_from_neo_to_ndr(_type):
+  # From NDR comments:
+  #   DATA is a two-column vector; the first column has the time of the event. The second
+  #   column indicates the marker code. In the case of 'events', this is just 1.
+  if _type == 'signal_channels':
+    return 'analog_input'
+  # TODO might be other types!
+  elif _type == 'spike_channels':
+    return 'event'
+  elif _type == 'event_channels':
+    return 'marker'
+
 # daqchannels2internalchannels(channelprefix, channelnumber, epochstreams, epochselect)
-def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filenames, segment_index, block_index=1):
+def convert_channels_from_neo_to_ndi(channel_names, filenames, segment_index, block_index=1):
   # 1. Get all channels from the segment
   channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
 
-  # 2. Filter for the channels we're interested in by channelprefix and channelnumber
-  channel_names = []
-  for i in range(len(channel_prefixes)):
-    channel_names.append(channel_prefixes[i] + channel_numbers[i])
+  # 2. Filter for the channels we're interested in
   needed_channels = filter(lambda channel: channel['name'] in channel_names, channels)
 
   # 3. Format from neo to ndi format
@@ -102,9 +119,9 @@ def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filename
     'internal_type':        channel['_type'],
     'internal_number':      channel['id'],
     'internal_channelname': channel['name'],
-    'ndr_type':             'neo',
+    'ndr_type':             channel_type_from_neo_to_ndr(channel['_type']),
     # TODO hieroglyph prints out if we don't convert to str
-    'samplerate':           str(channel['sampling_rate']),
+    'samplerate':           str(Utils.channel_to_sample_rate(channel)),
     # This is a nonstandard Neo-only field
     'stream_id':            channel['stream_id']
   }, needed_channels))
@@ -117,16 +134,7 @@ def convert_channels_from_neo_to_ndi(channel_prefixes, channel_numbers, filename
 def get_sample_rates_for_channel_ids(filenames, channel_ids):
   header_channels = Utils.get_header_channels(filenames)
   our_channels = list(filter(lambda channel: channel['id'] in channel_ids, header_channels))
-
-  def channel_to_sample_rate(channel):
-    if channel['_type'] == 'signal_channels':
-      return channel['sampling_rate']
-    elif channel['_type'] == 'spike_channels':
-      return channel['wf_sampling_rate']
-    elif channel['_type'] == 'event_channels':
-      return None
-
-  sample_rates = list(map(channel_to_sample_rate, our_channels))
+  sample_rates = list(map(Utils.channel_to_sample_rate, our_channels))
   return sample_rates
 
 # a = get_sample_rates_for_channel_ids(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], ['Ain1', 'Aout1'])
@@ -148,7 +156,7 @@ def can_be_read_together(channelstruct):
   else:
     return {
       'b': 1,
-      'errormsg': None
+      'errormsg': ""
     }
 
 # => [{ type: '', name, '' }, ~]
