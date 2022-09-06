@@ -11,7 +11,7 @@ classdef neo < ndr.reader.base
     % getchannelsepoch(epochfiles, 1) - to get channels from epoch 1
     % getchannelsepoch(epochfiles, 'all') - to get all channels
     function channels = getchannelsepoch(self, epochfiles, epochselect)
-      py_channels = py.neo_python.get_channels(epochfiles, epochselect);
+      py_channels = py.neo_python.getchannelsepoch(epochfiles, epochselect);
 
       % Formatting objects from python to matlab
       channels = vlt.data.emptystruct('name', 'type');
@@ -33,7 +33,7 @@ classdef neo < ndr.reader.base
     % s0           start_sample    1
     % s1           end_sample      10
     function data = readchannels_epochsamples(self, channeltype, channel, epochfiles, epochselect, s0, s1)
-      py_data = py.neo_python.read_channel(channeltype, channel, epochfiles, epochselect, s0, s1);
+      py_data = py.neo_python.readchannels_epochsamples(channeltype, channel, epochfiles, epochselect, s0, s1);
 
       % Formatting objects from python to matlab
       data = double(py_data);
@@ -44,7 +44,7 @@ classdef neo < ndr.reader.base
     % epochfiles    { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect   1
     function channelstruct = daqchannels2internalchannels(self, dummy, channelnumber, epochfiles, epochselect)
-        py_channels = py.neo_python.convert_channels_from_neo_to_ndi(channelnumber, epochfiles, epochselect);
+        py_channels = py.neo_python.daqchannels2internalchannels(channelnumber, epochfiles, epochselect);
 
         % Formatting objects from python to matlab
         channelstruct = vlt.data.emptystruct('internal_type','internal_number', 'internal_channelname','ndr_type','samplerate', 'stream_id');
@@ -68,7 +68,7 @@ classdef neo < ndr.reader.base
       for k = 1:length(channelstruct)
         py_channelstruct{k} = py.dict(channelstruct(k));
       end
-      py_response = py.neo_python.can_be_read_together(py_channelstruct);
+      py_response = py.neo_python.canbereadtogether(py_channelstruct);
 
       b = double(py_response{'b'});
       errormsg = [char(py_response{'errormsg'})];
@@ -85,7 +85,7 @@ classdef neo < ndr.reader.base
     end
 
     function t0t1 = t0_t1(self, epochfiles, epochselect)
-      py_t0t1 = py.neo_python.get_t0t1(epochfiles, epochselect);
+      py_t0t1 = py.neo_python.t0_t1(epochfiles, epochselect);
 
       % Formatting objects from python to matlab
       t0t1 = {py_t0t1};
