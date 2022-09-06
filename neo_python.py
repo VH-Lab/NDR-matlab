@@ -20,8 +20,6 @@ class Utils:
         aa.append(python_channel)
     return aa
 
-  # a = get_channels_from_segment(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
-  # print(a)
   def get_channels_from_segment(filenames, segment_index, block_index=1):
     io_reader = neo.io.get_io(filenames[0])
     blocks = io_reader.read(lazy=True)
@@ -91,9 +89,6 @@ def t0_t1(filenames, segment_index, block_index=1):
 
   return [get_magnitude(segment.t_start), get_magnitude(segment.t_stop)]
 
-# a = t0_t1(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
-# print(a)
-
 def channel_type_from_neo_to_ndr(_type):
   # From NDR comments:
   #   DATA is a two-column vector; the first column has the time of the event. The second
@@ -106,7 +101,6 @@ def channel_type_from_neo_to_ndr(_type):
   elif _type == 'event_channels':
     return 'marker'
 
-# daqchannels2internalchannels(channelprefix, channelnumber, epochstreams, epochselect)
 def daqchannels2internalchannels(channel_names, filenames, segment_index, block_index=1):
   # 1. Get all channels from the segment
   channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
@@ -128,17 +122,11 @@ def daqchannels2internalchannels(channel_names, filenames, segment_index, block_
 
   return formatted_channels
 
-# a = daqchannels2internalchannels(['Ain'], ['1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 1, 1)
-# print(a)
-
 def samplerate(filenames, channel_ids):
   header_channels = Utils.get_header_channels(filenames)
   our_channels = list(filter(lambda channel: channel['id'] in channel_ids, header_channels))
   sample_rates = list(map(Utils.channel_to_sample_rate, our_channels))
   return sample_rates
-
-# a = samplerate(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], ['Ain1', 'Aout1'])
-# print(a)
 
 def canbereadtogether(channelstruct):
   stream_ids = list(map(lambda channel: channel['stream_id'], channelstruct))
@@ -159,7 +147,6 @@ def canbereadtogether(channelstruct):
       'errormsg': ""
     }
 
-# => [{ type: '', name, '' }, ~]
 def getchannelsepoch(filenames, segment_index, block_index=1):
   # 1. If the user cares about all channels in this file, simply parse the header
   if segment_index == 'all':
@@ -193,11 +180,6 @@ def getchannelsepoch(filenames, segment_index, block_index=1):
 
     return a + b + c
 
-# channels = getchannelsepoch(["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rec"], 'all');
-# print(channels)
-
-# readchannels_epochsamples(channeltype, channel, epochfiles, epochselect, s0, s1)
-# Additional arguments: block_index
 def readchannels_epochsamples(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
     sample_rate = samplerate(filenames, channel_ids)[0]
@@ -225,9 +207,5 @@ def readchannels_epochsamples(channel_type, channel_ids, filenames, segment_inde
 
     return rescaled
 
-# data = readchannels_epochsamples("time", ['0', '1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
-# print(data)
-
-# function [data] = readevents_epochsamples_native(self, channeltype, channel, epochstreams, epoch_select, t0, t1)
 def read_channel_events(channel_type, channel_ids, filenames, segment_index, t0, t1):
   pass
