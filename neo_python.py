@@ -60,6 +60,11 @@ class Utils:
   def get_reader(filenames):
     # NDI passes an array of strings, however Neo always expects a single string, even for multi-file readers.
     filename = filenames[0]
+
+    # Ced can't find the CedRawIO class via get_rawio_class() for some reason
+    if filename.endswith('.smr'):
+      return CedRawIO(filename=filename)
+
     # => e.g. CedRawIO or SpikeGadgetsRawIO
     Klass = neo.rawio.get_rawio_class(filename)
     if (Klass.rawmode == 'one-file' or Klass.rawmode == 'multi-file'):
@@ -214,3 +219,7 @@ def read_channel(channel_type, channel_ids, filenames, segment_index, start_samp
 
 # data = read_channel("time", ['0', '1'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/example.rhd"], segment_index=0, start_sample=1, end_sample=10)
 # print(data)
+
+# function [data] = readevents_epochsamples_native(self, channeltype, channel, epochstreams, epoch_select, t0, t1)
+def read_channel_events(channel_type, channel_ids, filenames, segment_index, t0, t1):
+  pass

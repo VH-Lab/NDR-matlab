@@ -34,9 +34,26 @@ function test_getchannelsepoch(test_case)
   % 1. Note that intan and neo return different channel names
   verifyEqual(test_case, intan_channels(1).name, 'ai1');
   verifyEqual(test_case, neo_channels(1).name, 'A-000');
-  % 2. Note that neo returns a lot more channels!
+  % 2. Intan and neo return the same number of channels
   verifyEqual(test_case, numel(intan_channels), 36);
   verifyEqual(test_case, numel(neo_channels), 36);
+end
+
+function test_getchannelsepoch_ced(test_case)
+  filename = utils_get_example('example.smr');
+
+  % Setup ced
+  ced_reader = ndr.reader('smr');
+  ced_channels = ced_reader.getchannelsepoch({ filename }, 1);
+
+  % Setup neo
+  neo_reader = ndr.reader('neo');
+  neo_channels = neo_reader.getchannelsepoch({ filename }, 'all');
+
+  % Tests
+  % Note that neo returns a lot fewer channels!
+  verifyEqual(test_case, numel(ced_channels), 14);
+  verifyEqual(test_case, numel(neo_channels), 3);
 end
 
 function test_readchannels_epochsamples(test_case)
