@@ -31,21 +31,15 @@ def get_channels_from_segment(filenames, segment_index, block_index=1):
   our_channels = list(filter(lambda channel: channel['name'] in channel_names, header_channels))
   return our_channels
 
-def from_channel_ids_to_stream_index(reader, channel_ids):
+def from_channel_names_to_stream_index(filenames, channel_names):
   '''
-  => a single stream_index that all passed channels belong to, or
-  => throws an exception if not all channels belong to a single stream. 
-
-  Neo helps us by grouping all analogsignals into a single signal_stream when these analogsignals have the same: "sampling_rate, start_time, length, sample dtype".
-  That is, it only makes sense to retrieve channels from a single stream!
-  
-  Neo docs: "A stream thus has multiple channels which all have the same sampling rate and are on the same clock, have the same sections with t_starts and lengths, and the same data type for their samples. The samples in a stream can thus be retrieved as an Numpy array, a chunk of samples."
+  => a single stream_index that the first passed channel belongs to
   '''
-  reader.parse_header()
-
-  all_channels = reader.header['signal_channels']
-  channel = list(filter(lambda channel: channel['id'] == channel_ids[0], all_channels))[0]
+  all_channels = get_header_channels(filenames)
+  channel = list(filter(lambda channel: channel['name'] == channel_names[0], all_channels))[0]
   stream_id = channel['stream_id']
+  reader = get_reader(filenames)
+  reader.parse_header()
 
   all_streams = reader.header['signal_streams']
   for index, stream in enumerate(all_streams):

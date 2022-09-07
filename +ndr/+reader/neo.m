@@ -24,7 +24,7 @@ classdef neo < ndr.reader.base
     % Matlab      Python         Example
     % _________________________________________
     % channeltype  channel_type   'anything'
-    % channel      channel_ids     [ '0', '1' ]
+    % channel      channel_names   [ 'A-000', 'A-001' ]
     % epochfiles   filenames       { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect  segment_index   1
     % s0           start_sample    1

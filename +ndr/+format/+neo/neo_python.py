@@ -20,9 +20,9 @@ def getchannelsepoch(filenames, segment_index, block_index=1):
     segment_channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
     return format(segment_channels)
 
-def readchannels_epochsamples(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=1):
+def readchannels_epochsamples(channel_type, channel_names, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
-    sample_rate = samplerate(filenames, channel_ids)[0]
+    sample_rate = samplerate(filenames, channel_names)[0]
     sample_interval = 1/sample_rate
 
     times = []
@@ -31,17 +31,20 @@ def readchannels_epochsamples(channel_type, channel_ids, filenames, segment_inde
     return np.array(times, np.float32)
   else:
     reader = Utils.get_reader(filenames)
+    # THIS IS needed for the get_analogsignal_chunk() call!
+    reader.parse_header()
 
-    stream_index = Utils.from_channel_ids_to_stream_index(reader, channel_ids)
+    stream_index = Utils.from_channel_names_to_stream_index(filenames, channel_names)
+
     raw = reader.get_analogsignal_chunk(
-      block_index=int(block_index), seg_index=int(segment_index),
+      block_index=int(block_index) - 1, seg_index=int(segment_index) - 1,
       i_start=int(start_sample) - 1, i_stop=int(end_sample),
-      channel_ids=channel_ids,
+      channel_names=channel_names,
       stream_index=int(stream_index)
     )
     rescaled = reader.rescale_signal_raw_to_float(
       raw,
-      channel_ids=channel_ids,
+      channel_names=channel_names,
       stream_index=int(stream_index)
     )
 
@@ -69,13 +72,22 @@ def daqchannels2internalchannels(channel_names, filenames, segment_index, block_
   return formatted_channels
 
 def canbereadtogether(channelstruct):
+  '''
+  => { 'b': 1, 'errormsg': '' } when all channels belong to the same stream.
+  => { 'b': 0, 'errormsg': 'explanation...' when some channels belong to different streams.
+
+  Neo helps us by grouping all analogsignals into a single signal_stream when these analogsignals have the same: "sampling_rate, start_time, length, sample dtype".
+  That is, it only makes sense to retrieve channels from a single stream!
+  
+  Neo docs: "A stream thus has multiple channels which all have the same sampling rate and are on the same clock, have the same sections with t_starts and lengths, and the same data type for their samples. The samples in a stream can thus be retrieved as an Numpy array, a chunk of samples."
+  '''
   stream_ids = list(map(lambda channel: channel['stream_id'], channelstruct))
   unique_stream_ids = np.unique(stream_ids)
 
   if (len(unique_stream_ids) > 1):
     error_message = ''
     for channel in channelstruct:
-      error_message += f"\nChannel_id: '{channel['id']}', stream_id: '{channel['stream_id']}'."
+      error_message += f"\nChannel_name: '{channel['name']}', stream_id: '{channel['stream_id']}'."
 
     return {
       'b': 0,
@@ -87,9 +99,9 @@ def canbereadtogether(channelstruct):
       'errormsg': ""
     }
 
-def samplerate(filenames, channel_ids):
+def samplerate(filenames, channel_names):
   header_channels = Utils.get_header_channels(filenames)
-  our_channels = list(filter(lambda channel: channel['id'] in channel_ids, header_channels))
+  our_channels = list(filter(lambda channel: channel['name'] in channel_names, header_channels))
   sample_rates = list(map(Utils.channel_to_sample_rate, our_channels))
   return sample_rates
 
@@ -103,5 +115,5 @@ def t0_t1(filenames, segment_index, block_index=1):
 
   return [get_magnitude(segment.t_start), get_magnitude(segment.t_stop)]
 
-def read_channel_events(channel_type, channel_ids, filenames, segment_index, t0, t1):
+def read_channel_events(channel_type, channel_names, filenames, segment_index, t0, t1):
   pass

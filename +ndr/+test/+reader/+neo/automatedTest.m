@@ -71,7 +71,7 @@ function test_readchannels_epochsamples(test_case)
 
   % Tests
   intan_data = intan_reader.readchannels_epochsamples('ai', [ 1, 2 ], { filename }, 1, 1, 10);
-  neo_data = neo_reader.readchannels_epochsamples('smth', [ '0', '1' ], { filename }, 1, 1, 10);
+  neo_data = neo_reader.readchannels_epochsamples('smth', { 'A-000', 'A-001' }, { filename }, 1, 1, 10);
 
   verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.001);
 end
@@ -87,7 +87,7 @@ function test_readchannels_epochsamples_time(test_case)
 
   % Tests
   intan_data = intan_reader.readchannels_epochsamples('time', [ 1, 2 ], { filename }, 1, 1, 10);
-  neo_data = neo_reader.readchannels_epochsamples('time', [ '0', '1' ], { filename }, 1, 1, 10);
+  neo_data = neo_reader.readchannels_epochsamples('time', { 'A-000', 'A-001' }, { filename }, 1, 1, 10);
   verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.0000001);
 end
 
