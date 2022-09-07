@@ -7,14 +7,14 @@ def get_header_channels(filenames):
   raw_reader = get_reader(filenames)
   raw_reader.parse_header()
   header = raw_reader.header
-  aa = []
+  all_channels = []
   for _type in ['signal_channels', 'spike_channels', 'event_channels']:
     numpy_channels = header[_type]
     python_channels = [dict(zip(numpy_channels.dtype.names,x)) for x in numpy_channels]
     for python_channel in python_channels:
       python_channel['_type'] = _type
-      aa.append(python_channel)
-  return aa
+      all_channels.append(python_channel)
+  return all_channels
 
 def get_channels_from_segment(filenames, segment_index, block_index=1):
   io_reader = neo.io.get_io(filenames[0])

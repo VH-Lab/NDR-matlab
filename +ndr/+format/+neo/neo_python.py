@@ -61,37 +61,20 @@ def canbereadtogether(channelstruct):
     }
 
 def getchannelsepoch(filenames, segment_index, block_index=1):
+  def format(channels):
+    return list(map(lambda channel: {
+      'name': channel['name'],
+      'type': Utils.channel_type_from_neo_to_ndr(channel['_type'])
+    }, channels))
+
   # 1. If the user cares about all channels in this file, simply parse the header
   if segment_index == 'all':
-    reader = Utils.get_reader(filenames)
-    reader.parse_header()
-    def format(channels):
-      # We can find the Neo type in "mfdaq_prefix(channeltype)" if we like
-      return list(map(lambda channel: { 'name': channel['name'], 'type': 'neo' }, channels))
-
-    a = format(reader.header['signal_channels'])
-    b = format(reader.header['spike_channels'])
-    c = format(reader.header['event_channels'])
-
-    return a + b + c
+    all_channels = Utils.get_header_channels(filenames)
+    return format(all_channels)
   # 2. If the user passed segment_index, gather the channel info from every signal!
   else:
-    reader = neo.io.get_io(filenames[0])
-    blocks = reader.read(lazy=True)
-    block = blocks[int(block_index) - 1]
-    segment = block.segments[int(segment_index) - 1]
-
-    def format(signals):
-      channels = []
-      for signal in signals:
-        channels += list(map(lambda name: { 'name': name, 'type': 'neo' }, signal.array_annotations['channel_names']))
-      return channels
-
-    a = format(segment.analogsignals)
-    b = format(segment.spiketrains)
-    c = format(segment.irregularlysampledsignals)
-
-    return a + b + c
+    segment_channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
+    return format(segment_channels)
 
 def readchannels_epochsamples(channel_type, channel_ids, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
