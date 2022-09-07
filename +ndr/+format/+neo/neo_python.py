@@ -13,16 +13,20 @@ def getchannelsepoch(filenames, segment_index, block_index=1):
 
   # 1. If the user cares about all channels in this file, simply parse the header
   if segment_index == 'all':
-    all_channels = Utils.get_header_channels(filenames)
+    raw_reader = Utils.get_raw_reader(filenames)
+    all_channels = Utils.get_header_channels(raw_reader)
     return format(all_channels)
   # 2. If the user passed segment_index, gather the channel info from every signal!
   else:
-    segment_channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
+    reader = Utils.get_reader(filenames)
+    raw_reader = Utils.get_raw_reader(filenames)
+    segment_channels = Utils.get_channels_from_segment(reader, raw_reader, segment_index, block_index)
     return format(segment_channels)
 
 def readchannels_epochsamples(channel_type, channel_names, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
-    sample_rate = samplerate(filenames, channel_names)[0]
+    raw_reader = Utils.get_raw_reader(filenames)
+    sample_rate = Utils.get_sample_rates(raw_reader, channel_names)[0]
     sample_interval = 1/sample_rate
 
     times = []
@@ -32,7 +36,7 @@ def readchannels_epochsamples(channel_type, channel_names, filenames, segment_in
   else:
     raw_reader = Utils.get_raw_reader(filenames)
 
-    stream_index = Utils.from_channel_names_to_stream_index(filenames, channel_names)
+    stream_index = Utils.from_channel_names_to_stream_index(raw_reader, channel_names)
 
     raw = raw_reader.get_analogsignal_chunk(
       block_index=int(block_index) - 1, seg_index=int(segment_index) - 1,
@@ -49,8 +53,11 @@ def readchannels_epochsamples(channel_type, channel_names, filenames, segment_in
     return rescaled
 
 def daqchannels2internalchannels(channel_names, filenames, segment_index, block_index=1):
+  reader = Utils.get_reader(filenames)
+  raw_reader = Utils.get_raw_reader(filenames)
+
   # 1. Get all channels from the segment
-  channels = Utils.get_channels_from_segment(filenames, segment_index, block_index)
+  channels = Utils.get_channels_from_segment(reader, raw_reader, segment_index, block_index)
 
   # 2. Filter for the channels we're interested in
   needed_channels = filter(lambda channel: channel['name'] in channel_names, channels)
@@ -98,10 +105,8 @@ def canbereadtogether(channelstruct):
     }
 
 def samplerate(filenames, channel_names):
-  header_channels = Utils.get_header_channels(filenames)
-  our_channels = list(filter(lambda channel: channel['name'] in channel_names, header_channels))
-  sample_rates = list(map(Utils.channel_to_sample_rate, our_channels))
-  return sample_rates
+  raw_reader = Utils.get_raw_reader(filenames)
+  return Utils.get_sample_rates(raw_reader, channel_names)
 
 def t0_t1(filenames, segment_index, block_index=1):
   reader = Utils.get_reader(filenames)

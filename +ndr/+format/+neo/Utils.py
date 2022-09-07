@@ -3,8 +3,8 @@ from neo.rawio.cedrawio import CedRawIO
 import quantities as pq
 import numpy as np
 
-def get_header_channels(filenames):
-  raw_reader = get_raw_reader(filenames)
+def get_header_channels(raw_reader):
+  raw_reader.parse_header()
   header = raw_reader.header
   all_channels = []
   for _type in ['signal_channels', 'spike_channels', 'event_channels']:
@@ -15,8 +15,7 @@ def get_header_channels(filenames):
       all_channels.append(python_channel)
   return all_channels
 
-def get_channels_from_segment(filenames, segment_index, block_index=1):
-  reader = get_reader(filenames)
+def get_channels_from_segment(reader, raw_reader, segment_index, block_index=1):
   blocks = reader.read(lazy=True)
   block = blocks[int(block_index) - 1]
   segment = block.segments[int(segment_index) - 1]
@@ -26,22 +25,47 @@ def get_channels_from_segment(filenames, segment_index, block_index=1):
   for signal in signals:
     channel_names += signal.array_annotations['channel_names'].tolist()
 
-  header_channels = get_header_channels(filenames)
+  header_channels = get_header_channels(raw_reader)
   our_channels = list(filter(lambda channel: channel['name'] in channel_names, header_channels))
   return our_channels
 
-def from_channel_names_to_stream_index(filenames, channel_names):
+def from_channel_names_to_stream_index(raw_reader, channel_names):
   '''
   => a single stream_index that the first passed channel belongs to
   '''
-  all_channels = get_header_channels(filenames)
+  all_channels = get_header_channels(raw_reader)
   channel = list(filter(lambda channel: channel['name'] == channel_names[0], all_channels))[0]
   stream_id = channel['stream_id']
-  raw_reader = get_raw_reader(filenames)
 
   all_streams = raw_reader.header['signal_streams']
   for index, stream in enumerate(all_streams):
     if stream_id == stream['id']: return index
+
+def channel_to_sample_rate(channel):
+  if channel['_type'] == 'signal_channels':
+    return channel['sampling_rate']
+  elif channel['_type'] == 'spike_channels':
+    return channel['wf_sampling_rate']
+  elif channel['_type'] == 'event_channels':
+    return 0
+
+def channel_type_from_neo_to_ndr(_type):
+  # From NDR comments:
+  #   DATA is a two-column vector; the first column has the time of the event. The second
+  #   column indicates the marker code. In the case of 'events', this is just 1.
+  if _type == 'signal_channels':
+    return 'analog_input'
+  # TODO might be other types!
+  elif _type == 'spike_channels':
+    return 'event'
+  elif _type == 'event_channels':
+    return 'marker'
+
+def get_sample_rates(raw_reader, channel_names):
+  header_channels = get_header_channels(raw_reader)
+  our_channels = list(filter(lambda channel: channel['name'] in channel_names, header_channels))
+  sample_rates = list(map(channel_to_sample_rate, our_channels))
+  return sample_rates
 
 def get_reader(filenames):
   # => e.g. CedIO or SpikeGadgetsIO
@@ -63,27 +87,4 @@ def get_raw_reader(filenames):
   elif (Klass.rawmode == 'one-dir'):
     raw_reader = Klass(dirname=filename)
 
-  # We need header access (e.g. raw_reader.header['signal_streams']) in most cases when we access raw reader
-  raw_reader.parse_header()
-
   return raw_reader
-
-def channel_to_sample_rate(channel):
-  if channel['_type'] == 'signal_channels':
-    return channel['sampling_rate']
-  elif channel['_type'] == 'spike_channels':
-    return channel['wf_sampling_rate']
-  elif channel['_type'] == 'event_channels':
-    return 0
-
-def channel_type_from_neo_to_ndr(_type):
-  # From NDR comments:
-  #   DATA is a two-column vector; the first column has the time of the event. The second
-  #   column indicates the marker code. In the case of 'events', this is just 1.
-  if _type == 'signal_channels':
-    return 'analog_input'
-  # TODO might be other types!
-  elif _type == 'spike_channels':
-    return 'event'
-  elif _type == 'event_channels':
-    return 'marker'
