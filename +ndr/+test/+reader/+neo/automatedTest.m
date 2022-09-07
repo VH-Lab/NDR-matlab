@@ -3,7 +3,7 @@ function tests = automatedTest
 end
 
 function setupOnce(test_case)
-  ndr.reader.neo.reload_py();
+  ndr.reader.neo.reload_python();
   ndr_Init();
 end
 

@@ -3,7 +3,8 @@ classdef neo < ndr.reader.base
   end
 
   methods
-    function obj = neo(varargin)
+    function self = neo(varargin)
+      ndr.reader.neo.insert_python_path()
     end
 
     % Get all channels from a file: py.get_channels().
@@ -94,11 +95,18 @@ classdef neo < ndr.reader.base
   end
 
   methods (Static)
-    function reload_py()
+    function reload_python()
       warning('off','MATLAB:ClassInstanceExists')
       clear classes
       modd = py.importlib.import_module('neo_python');
       py.importlib.reload(modd);
+    end
+
+    function insert_python_path()
+      P = py.sys.path;
+      if count(P, '+ndr/+format/+neo') == 0
+        insert(P, int32(0), '+ndr/+format/+neo');
+      end
     end
   end
 end
