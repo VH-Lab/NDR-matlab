@@ -4,8 +4,7 @@ import quantities as pq
 import numpy as np
 
 def get_header_channels(filenames):
-  raw_reader = get_reader(filenames)
-  raw_reader.parse_header()
+  raw_reader = get_raw_reader(filenames)
   header = raw_reader.header
   all_channels = []
   for _type in ['signal_channels', 'spike_channels', 'event_channels']:
@@ -17,8 +16,8 @@ def get_header_channels(filenames):
   return all_channels
 
 def get_channels_from_segment(filenames, segment_index, block_index=1):
-  io_reader = neo.io.get_io(filenames[0])
-  blocks = io_reader.read(lazy=True)
+  reader = get_reader(filenames)
+  blocks = reader.read(lazy=True)
   block = blocks[int(block_index) - 1]
   segment = block.segments[int(segment_index) - 1]
 
@@ -38,14 +37,18 @@ def from_channel_names_to_stream_index(filenames, channel_names):
   all_channels = get_header_channels(filenames)
   channel = list(filter(lambda channel: channel['name'] == channel_names[0], all_channels))[0]
   stream_id = channel['stream_id']
-  reader = get_reader(filenames)
-  reader.parse_header()
+  raw_reader = get_raw_reader(filenames)
 
-  all_streams = reader.header['signal_streams']
+  all_streams = raw_reader.header['signal_streams']
   for index, stream in enumerate(all_streams):
     if stream_id == stream['id']: return index
 
 def get_reader(filenames):
+  # => e.g. CedIO or SpikeGadgetsIO
+  reader = neo.io.get_io(filenames[0])
+  return reader
+
+def get_raw_reader(filenames):
   # NDI passes an array of strings, however Neo always expects a single string, even for multi-file readers.
   filename = filenames[0]
 
@@ -56,10 +59,14 @@ def get_reader(filenames):
   # => e.g. CedRawIO or SpikeGadgetsRawIO
   Klass = neo.rawio.get_rawio_class(filename)
   if (Klass.rawmode == 'one-file' or Klass.rawmode == 'multi-file'):
-    reader = Klass(filename=filename)
+    raw_reader = Klass(filename=filename)
   elif (Klass.rawmode == 'one-dir'):
-    reader = Klass(dirname=filename)
-  return reader
+    raw_reader = Klass(dirname=filename)
+
+  # We need header access (e.g. raw_reader.header['signal_streams']) in most cases when we access raw reader
+  raw_reader.parse_header()
+
+  return raw_reader
 
 def channel_to_sample_rate(channel):
   if channel['_type'] == 'signal_channels':

@@ -30,19 +30,17 @@ def readchannels_epochsamples(channel_type, channel_names, filenames, segment_in
       times.append([sample * sample_interval])
     return np.array(times, np.float32)
   else:
-    reader = Utils.get_reader(filenames)
-    # THIS IS needed for the get_analogsignal_chunk() call!
-    reader.parse_header()
+    raw_reader = Utils.get_raw_reader(filenames)
 
     stream_index = Utils.from_channel_names_to_stream_index(filenames, channel_names)
 
-    raw = reader.get_analogsignal_chunk(
+    raw = raw_reader.get_analogsignal_chunk(
       block_index=int(block_index) - 1, seg_index=int(segment_index) - 1,
       i_start=int(start_sample) - 1, i_stop=int(end_sample),
       channel_names=channel_names,
       stream_index=int(stream_index)
     )
-    rescaled = reader.rescale_signal_raw_to_float(
+    rescaled = raw_reader.rescale_signal_raw_to_float(
       raw,
       channel_names=channel_names,
       stream_index=int(stream_index)
@@ -106,7 +104,7 @@ def samplerate(filenames, channel_names):
   return sample_rates
 
 def t0_t1(filenames, segment_index, block_index=1):
-  reader = neo.io.get_io(filenames[0])
+  reader = Utils.get_reader(filenames)
   block = reader.read()[block_index - 1]
   segment = block.segments[segment_index - 1]
 
