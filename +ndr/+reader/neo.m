@@ -7,8 +7,6 @@ classdef neo < ndr.reader.base
       ndr.reader.neo.insert_python_path()
     end
 
-    % Get all channels from a file: py.get_channels().
-    %
     % getchannelsepoch(epochfiles, 1) - to get channels from epoch 1
     % getchannelsepoch(epochfiles, 'all') - to get all channels
     function channels = getchannelsepoch(self, epochfiles, epochselect)
@@ -23,8 +21,6 @@ classdef neo < ndr.reader.base
       end
     end
 
-    % Read the channel: py.read_channel().
-    %
     % Matlab      Python         Example
     % _________________________________________
     % channeltype  channel_type   'anything'
@@ -61,27 +57,20 @@ classdef neo < ndr.reader.base
     end
 
     function [b, errormsg] = canbereadtogether(self, channelstruct)
-      % Returns 1 if the NDR_READER_BASE_OBJ can read all of the channels in
-      % CHANNELSTRUCT with a single function call. If they cannot be read together,
-      % a description is provided in ERRORMSG.
-
+      % Formatting objects from matlab to python
       py_channelstruct = {};
       for k = 1:length(channelstruct)
         py_channelstruct{k} = py.dict(channelstruct(k));
       end
+
       py_response = py.neo_python.canbereadtogether(py_channelstruct);
 
+      % Formatting objects from python to matlab
       b = double(py_response{'b'});
       errormsg = [char(py_response{'errormsg'})];
     end
 
     function sr = samplerate(self, epochfiles, epochselect, channeltype, channel)
-      % SR is an array of sample rates from the specified channels
-      %
-      % CHANNELTYPE can be either a string or a cell array of
-      % strings the same length as the vector CHANNEL.
-      % If CHANNELTYPE is a single string, then it is assumed that
-      % that CHANNELTYPE applies to every entry of CHANNEL.
       sr = py.neo_python.get_sample_rates_for_channel_ids(epochfiles, channel);
     end
 
@@ -90,7 +79,6 @@ classdef neo < ndr.reader.base
 
       % Formatting objects from python to matlab
       t0t1 = {py_t0t1};
-      % t0t1 = {[NaN NaN]};
     end
   end
 
@@ -99,6 +87,9 @@ classdef neo < ndr.reader.base
       warning('off','MATLAB:ClassInstanceExists')
       clear classes
       modd = py.importlib.import_module('neo_python');
+      py.importlib.reload(modd);
+
+      modd = py.importlib.import_module('Utils');
       py.importlib.reload(modd);
     end
 
