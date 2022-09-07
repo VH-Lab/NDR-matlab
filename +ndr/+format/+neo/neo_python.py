@@ -1,8 +1,5 @@
 import neo
-from neo.io.cedio import CedIO
-from neo.io.spikegadgetsio import SpikeGadgetsIO
 from neo.rawio.cedrawio import CedRawIO
-from neo.rawio.spikegadgetsrawio import SpikeGadgetsRawIO
 import quantities as pq
 import numpy as np
 
