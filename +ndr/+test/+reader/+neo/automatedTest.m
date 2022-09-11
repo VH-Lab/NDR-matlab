@@ -10,11 +10,11 @@ end
 function test_read(test_case)
   filename = utils_get_example('example.rhd');
 
-  % Setup intan
+  % Set up intan
   intan_reader = ndr.reader('intan');
   [intan_data, intan_time] = intan_reader.read({ filename }, 'A000+A001', { 'useSamples', 1, 's0', 5, 's1', 8 });
 
-  % Setup neo
+  % Set up neo
   neo_reader = ndr.reader('neo');
   [neo_data, neo_time] = neo_reader.read({ filename }, { 'A-000', 'A-001' }, { 'useSamples', 1, 's0', 5, 's1', 8 });
 
@@ -26,11 +26,11 @@ end
 function test_getchannelsepoch(test_case)
   filename = utils_get_example('example.rhd');
 
-  % Setup intan
+  % Set up intan
   intan_reader = ndr.reader('intan');
   intan_channels = intan_reader.getchannelsepoch({ filename }, 1);
 
-  % Setup neo
+  % Set up neo
   neo_reader = ndr.reader('neo');
   neo_channels = neo_reader.getchannelsepoch({ filename }, 'all');
 
@@ -46,11 +46,11 @@ end
 function test_getchannelsepoch_ced(test_case)
   filename = utils_get_example('example.smr');
 
-  % Setup ced
+  % Set up ced
   ced_reader = ndr.reader('smr');
   ced_channels = ced_reader.getchannelsepoch({ filename }, 1);
 
-  % Setup neo
+  % Set up neo
   neo_reader = ndr.reader('neo');
   neo_channels = neo_reader.getchannelsepoch({ filename }, 'all');
 
@@ -63,10 +63,10 @@ end
 function test_readchannels_epochsamples(test_case)
   filename = utils_get_example('example.rhd');
 
-  % Setup intan
+  % Set up intan
   intan_reader = ndr.reader('intan');
 
-  % Setup neo
+  % Set up neo
   neo_reader = ndr.reader('neo');
 
   % Tests
@@ -79,10 +79,10 @@ end
 function test_readchannels_epochsamples_time(test_case)
   filename = utils_get_example('example.rhd');
 
-  % Setup intan
+  % Set up intan
   intan_reader = ndr.reader('intan');
 
-  % Setup neo
+  % Set up neo
   neo_reader = ndr.reader('neo');
 
   % Tests

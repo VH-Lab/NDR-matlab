@@ -1,6 +1,4 @@
 import neo
-from neo.rawio.cedrawio import CedRawIO
-import quantities as pq
 import numpy as np
 import Utils
 

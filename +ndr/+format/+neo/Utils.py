@@ -1,7 +1,5 @@
 import neo
 from neo.rawio.cedrawio import CedRawIO
-import quantities as pq
-import numpy as np
 
 def get_header_channels(raw_reader):
   raw_reader.parse_header()
