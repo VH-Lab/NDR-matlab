@@ -7,7 +7,7 @@ function setupOnce(test_case)
   ndr_Init();
 end
 
-function test_read(test_case)
+function test_read_intan(test_case)
   filename = utils_get_example('example.rhd');
 
   % Set up intan
@@ -23,7 +23,7 @@ function test_read(test_case)
   verifyEqual(test_case, intan_time, neo_time, "AbsTol", 0.001);
 end
 
-function test_getchannelsepoch(test_case)
+function test_getchannelsepoch_intan(test_case)
   filename = utils_get_example('example.rhd');
 
   % Set up intan
@@ -60,7 +60,7 @@ function test_getchannelsepoch_ced(test_case)
   verifyEqual(test_case, numel(neo_channels), 3);
 end
 
-function test_readchannels_epochsamples(test_case)
+function test_readchannels_epochsamples_intan(test_case)
   filename = utils_get_example('example.rhd');
 
   % Set up intan
@@ -70,26 +70,16 @@ function test_readchannels_epochsamples(test_case)
   neo_reader = ndr.reader('neo');
 
   % Tests
+  % 1. Test 'analog_input' channel
   intan_data = intan_reader.readchannels_epochsamples('ai', [ 1, 2 ], { filename }, 1, 1, 10);
   neo_data = neo_reader.readchannels_epochsamples('smth', { 'A-000', 'A-001' }, { filename }, 1, 1, 10);
-
   verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.001);
+  % 2. Test 'time' channel
+  intan_time = intan_reader.readchannels_epochsamples('time', [ 1, 2 ], { filename }, 1, 1, 10);
+  neo_time = neo_reader.readchannels_epochsamples('time', { 'A-000', 'A-001' }, { filename }, 1, 1, 10);
+  verifyEqual(test_case, intan_time, neo_time, "AbsTol", 0.0000001);
 end
 
-function test_readchannels_epochsamples_time(test_case)
-  filename = utils_get_example('example.rhd');
-
-  % Set up intan
-  intan_reader = ndr.reader('intan');
-
-  % Set up neo
-  neo_reader = ndr.reader('neo');
-
-  % Tests
-  intan_data = intan_reader.readchannels_epochsamples('time', [ 1, 2 ], { filename }, 1, 1, 10);
-  neo_data = neo_reader.readchannels_epochsamples('time', { 'A-000', 'A-001' }, { filename }, 1, 1, 10);
-  verifyEqual(test_case, intan_data, neo_data, "AbsTol", 0.0000001);
-end
 
 % Utils
 function utils_disp_channels(channels)
