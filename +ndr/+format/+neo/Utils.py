@@ -56,6 +56,8 @@ def channel_type_from_neo_to_ndr(_type):
   # TODO might be other types!
   elif _type == 'spike_channels':
     return 'event'
+  # From Neo: ev_timestamps, _, ev_labels = reader.event_timestamps(event_channel_index=0)
+  # So, events probably have labels => they are markers in Neo
   elif _type == 'event_channels':
     return 'marker'
 

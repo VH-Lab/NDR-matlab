@@ -4,7 +4,6 @@ classdef neo < ndr.reader.base
 
   methods
     function self = neo(varargin)
-      ndr.reader.neo.insert_python_path()
     end
 
     % getchannelsepoch(epochfiles, 1) - to get channels from epoch 1

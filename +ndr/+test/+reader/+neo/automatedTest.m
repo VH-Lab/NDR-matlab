@@ -23,6 +23,51 @@ function test_read_intan(test_case)
   verifyEqual(test_case, intan_time, neo_time, "AbsTol", 0.001);
 end
 
+function test_getchannelsepoch_blackrock(test_case)
+  filename = utils_get_example('l101210-001.ns2');
+
+  % Set up neo
+  reader = ndr.reader('neo');
+  channels = reader.getchannelsepoch({ filename }, 'all');
+
+  % Tests
+  verifyEqual(test_case, channels(1), struct('name', 'ainp9',  'type', 'analog_input'));
+  verifyEqual(test_case, channels(2), struct('name', 'ainp10', 'type', 'analog_input'));
+  verifyEqual(test_case, numel(channels), 6);
+end
+
+function test_getchannelsepoch_blackrock2(test_case)
+  filename = utils_get_example('l101210-001-02.ns2');
+
+  % Set up neo
+  reader = ndr.reader('neo');
+  channels = reader.getchannelsepoch({ filename }, 'all');
+
+  % Tests
+  verifyEqual(test_case, channels(1), struct('name', 'ch1#0',   'type', 'event'));
+  verifyEqual(test_case, channels(2), struct('name', 'ch1#255', 'type', 'event'));
+  verifyEqual(test_case, channels(3), struct('name', 'ch2#0',   'type', 'event'));
+  verifyEqual(test_case, channels(325), struct('name', 'digital_input_port',     'type', 'marker'));
+  verifyEqual(test_case, channels(326), struct('name', 'serial_input_port',      'type', 'marker'));
+  verifyEqual(test_case, channels(327), struct('name', 'analog_input_channel_1', 'type', 'marker'));
+  verifyEqual(test_case, numel(channels), 332);
+end
+
+function test_readchannels_epochsamples_blackrock(test_case)
+  filename = utils_get_example('l101210-001.ns2');
+
+  % Set up neo
+  reader = ndr.reader('neo');
+
+  % Tests
+  % 1. Test 'analog_input' channel
+  data = reader.readchannels_epochsamples('smth', { 'ainp9', 'ainp10' }, { filename }, 1, 1, 3);
+  verifyEqual(test_case, data, [137 761; 125 747; 110 733]);
+  % 2. Test 'time' channel
+  time = reader.readchannels_epochsamples('time', { 'ainp9', 'ainp10' }, { filename }, 1, 1, 3);
+  verifyEqual(test_case, time, [0; 0.001; 0.002], "AbsTol", 0.0000001);
+end
+
 function test_getchannelsepoch_intan(test_case)
   filename = utils_get_example('example.rhd');
 
