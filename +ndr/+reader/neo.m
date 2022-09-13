@@ -20,10 +20,10 @@ classdef neo < ndr.reader.base
       end
     end
 
-    % Matlab      Python         Example
+    % Matlab       Python          Example
     % _________________________________________
-    % channeltype  channel_type   'anything'
-    % channel      channel_names   [ 'A-000', 'A-001' ]
+    % channeltype  channel_type    either'time' or it's not important
+    % channel      channel_names   { 'A-000', 'A-001' }
     % epochfiles   filenames       { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect  segment_index   1
     % s0           start_sample    1
@@ -39,7 +39,7 @@ classdef neo < ndr.reader.base
     % channelnumber { 'A-000', 'A-001' }
     % epochfiles    { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect   1
-    function channelstruct = daqchannels2internalchannels(self, dummy, channelnumber, epochfiles, epochselect)
+    function channelstruct = daqchannels2internalchannels(self, ~, channelnumber, epochfiles, epochselect)
       py_channels = py.neo_python.daqchannels2internalchannels(channelnumber, epochfiles, epochselect);
 
       % Formatting objects from python to matlab

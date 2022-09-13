@@ -18,8 +18,14 @@ def getchannelsepoch(filenames, segment_index, block_index=1):
   else:
     reader = Utils.get_reader(filenames)
     raw_reader = Utils.get_raw_reader(filenames)
-    segment_channels = Utils.get_channels_from_segment(reader, raw_reader, segment_index, block_index)
+    segment_channels = Utils.get_channels_from_segment(reader, raw_reader, int(segment_index) - 1, int(block_index) - 1)
     return format(segment_channels)
+
+# This file is actually used for the Neo tests
+# a = getchannelsepoch(["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 'all')
+# a = getchannelsepoch(["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001.ns2"], 'all')
+# for channel in a:
+  # print(channel)
 
 def readchannels_epochsamples(channel_type, channel_names, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
@@ -55,7 +61,7 @@ def daqchannels2internalchannels(channel_names, filenames, segment_index, block_
   raw_reader = Utils.get_raw_reader(filenames)
 
   # 1. Get all channels from the segment
-  channels = Utils.get_channels_from_segment(reader, raw_reader, segment_index, block_index)
+  channels = Utils.get_channels_from_segment(reader, raw_reader, int(segment_index) - 1, int(block_index) - 1)
 
   # 2. Filter for the channels we're interested in
   needed_channels = filter(lambda channel: channel['name'] in channel_names, channels)

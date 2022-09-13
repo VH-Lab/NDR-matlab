@@ -13,11 +13,10 @@ def get_header_channels(raw_reader):
       all_channels.append(python_channel)
   return all_channels
 
-# Possible TODO: segment_index & block_index should mb already be in Python format in Utils
-def get_channels_from_segment(reader, raw_reader, segment_index, block_index=1):
+def get_channels_from_segment(reader, raw_reader, segment_index, block_index):
   blocks = reader.read(lazy=True)
-  block = blocks[int(block_index) - 1]
-  segment = block.segments[int(segment_index) - 1]
+  block = blocks[block_index]
+  segment = block.segments[segment_index]
 
   signals = segment.analogsignals + segment.spiketrains + segment.irregularlysampledsignals
   channel_names = []
