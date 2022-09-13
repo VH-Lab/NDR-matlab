@@ -13,6 +13,7 @@ def get_header_channels(raw_reader):
       all_channels.append(python_channel)
   return all_channels
 
+# Possible TODO: segment_index & block_index should mb already be in Python format in Utils
 def get_channels_from_segment(reader, raw_reader, segment_index, block_index=1):
   blocks = reader.read(lazy=True)
   block = blocks[int(block_index) - 1]

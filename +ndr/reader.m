@@ -81,6 +81,7 @@ classdef reader
 
 				if b,
 					switch (channelstruct(1).ndr_type),
+						% readchannels_epochsamples
 						case {'analog_input','analog_output','analog_in','analog_out','ai','ao'},
 							if ~useSamples, % must compute the samples to be read
 								s0 = round(1+t0*channelstruct(1).samplerate);
@@ -95,7 +96,8 @@ classdef reader
 
 							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type, channels, epochstreams, epoch_select, s0, s1);
 							time = ndr_reader_obj.readchannels_epochsamples('time', channels, epochstreams, epoch_select, s0, s1);
-						otherwise, % readevents
+						% readevents_epochsamples
+						otherwise,
 							if is_neo,
 								channels = channelstring;
 							else,
