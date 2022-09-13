@@ -150,7 +150,7 @@ classdef base
 				data = []; % abstract class
 		end % readchannels_epochsamples()
 
-		function [data] = readevents_epochsamples_native(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
+		function [timestamps, data] = readevents_epochsamples_native(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t0, t1)
 			%  READEVENTS_EPOCHSAMPLES - read events or markers of specified channels for a specified epoch
 			%
 			%  [DATA] = READEVENTS_EPOCHSAMPLES_NATIVE(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHFILES, T0, T1)
@@ -168,6 +168,7 @@ classdef base
 			%
 			%  TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.
 			%
+				timestamps = []
 				data = []; % abstract class
 		end; % readevents_epochsamples
 
