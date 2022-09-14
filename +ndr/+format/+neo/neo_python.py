@@ -124,28 +124,29 @@ def t0_t1(filenames, segment_index, block_index=1):
 
 # TODO _rescale_spike_timestamp
 def readevents_epochsamples_native(channel_type, channel_names, filenames, segment_index, start_time, end_time, block_index=1):
+  raw_reader = Utils.get_raw_reader(filenames)
 
   if channel_type == 'marker':
-    raw_reader = Utils.get_raw_reader(filenames)
-
-    list_of_times = []
+    list_of_timestamps = []
     list_of_marker_codes = []
 
     for channel_name in channel_names:
-      times, _durations, marker_codes = raw_reader.get_event_timestamps(
-        event_channel_index=Utils.from_channel_name_to_event_channel_index(raw_reader, channel_name),
+      event_channel_index = Utils.from_channel_name_to_event_channel_index(raw_reader, channel_name)
+      timestamps, _durations, marker_codes = raw_reader.get_event_timestamps(
+        event_channel_index=event_channel_index,
         block_index=int(block_index) - 1,
         seg_index=int(segment_index) - 1,
         t_start=start_time,
         t_stop=end_time
       )
-      times = raw_reader._rescale_spike_timestamp(times, dtype='float64')
-      list_of_times.append(times.tolist())
+      timestamps = raw_reader.rescale_event_timestamp(timestamps, event_channel_index=event_channel_index)
+      list_of_timestamps.append(timestamps.tolist())
       list_of_marker_codes.append(marker_codes.tolist())
 
-    return [list_of_times, list_of_marker_codes]
+    return [list_of_timestamps, list_of_marker_codes]
   elif channel_type == 'event':
-    raw_reader = Utils.get_raw_reader(filenames)
+    list_of_timestamps = []
+    list_of_events = []
 
     for channel_name in channel_names:
       timestamps = raw_reader.get_spike_timestamps(
@@ -155,16 +156,11 @@ def readevents_epochsamples_native(channel_type, channel_names, filenames, segme
         t_start=start_time,
         t_stop=end_time
       )
+      timestamps = raw_reader.rescale_spike_timestamp(timestamps)
+      events = [1] * len(timestamps)
+      list_of_timestamps.append(timestamps.tolist())
+      list_of_events.append(events)
 
-      # print(timestamps)
+    return [list_of_timestamps, list_of_events]
   else:
     raise Exception(f"channel_type in readevents_epochsamples_native(channel_type, ...) should be either 'marker' or 'event', not {str(channel_type)}")
-
-# 'marker'
-# a = readevents_epochsamples_native('marker',
-#   ['digital_input_port', 'serial_input_port', 'analog_input_channel_1', 'analog_input_channel_2', 'analog_input_channel_3', 'analog_input_channel_4', 'analog_input_channel_5', 'periodic_sampling_events'],
-#   ["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 1, 0, 100)
-# print(a)
-
-# 'event'
-# readevents_epochsamples_native('event', ['ch1#0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 1, 0, 10000)

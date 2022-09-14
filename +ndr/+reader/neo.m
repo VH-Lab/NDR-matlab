@@ -44,12 +44,12 @@ classdef neo < ndr.reader.base
       n_of_channels = length(channel);
 
       timestamps = cell([1 n_of_channels]);
-      for k = 1:length(n_of_channels)
+      for k = 1:n_of_channels
         timestamps{k} = double(py_timestamps{k})';
       end
 
       data = cell([1 n_of_channels]);
-      for k = 1:length(n_of_channels)
+      for k = 1:n_of_channels
         data{k} = string(py_data{k})';
       end
 
