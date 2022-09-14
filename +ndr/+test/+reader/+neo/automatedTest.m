@@ -7,6 +7,46 @@ function setupOnce(test_case)
   ndr_Init();
 end
 
+function test_readevents_epochsamples_native_blackrock(test_case)
+  filename = utils_get_example('l101210-001-02.ns2');
+  reader = ndr.reader('neo');
+
+  % 1. Read 'marker' - many channels
+  [timestamps, data] = reader.readevents_epochsamples_native('marker',...
+    { 'digital_input_port', 'serial_input_port', 'analog_input_channel_1' },...
+    { filename }, 1, 0, 100);
+  
+  %%% 1.1 Test data structure
+  verifyEqual(test_case, size(timestamps), [1, 3]);
+  verifyEqual(test_case, class(timestamps), 'cell');
+  verifyEqual(test_case, size(data), [1, 3]);
+  verifyEqual(test_case, class(data), 'cell');
+
+  %%% 1.2 Test values
+  verifyEqual(test_case, timestamps{1}, [0.1349; 0.1385; 0.1604; 0.5421; 0.9435; 1.2480; 2.2508; 2.4426], "AbsTol", 0.001);
+  verifyEqual(test_case, data{1}, ["65280"; "65296"; "65280"; "65344"; "65349"; "65344"; "65350"; "65382"]);
+
+  % 2. Read 'marker' - one channel
+  [timestamps, data] = reader.readevents_epochsamples_native('marker',...
+    { 'digital_input_port' },...
+    { filename }, 1, 0, 100);
+
+  %%% 2.1 Test data structure
+  verifyEqual(test_case, size(timestamps), [8, 1]);
+  verifyEqual(test_case, class(timestamps), 'double');
+  verifyEqual(test_case, size(data), [8, 1]);
+  verifyEqual(test_case, class(data), 'string');
+
+  %%% 2.2 Test values
+  verifyEqual(test_case, timestamps, [0.1349; 0.1385; 0.1604; 0.5421; 0.9435; 1.2480; 2.2508; 2.4426], "AbsTol", 0.001);
+  verifyEqual(test_case, data, ["65280"; "65296"; "65280"; "65344"; "65349"; "65344"; "65350"; "65382"]);
+
+
+  % 3. Read 'event' - many channels
+
+  % 4. Read 'event' - one channel
+end
+
 function test_read_intan(test_case)
   filename = utils_get_example('example.rhd');
 

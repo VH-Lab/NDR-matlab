@@ -39,6 +39,22 @@ def from_channel_names_to_stream_index(raw_reader, channel_names):
   for index, stream in enumerate(all_streams):
     if stream_id == stream['id']: return index
 
+def from_channel_name_to_event_channel_index(raw_reader, channel_name):
+  raw_reader.parse_header()
+  event_channels = raw_reader.header['event_channels']
+  n = raw_reader.event_channels_count()
+  for event_channel_index in range(n):
+    if (event_channels[event_channel_index]['name'] == channel_name):
+      return event_channel_index
+
+def from_channel_name_to_marker_channel_index(raw_reader, channel_name):
+  raw_reader.parse_header()
+  spike_channels = raw_reader.header['spike_channels']
+  n = raw_reader.spike_channels_count()
+  for spike_channel_index in range(n):
+    if (spike_channels[spike_channel_index]['name'] == channel_name):
+      return spike_channel_index
+
 def channel_to_sample_rate(channel):
   if channel['_type'] == 'signal_channels':
     return channel['sampling_rate']
@@ -53,11 +69,10 @@ def channel_type_from_neo_to_ndr(_type):
   #   column indicates the marker code. In the case of 'events', this is just 1.
   if _type == 'signal_channels':
     return 'analog_input'
-  # TODO might be other types!
   elif _type == 'spike_channels':
     return 'event'
   # From Neo: ev_timestamps, _, ev_labels = reader.event_timestamps(event_channel_index=0)
-  # So, events probably have labels => they are markers in Neo
+  # So, events have labels => they are markers in Neo
   elif _type == 'event_channels':
     return 'marker'
 

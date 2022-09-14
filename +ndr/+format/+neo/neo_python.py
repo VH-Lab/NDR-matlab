@@ -122,5 +122,49 @@ def t0_t1(filenames, segment_index, block_index=1):
 
   return [get_magnitude(segment.t_start), get_magnitude(segment.t_stop)]
 
-def read_channel_events(channel_type, channel_names, filenames, segment_index, t0, t1):
-  pass
+# TODO _rescale_spike_timestamp
+def readevents_epochsamples_native(channel_type, channel_names, filenames, segment_index, start_time, end_time, block_index=1):
+
+  if channel_type == 'marker':
+    raw_reader = Utils.get_raw_reader(filenames)
+
+    list_of_times = []
+    list_of_marker_codes = []
+
+    for channel_name in channel_names:
+      times, _durations, marker_codes = raw_reader.get_event_timestamps(
+        event_channel_index=Utils.from_channel_name_to_event_channel_index(raw_reader, channel_name),
+        block_index=int(block_index) - 1,
+        seg_index=int(segment_index) - 1,
+        t_start=start_time,
+        t_stop=end_time
+      )
+      times = raw_reader._rescale_spike_timestamp(times, dtype='float64')
+      list_of_times.append(times.tolist())
+      list_of_marker_codes.append(marker_codes.tolist())
+
+    return [list_of_times, list_of_marker_codes]
+  elif channel_type == 'event':
+    raw_reader = Utils.get_raw_reader(filenames)
+
+    for channel_name in channel_names:
+      timestamps = raw_reader.get_spike_timestamps(
+        spike_channel_index=Utils.from_channel_name_to_marker_channel_index(raw_reader, channel_name),
+        block_index=int(block_index) - 1,
+        seg_index=int(segment_index) - 1,
+        t_start=start_time,
+        t_stop=end_time
+      )
+
+      # print(timestamps)
+  else:
+    raise Exception(f"channel_type in readevents_epochsamples_native(channel_type, ...) should be either 'marker' or 'event', not {str(channel_type)}")
+
+# 'marker'
+# a = readevents_epochsamples_native('marker',
+#   ['digital_input_port', 'serial_input_port', 'analog_input_channel_1', 'analog_input_channel_2', 'analog_input_channel_3', 'analog_input_channel_4', 'analog_input_channel_5', 'periodic_sampling_events'],
+#   ["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 1, 0, 100)
+# print(a)
+
+# 'event'
+# readevents_epochsamples_native('event', ['ch1#0'], ["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 1, 0, 10000)

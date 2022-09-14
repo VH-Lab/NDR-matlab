@@ -35,7 +35,30 @@ classdef neo < ndr.reader.base
       data = double(py_data);
     end
 
-    % channelprefix { always empty }
+    function [timestamps, data] = readevents_epochsamples_native(self, channeltype, channel, epochfiles, epochselect, t0, t1)
+      py_result = py.neo_python.readevents_epochsamples_native(channeltype, channel, epochfiles, epochselect, t0, t1);
+      py_timestamps = py_result{1};
+      py_data = py_result{2};
+
+      % Formatting objects from python to matlab
+      n_of_channels = length(channel);
+
+      timestamps = cell([1 n_of_channels]);
+      for k = 1:length(n_of_channels)
+        timestamps{k} = double(py_timestamps{k})';
+      end
+
+      data = cell([1 n_of_channels]);
+      for k = 1:length(n_of_channels)
+        data{k} = string(py_data{k})';
+      end
+
+      if n_of_channels == 1
+        timestamps = timestamps{1};
+        data = data{1};
+      end
+    end
+
     % channelnumber { 'A-000', 'A-001' }
     % epochfiles    { '/Users/Me/NDR-matlab/example_data/example.rhd' }
     % epochselect   1
