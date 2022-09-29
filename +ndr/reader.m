@@ -30,9 +30,12 @@ classdef reader
 		function [data, time] = read(ndr_reader_obj, epochstreams, channelstring, varargin)
 			% READ - read data from an ndr.reader object
 			%
+			% CHANNELSTRING can be multiple things.
+			%   For most readers, it should be a string of NDR channel names, e.g. 'ai1-3+b2-4'.
+			%   Intan reader accepts both the NDR channel names, e.g. 'ai1-3+b2-4', and device channel names, e.g. 'A021+A022'.
+			%   Neo reader stands as an exception - it expects device channel names, but as a cell array, e.g. { 'A-000', 'A-001' }.
+			% 
 			% [DATA, TIME] = READ(NDR_READER_OBJ, EPOCHSTREAMS, CHANNELSTRING, ...)
-			%
-			
 			%
 			% This function takes additional arguments in the form of name/value pairs.
 			% -------------------------------------------------------------------------
@@ -65,33 +68,46 @@ classdef reader
 
 				ndr.data.assign(varargin{:});
 
-				[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
+				is_neo = strcmp(class(ndr_reader_obj.ndr_reader_base), 'ndr.reader.neo');
 
-				channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, ...
-					channelprefix, channelnumber, epochstreams, epoch_select);
+				if is_neo,
+					channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, {}, channelstring, epochstreams, epoch_select);
+				else,
+					[channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
+					channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, channelprefix, channelnumber, epochstreams, epoch_select);
+				end;
 
-				[b,errormsg] =  ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct);
+				[b, errormsg] = ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct);
 
 				if b,
 					switch (channelstruct(1).ndr_type),
+						% readchannels_epochsamples
 						case {'analog_input','analog_output','analog_in','analog_out','ai','ao'},
 							if ~useSamples, % must compute the samples to be read
 								s0 = round(1+t0*channelstruct(1).samplerate);
 								s1 = round(1+t1*channelstruct(1).samplerate);
 							end;
-							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type, ...
-                                [channelstruct.internal_number],epochstreams,epoch_select,s0,s1);
-							time = ndr_reader_obj.readchannels_epochsamples('time',...
-								[channelstruct.internal_number],epochstreams,epoch_select,s0,s1); % how to read this in general??
-						otherwise, % readevents
-							[data,time] = ndr_reader_obj.readevents_epochsamples({channelstruct.internal_type},...
-								channelstruct.internal_number,epochstreams,epoch_select,t0,t1);
+
+							if is_neo,
+								channels = channelstring;
+							else,
+								channels = [channelstruct.internal_number];
+							end;
+
+							data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type, channels, epochstreams, epoch_select, s0, s1);
+							time = ndr_reader_obj.readchannels_epochsamples('time', channels, epochstreams, epoch_select, s0, s1);
+						% readevents_epochsamples
+						otherwise,
+							if is_neo,
+								channels = channelstring;
+							else,
+								channels = channelstruct.internal_number;
+							end;
+
+							[data, time] = ndr_reader_obj.readevents_epochsamples({channelstruct.internal_type}, channels, epochstreams, epoch_select, t0, t1);
 					end;
 				else, % we can't do it, report an error
-					error(['Specified channels in channelstring (' ...
-						channelstring ...
-						') cannot be read in a single function call. Please split channel reading by similar channel types. ' ...
-						errormsg]);
+					error(['Specified channels cannot be read in a single function call. Please split channel reading by similar channel types. ' errormsg]);
 				end;
 		end; % read() 
 
