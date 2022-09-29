@@ -1,3 +1,33 @@
+To use neo, it is necessary to install exactly python3.9.
+
+In macOS, on a terminal run:
+
+```
+brew install pyenv
+pyenv install 3.9.0
+python3.9 -m pip install neo
+python3.9 -m pip install sonpy
+```
+
+In Matlab, before using neo, establish Python 3.9 as a valid Matlab python environment by calling
+
+```
+pyenv('3.9.0',*path_to_your_executable*)
+```
+
+In macOS for me this is
+
+```
+pyenv('Version','/usr/local/bin/python3.9')
+```
+
+All set.
+
+
+
+
+Development notes:
+
 
 We need Python 3.9.0 (not bigger!) for sonpy.
 
