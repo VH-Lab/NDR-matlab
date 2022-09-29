@@ -117,8 +117,10 @@ classdef neo < ndr.reader.base
 
     function insert_python_path()
       P = py.sys.path;
-      if count(P, '+ndr/+format/+neo') == 0
-        insert(P, int32(0), '+ndr/+format/+neo');
+      ndr.globals();
+      newpath = fullfile(ndr_globals.path.path,'+ndr','+format','+neo');
+      if count(P, newpath) == 0
+        insert(P, int32(0), newpath);
       end
     end
   end
