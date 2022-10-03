@@ -8,7 +8,7 @@ function setupOnce(test_case)
 end
 
 function test_readevents_epochsamples_native_blackrock(test_case)
-  filename = utils_get_example('l101210-001-02.ns2');
+  filename = utils_get_example('example_1.ns2');
   reader = ndr.reader('neo');
 
   % 1. Read 'marker' - many channels
@@ -77,7 +77,7 @@ function test_read_intan(test_case)
 end
 
 function test_getchannelsepoch_blackrock(test_case)
-  filename = utils_get_example('l101210-001.ns2');
+  filename = utils_get_example('example_2.ns2');
 
   % Set up neo
   reader = ndr.reader('neo');
@@ -90,7 +90,7 @@ function test_getchannelsepoch_blackrock(test_case)
 end
 
 function test_getchannelsepoch_blackrock2(test_case)
-  filename = utils_get_example('l101210-001-02.ns2');
+  filename = utils_get_example('example_1.ns2');
 
   % Set up neo
   reader = ndr.reader('neo');
@@ -107,7 +107,7 @@ function test_getchannelsepoch_blackrock2(test_case)
 end
 
 function test_readchannels_epochsamples_blackrock(test_case)
-  filename = utils_get_example('l101210-001.ns2');
+  filename = utils_get_example('example_2.ns2');
 
   % Set up neo
   reader = ndr.reader('neo');

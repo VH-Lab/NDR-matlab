@@ -1,4 +1,21 @@
-l101210-001.ns2 - Blackrock, analog channels
+This folder contains example neurophysiology files that we can use for testing our readers.  
+An excellent source of example files is https://gin.g-node.org/NeuralEnsemble/ephy_testing_data.  
+Take note of `.txt` files in https://gin.g-node.org/NeuralEnsemble/ephy_testing_data/src/master/blackrock/blackrock_2_1) - this might be a good source of *already parsed* neurophysiology data.  
+
+___
+
+The rest of this file shows all channels from each `example.extension` file, as shown by Neo:
+
+```
+reader = ndr.reader('neo');
+channels = reader.getchannelsepoch({ filename }, 'all');
+```
+
+Keep in mind Neo designates any channel type to one of the: `'analog_input'`, `'event'`, and `'marker'` NDR channel types. Look at `automatedTest.m` to see how to query data from these files.
+
+
+**example_2.ns2** - Blackrock, contains analog channels  
+(https://gin.g-node.org/NeuralEnsemble/ephy_testing_data/src/master/blackrock/blackrock_2_1/l101210-001.ns2)
 
 {'name': 'ainp9', 'type': 'analog_input'}
 {'name': 'ainp10', 'type': 'analog_input'}
@@ -8,7 +25,8 @@ l101210-001.ns2 - Blackrock, analog channels
 {'name': 'ainp15', 'type': 'analog_input'}
 
 
-l101210-001-02.ns2 - Blackrock, event & marker channels
+**example_1.nev** - Blackrock, contains event & marker channels  
+(https://gin.g-node.org/NeuralEnsemble/ephy_testing_data/src/master/blackrock/blackrock_2_1/l101210-001-02.nev)
 
 {'name': 'ch1#0', 'type': 'event'}
 {'name': 'ch1#255', 'type': 'event'}
