@@ -28,7 +28,34 @@ All set.
 # Using Neo
 
 Take a look at `+neo/automatedTest.m` to see how to use Neo and what output to expect.  
+
 Unlike with other readers, Neo expects device-native channel names in its every method (the `channel` parameter always expects a cell array of channel names, e.g. `{ 'A-000', 'A-001' }`).
+
+# Gotchas
+
+## Channel types
+
+Neo doesn't have a way to determine a specific NDR type of a channel. Neo only divides channels into 3 NDR types: `analog_input` (Neo's `signal_channels`), `event` (Neo's `spike_channels`), and `marker` (Neo's `event_channels`). So, the types you will see returned from the NDR reader might differ from those returned from the Neo reader (for the same file).  
+
+## Available channels
+
+Both the readers implemented in NDR and the readers implemented in Neo don't necessarily return all available channels.
+So, the number of channels might differ (as well as channel types). Here are two examples:
+
+```
+// ced_smr .smr
+NDR: 14 channels (2 analog_in, |||8 event, 1 text, 3 mark)
+NEO: 3 channels (2 signal channels, 1 spike channel)
+```
+
+```
+// spikegadgets_rec .rec
+NDR: 204 channels (120 analog_in, 12 auxiliary, |||40 digital_in, 32 digital_out)
+NEO: 132 channels (120 trodes, 8 analog_in, 4 analog_out)
+// Confirmed: NEO's "analog_in", "analog_out" channels = NDR's "auxiliary" channel
+```
+
+## File extensions
 
 One gotcha is Neo determines what file reader to use via file extensions.  
 With some formats, this is not straightforward. For example, for the Blackrock reader, we have to:
