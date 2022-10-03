@@ -21,12 +21,6 @@ def getchannelsepoch(filenames, segment_index, block_index=1):
     segment_channels = Utils.get_channels_from_segment(reader, raw_reader, int(segment_index) - 1, int(block_index) - 1)
     return format(segment_channels)
 
-# This file is actually used for the Neo tests
-# a = getchannelsepoch(["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001-02.ns2"], 'all')
-# a = getchannelsepoch(["/Users/lakesare/Desktop/NDR-matlab/example_data/l101210-001.ns2"], 'all')
-# for channel in a:
-  # print(channel)
-
 def readchannels_epochsamples(channel_type, channel_names, filenames, segment_index, start_sample, end_sample, block_index=1):
   if channel_type == 'time':
     raw_reader = Utils.get_raw_reader(filenames)
@@ -72,7 +66,9 @@ def daqchannels2internalchannels(channel_names, filenames, segment_index, block_
     'internal_number':      channel['id'],
     'internal_channelname': channel['name'],
     'ndr_type':             Utils.channel_type_from_neo_to_ndr(channel['_type']),
-    # TODO hieroglyph prints out if we don't convert to str
+    # At some point the hieroglyph was printing out if we did't convert the sample rate to str.
+    # I can't replicate this issue now, might have been a problem with a particular Python version.
+    # Still leaving this wrapped in str() for safety.
     'samplerate':           str(Utils.channel_to_sample_rate(channel)),
     # This is a nonstandard Neo-only field
     'stream_id':            channel['stream_id']
@@ -122,7 +118,6 @@ def t0_t1(filenames, segment_index, block_index=1):
 
   return [get_magnitude(segment.t_start), get_magnitude(segment.t_stop)]
 
-# TODO _rescale_spike_timestamp
 def readevents_epochsamples_native(channel_type, channel_names, filenames, segment_index, start_time, end_time, block_index=1):
   raw_reader = Utils.get_raw_reader(filenames)
 
