@@ -4,7 +4,7 @@ end
 
 function setupOnce(test_case)
   ndr.reader.neo.reload_python();
-  ndr_Init();
+  ndr_Init(); % seems to be needed, perhaps test environment runs with its own global variables?
 end
 
 function test_readevents_epochsamples_native_blackrock(test_case)

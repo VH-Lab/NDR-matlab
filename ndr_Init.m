@@ -46,7 +46,6 @@ if ~exist(ndr_globals.path.preferences,'dir'),
         mkdir(ndr_globals.path.preferences);
 end;
 
-
 ndr_globals.debug.verbose = 1;
 
  % test write access to preferences, testpath, filecache, temppath
@@ -62,4 +61,7 @@ for i=1:numel(paths),
         fclose(fid);
         delete(fname);
 end;
+
+ndr.reader.neo.insert_python_path()
+
 

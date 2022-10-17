@@ -159,3 +159,11 @@ def readevents_epochsamples_native(channel_type, channel_names, filenames, segme
     return [list_of_timestamps, list_of_events]
   else:
     raise Exception(f"channel_type in readevents_epochsamples_native(channel_type, ...) should be either 'marker' or 'event', not {str(channel_type)}")
+
+
+
+#raw_reader = Utils.get_raw_reader([ '/Users/vanhoosr/Documents/MATLAB/tools/NDR-matlab/example_data/example_1.ns2' ])
+#channels = Utils.get_header_channels(raw_reader)
+#print(channels)
+
+
