@@ -267,6 +267,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supported-formats" class="md-nav__link">
+    Supported formats
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licenses-from-other-software" class="md-nav__link">
+    Licenses from other software
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#availability" class="md-nav__link">
     Availability
   </a>
@@ -12827,6 +12841,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supported-formats" class="md-nav__link">
+    Supported formats
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licenses-from-other-software" class="md-nav__link">
+    Licenses from other software
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#availability" class="md-nav__link">
     Availability
   </a>
@@ -12872,8 +12900,60 @@
                 
                 
                 <h1 id="ndr">NDR<a class="headerlink" href="#ndr" title="Permanent link">&para;</a></h1>
+<p><a href="http://ndr.vhlab.org">NDR</a> (Neuroscience Data Readers)  A Matlab conglomerative package for reading neuroscience data files</p>
 <h2 id="about">About<a class="headerlink" href="#about" title="Permanent link">&para;</a></h2>
-<p><a href="http://ndr.vhlab.org">NDR</a> (Neuroscience Data Readers) is a consolidated Matlab toolbox for reading neurophysiology and imaging files. It contains some original code and substantial code that has been merged from open source repositories across the internet.</p>
+<p>NDR-matlab is a package for reading neuroscience data files in a standard way. It includes some original code and some bundled code from
+other open source projects. It will eventually provide the file reading functionality for <a href="http://ndi.vhlab.org">NDI</a> (Neuroscience Data Interface) as NDI scales up but is available for use widely in many projects.</p>
+<p>The package is focused around a central object called <code>ndr.reader</code>. This object can be used to read file metadata (such as the channels
+that were turned on during the acquisition, the sampling rate, and other quantities) as well as file data.</p>
+<p>The package is supported by a number of ndr.reader.* class objects that actually perform the reading of different file types in neuroscience.</p>
+<p>It is intended that this package will be self-sufficient and not require other open source Matlab packages, although it does require
+some Matlab toolboxes from The MathWorks.</p>
+<h2 id="supported-formats">Supported formats<a class="headerlink" href="#supported-formats" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Vendor/Format</th>
+<th>Extension(s)</th>
+<th>NDR Names</th>
+<th>Support</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intan RHD</td>
+<td><code>.rhd</code></td>
+<td>'Intan', 'IntanRHD', 'RHD'</td>
+<td>Native Matlab</td>
+<td></td>
+</tr>
+<tr>
+<td>CED Spike2/SMR</td>
+<td><code>.smr</code></td>
+<td>'SMR', 'Spike2', 'CEDSpike2'</td>
+<td>Native Matlab via <a href="http://sigtool.sourceforge.net/sigtool.html">sigTOOL</a> (included)</td>
+<td></td>
+</tr>
+<tr>
+<td>SpikeGadgets</td>
+<td><code>.rec</code></td>
+<td>'SpikeGadgets', 'SpikeGadgetsREC'</td>
+<td>Native Matlab</td>
+<td></td>
+</tr>
+<tr>
+<td>Blackrock Microsystems</td>
+<td>'.NEV', 'NS#'</td>
+<td>'BlackrockNEV', 'BlackrockNS4', 'BlackrockNS5'</td>
+<td>Native Matlab via NPMK (from Blackrock Microsystems) (included)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Dozens of other formats are supported via the integration with Neo-Python (see the list here - https://neo.readthedocs.io/en/stable/rawio.html#module-neo.rawio, note that NDR only suppports the Neo formats that implement <code>RawIO</code>).</p>
+<h2 id="licenses-from-other-software">Licenses from other software<a class="headerlink" href="#licenses-from-other-software" title="Permanent link">&para;</a></h2>
+<p>This package has files from a variety of distributions. It is our intention to only distribute code that is in the public domain or is licensed for re-distribution. If you find your code here that is not properly distributed please notify the maintainer.</p>
 <h2 id="availability">Availability<a class="headerlink" href="#availability" title="Permanent link">&para;</a></h2>
 <p>A mature prototype of NDR is available in <a href="https://github.com/VH-Lab/NDR-matlab">Matlab</a>.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
