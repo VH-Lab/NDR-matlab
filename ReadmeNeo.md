@@ -7,7 +7,8 @@ In macOS, on a terminal run:
 ```
 brew install pyenv
 pyenv install 3.9.0
-python3.9 -m pip install neo
+python3.9 -m pip install numpy==1.22.4
+python3.9 -m pip install neo==0.10.2
 python3.9 -m pip install sonpy
 ```
 
