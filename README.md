@@ -1,6 +1,6 @@
 # NDR-matlab
 
-Neuroscience Data Readers - A Matlab conglomerative package for reading neuroscience data files
+[Neuroscience Data Readers](https://ndr.vhlab.org) - A Matlab conglomerative package for reading neuroscience data files
 
 ## About
 

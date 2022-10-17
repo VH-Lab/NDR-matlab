@@ -15,6 +15,9 @@ NDI installer as described here.
 
     `ndi_install`
 
+## Python code
+
+NDR can now call Python code, including the [neo](https://pypi.org/project/neo/) Python package for reading neurophysiology files. See [here](https://github.com/VH-Lab/NDR-matlab/blob/main/ReadmeNeo.md) for instructions to install the particular version of Python and the dependencies necessary to use neo.
 
 ## Manual method:
 

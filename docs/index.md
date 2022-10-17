@@ -1,41 +1,53 @@
 # NDR
 
+[NDR](http://ndr.vhlab.org) (Neuroscience Data Readers):  A Matlab conglomerative package for reading neuroscience data files
+
 ## About
 
-(Under construction.. this will be updated for NDR soon)
+NDR-matlab is a package for reading neuroscience data files in a standard way. It includes some original code and some bundled code from
+other open source projects. It will eventually provide the file reading functionality for [NDI](http://ndi.vhlab.org) (Neuroscience Data Interface) as NDI scales up but is available for use widely in many projects.
 
-[NDI](http://ndi.vhlab.org) (Neuroscience Data Interface) is a cross-platform interface standard for reading neuroscience data and storing the results of analyses. Who inspires NDI?
+The package is focused around a central object called `ndr.reader`. This object can be used to read file metadata (such as the channels
+that were turned on during the acquisition, the sampling rate, and other quantities) as well as file data.
 
-- As an **analyst**, I want to quickly open my colleagues' data, regardless of its format and organization, so we can make discoveries.
+The package is supported by a number of ndr.reader.* class objects that actually perform the reading of different file types in neuroscience.
 
-- As a **researcher**, I want my data records and analysis steps to be annotated and both human and machine readable, so I can review my teammates' work and share these annotated results with the world. I want these annotations to occur *in situ*, not as a separate step that I do later.
+It is intended that this package will be self-sufficient and not require other open source Matlab packages, although it does require
+some Matlab toolboxes from The MathWorks.
 
-- As a **physiologist/imager**, I want my analysis routines to have access to my data the instant it is recorded, so I can make choices about how to proceed during my experiment. 
+## Supported formats
 
-- As an **analyst**, I want to write one set of analysis routines that do not need to be revised to work with new data formats or new data organizations.
+| Vendor/Format | Extension(s) | NDR Names | Support | Notes |
+| ----------- | ----------- | ---- | ---- | ---- |
+| Intan RHD | `.rhd` | 'Intan', 'IntanRHD', 'RHD' | Native Matlab | |
+| CED Spike2/SMR | `.smr` | 'SMR', 'Spike2', 'CEDSpike2' | Native Matlab via [sigTOOL](http://sigtool.sourceforge.net/sigtool.html) (included) | |
+| SpikeGadgets | `.rec` | 'SpikeGadgets', 'SpikeGadgetsREC' | Native Matlab | |
+| Blackrock Microsystems | '.NEV', 'NS#' | 'BlackrockNEV', 'BlackrockNS4', 'BlackrockNS5' | Native Matlab via NPMK (from Blackrock Microsystems) (included) | |
 
-- As a **scientist**, I want to search for data or analyses from other researchers.
+Dozens of other formats are supported via the integration with Neo-Python (see the list here - https://neo.readthedocs.io/en/stable/rawio.html#module-neo.rawio, note that NDR only suppports the Neo formats that implement `RawIO`).
 
-- As an **amateur**, I want to be able to access scientists' raw data to perform my own analyses.
+## Licenses from other software
+
+This package has files from a variety of distributions. It is our intention to only distribute code that is in the public domain or is licensed for re-distribution. If you find your code here that is not properly distributed please notify the maintainer.
+
 
 ## Availability
 
-A mature prototype of NDI is available in [Matlab](https://github.com/VH-Lab/NDI-matlab) and a version for Python is well under construction.
+A mature prototype of NDR is available in [Matlab](https://github.com/VH-Lab/NDR-matlab).
 
 ## Installation
 
-Check out the [Installation Guide](https://vh-lab.github.io/NDI-matlab/installation/).
-
-## Pre-print
-
-Check out the [NDI pre-print](https://www.biorxiv.org/content/10.1101/2020.05.13.093542v2) available on [biorxiv](http://biorxiv.org/). 
+Check out the [Installation Guide](https://vh-lab.github.io/NDR-matlab/installation/).
 
 ## Help and Support
 
-Use the [issue tracker](https://github.com/VH-Lab/NDI-matlab/issues) to submit questions, bugs, and issues.
+Use the [issue tracker](https://github.com/VH-Lab/NDR-matlab/issues) to submit questions, bugs, and issues.
 
 ## Financial Support
 
-Supported by the [NIH BRAIN Initiative informatics group](https://braininitiative.nih.gov/brain-programs/informatics), grant MH114678.
+Supported by the [NIH BRAIN Initiative informatics group](https://braininitiative.nih.gov/brain-programs/informatics), grant MH114678, and by the [MathWorks](https://www.mathworks.com)/[INCF](https://www.incf.org) Community Toolbox Training Project program.
 
+## Contributors
+
+Many thanks to our [contributors](https://github.com/VH-Lab/NDR-matlab/graphs/contributors).
 
