@@ -62,6 +62,14 @@ for i=1:numel(paths),
         delete(fname);
 end;
 
-ndr.reader.neo.insert_python_path()
+ndr_globals.Python_available = 0;
+try, 
+        P = py.sys.path;
+        ndr_globals.Python_available = 1;
+end;
+        
+if ndr_globals.Python_available,
+        ndr.reader.neo.insert_python_path();
+end;
 
 
