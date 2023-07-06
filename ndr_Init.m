@@ -64,8 +64,7 @@ end;
 
 ndr_globals.Python_available = 0;
 try, 
-        P = py.sys.path;
-        ndr_globals.Python_available = 1;
+	ndr_globals.Python_available = ndr.fun.python_detect;
 end;
         
 if ndr_globals.Python_available,
