@@ -165,10 +165,10 @@ else,
 		data = reshape(data,length(channel_numbers),numel(data)/length(channel_numbers))';
 
 		if ~eqlen(chan_sort,channel_numbers),
-			data = data(:,chan_sort_indexes); % resort to match user request
+			data(:,chan_sort_indexes) = data; % resort to match user request
 		end;
 	else, % numbers not consecutive, read all individually (or user forced individual channel read)
-		data = zeros(s1-s0+1,length(channel_numbers));
+		data = zeros(blockinfo(c).samples_per_block*(block1-block0+1),length(channel_numbers));
 		for i=1:length(channel_numbers),
 			channels_to_skip_before_reading = channel_numbers(i)-1;
 			channels_remaining_after_read = blockinfo(c).numchannels - channel_numbers(i);
