@@ -46,7 +46,7 @@ else
 			end
 
 			if temp_sample_info.start_sample > 2 && temp_sample_info.hour == 0
-				warning('%s store starts on sample %d', temp_sample_info.name, temp_sample_info.start_sample);
+				error('%s store starts on sample %d', temp_sample_info.name, temp_sample_info.start_sample);
 			end
 
 			% look for gap info
@@ -58,9 +58,9 @@ else
 				temp_sample_info.gaps = reshape(cell2mat(cellfun(@str2double,t,'uniform',0)), 2, []);
 				temp_sample_info.gap_text = strjoin(gap_text', '\n   ');
 				if temp_sample_info.hour > 0
-					warning('gaps detected in data set for %s-%dh!\n   %s\nContact TDT for assistance.\n', temp_sample_info.name, temp_sample_info.hour, temp_sample_info.gap_text);
+					error('gaps detected in data set for %s-%dh!\n   %s\nContact TDT for assistance.\n', temp_sample_info.name, temp_sample_info.hour, temp_sample_info.gap_text);
 				else
-					warning('gaps detected in data set for %s!\n   %s\nContact TDT for assistance.\n', temp_sample_info.name, temp_sample_info.gap_text);
+					error('gaps detected in data set for %s!\n   %s\nContact TDT for assistance.\n', temp_sample_info.name, temp_sample_info.gap_text);
 				end
 			end
 			sample_info = [sample_info temp_sample_info];

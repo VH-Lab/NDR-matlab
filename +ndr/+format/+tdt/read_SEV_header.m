@@ -219,6 +219,19 @@ for ii=1:numel(file_list),
 	file_list(ii).dForm = streamHeader.dForm;
 	file_list(ii).eventName = streamHeader.eventName;
 	file_list(ii).varName = varname;
+	file_list(ii).duration_seconds = file_list(ii).npts / file_list(ii).fs; % duration in seconds
+
+	file_list(ii).start_date = '';
+	file_list(ii).start_time = '';
+	% get start date
+	sp = split(file_list(ii).name,'-');
+	if numel(sp)==5,
+		file_list(ii).start_date = ['20' sp{4}];
+		file_list(ii).start_time = sp{5}(1:6);
+	else,
+		% do not know how to interpret the date
+	end; 
+	
 	fclose(fid);
 
 end; % loop over file_list

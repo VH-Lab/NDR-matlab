@@ -90,7 +90,7 @@ classdef base
 			% |                             |   types returned by                          |
 			% |                             |   ndr.reader.base.mfdaq_type                 |
 			% | samplerate                  | The sampling rate of this channel, or NaN if |
-			% |                             |   not applicable.
+			% |                             |   not applicable.                            |
 			% ------------------------------------------------------------------------------
 			%
 				% abstract class returns empty
@@ -323,10 +323,10 @@ classdef base
 						type = 'mark';
 					case {'event','e'},
 						type = 'event';
-                    case {'text'},
-                        type = 'text';
-                    otherwise,
-                        error(['Type ' channeltype ' is unknown.']);
+					case {'text'},
+						type = 'text';
+					otherwise,
+						error(['Type ' channeltype ' is unknown.']);
 				end;
 		end;
 	

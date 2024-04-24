@@ -16,10 +16,10 @@ classdef reader
 				j = ndr.fun.ndrresource('ndr_reader_types.json');
 				match = 0;
 				for i=1:numel(j),
-                    if any(strcmpi(ndr_reader_type, j(i).type)),
-                    	match = i;
-                        break;
-                    end;
+					if any(strcmpi(ndr_reader_type, j(i).type)),
+						match = i;
+						break;
+					end;
 				end;
 				if match==0,
 					error(['Do not know how to make a reader of type ''' ndr_reader_type '''.']);
@@ -166,7 +166,9 @@ classdef reader
 			% -------------------------------------------------------
 			% 'name'             | The name of the channel (e.g., 'ai1')
 			% 'type'             | The type of data stored in the channel
-			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
+			%                    |    (e.g., 'analog_in', 'digital_in', 'image', 'timestamp')
+			% 'time_channel'     | The time channel number that contains timing information for
+			%                    |    this channel.
 			%
 			%
 			%

@@ -1,6 +1,6 @@
-# Channel names in Intan RHD files:
+# Channel names in CED Spike2 files:
 
-## How channels are named natively according to the Intan system:
+## How channels are named natively according to the CED Spike2 systems:
 
 | CED Type | What it is | How specified | Example native channel name | Example meaning |
 | -- | -- | -- | -- | --- | 
