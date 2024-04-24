@@ -14,5 +14,9 @@
         {
         	"type": ["neo"],
         	"classname": "ndr.reader.neo"
-        }
+        },
+	{
+		"type": ["sev", "tdt_sev"],
+		"classname": "ndr.reader.tdt_sev"
+	}
 ]

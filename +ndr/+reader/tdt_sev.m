@@ -36,12 +36,19 @@ classdef tdt_sev < ndr.reader.base
 			%
 			%  See also: ndr.time.clocktype, EPOCHCLOCK
 			%
-				[filename,parentdir,isdirectory] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
+				[filename] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.tdt.read_SEV_header(filename);
 
 				t0 = 0;
-				t1 = header(1).duration_seconds;
-				
+				t1 = 0;
+				if numel(header)>0,
+					indexes = find([header.chan]==header(1).chan);
+					header = header(indexes);
+					[hours_sorted,hours_sort_index] = sort([header.hour]);
+					for i=1:numel(hours_sort_index),
+						t1 = t1 + header(hours_sort_index(i)).duration_seconds;
+					end;
+				end;
 				t0t1 = {[t0 t1]};
 		end % ndr.reader.tdt_sev.epochclock
 		
@@ -59,22 +66,21 @@ classdef tdt_sev < ndr.reader.base
 			% 'type'             | The type of data store in the channel
 			%                    |    (e.g., 'analog_in', 'digital_in', 'image', 'timestamp')
 			%
-				[filename,parentdir,isdirectory] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
+				[filename] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.tdt.read_SEV_header(filename);
 			
 				channels = vlt.data.emptystruct('name','type','time_channel');
 
 				if numel(header)>0,
-					channels(1) = struct('name','t1','time',1);
+					channels(1) = struct('name','t1','type','time','time_channel',1);
 				end;
 
 				for i=1:numel(header),
 					if header(i).hour==0,
-						channels(end+1) = struct('name',['ai' int2str(chan)],...
+						channels(end+1) = struct('name',['ai' int2str(header(i).chan)],...
 							'type','analog_in', 'time_channel', 1);
 					end;
 				end;
-			end
 		end % ndr.reader.tdt_sev.getchannelsepoch
 		
 		function data = readchannels_epochsamples(tdt_sev_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
@@ -92,7 +98,7 @@ classdef tdt_sev < ndr.reader.base
 			%
 			%  DATA will have one column per channel.
 			%
-				[filename,parentdir,isdirectory] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
+				[filename] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.tdt.read_SEV_header(filename);
 
 				if ~iscell(channeltype),
@@ -101,7 +107,7 @@ classdef tdt_sev < ndr.reader.base
 
 				% we can only read single channels from tdt_sev files at a time
 
-				index = find([{header.chan} == channel(1)] & [{header.hour}==0]);
+				index = find([[header.chan] == channel(1)] & [[header.hour]==0]);
 				if isempty(index),
 					error(['Channel ' int2str(channel(1)) ' not recorded in this epoch.']);
 				end;
@@ -110,7 +116,7 @@ classdef tdt_sev < ndr.reader.base
 				done = 0;
 				hour = 1;
 				while ~done,
-					index = find([{header.chan} == channel(1)] & [{header.hour}==hour]);
+					index = find([[header.chan] == channel(1)] & [[header.hour]==hour]);
 					if isempty(index),
 						done = 1;
 					else,
@@ -160,8 +166,8 @@ classdef tdt_sev < ndr.reader.base
 				filename = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 			    
 				header = ndr.format.tdt.read_SEV_header(filename);
-				header_channels = [{header.chan}];
-				hour0 = [{header.hour}==0];
+				header_channels = [header.chan];
+				hour0 = [[header.hour]==0];
 				for i=1:numel(channel),
 					index = find(hour0 & (channel(i)==header_channels));
 					if isempty(index),
@@ -184,7 +190,7 @@ classdef tdt_sev < ndr.reader.base
 		    
 				index = find(tf);
 				if numel(index)==0,
-					error(['Need 1 .rhd file per epoch.']);
+					error(['Need at least 1 .sev file per epoch.']);
 				else,
 					filename = filename_array{index(1)};
 					[parentdir, fname, ext] = fileparts(filename);
