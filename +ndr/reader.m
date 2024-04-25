@@ -320,7 +320,7 @@ classdef reader
 			%
 			%  EPOCH_SELECT allows one to choose which epoch in the file one wants to access,
 			%  if the file(s) has more than one epoch contained. For most devices, EPOCH_SELECT is always 1.
-				sr = ndr.reader_obj.ndr_reader_base.samplerate(epochstreams, epoch_select, channeltype, channel);
+				sr = ndr_reader_obj.ndr_reader_base.samplerate(epochstreams, epoch_select, channeltype, channel);
 		end;
 
 	end; % methods
