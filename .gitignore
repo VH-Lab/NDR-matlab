@@ -5,3 +5,4 @@
 mkdocs.yml
 docs/reference
 site
+__pycache__
