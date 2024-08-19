@@ -62,6 +62,7 @@ for i=1:numel(paths),
         delete(fname);
 end;
 
+return;
 ndr_globals.Python_available = 0;
 try, 
 	ndr_globals.Python_available = ndr.fun.python_detect;

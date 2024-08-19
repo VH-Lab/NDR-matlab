@@ -142,7 +142,7 @@ classdef tdt_sev < ndr.reader.base
 				data = NaN(s1_-s0_+1,numel(channel));
 
 				for c=1:numel(channel),
-					data(:,c) = ndr.format.tdt.read_SEV_channel(filename,header,channeltype,channel(c),s0_,s1_);
+					data(:,c) = ndr.format.tdt.read_SEV_channel(filename,header,channeltype{c},channel(c),s0_,s1_);
 				end;
 
 		end % ndr.reader.tdt_sev.readchannels_epochsamples
