@@ -18,5 +18,9 @@
 	{
 		"type": ["sev", "tdt_sev"],
 		"classname": "ndr.reader.tdt_sev"
+	},
+	{
+		"type": ["abf", "axon_abf"],
+		"classname": "ndr.reader.axon_abf"
 	}
 ]
