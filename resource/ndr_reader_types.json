@@ -22,5 +22,9 @@
 	{
 		"type": ["abf", "axon_abf"],
 		"classname": "ndr.reader.axon_abf"
+	},
+	{
+		"type": ["bjg", "bjg_bin"],
+		"classname": "ndr.reader.bjg"
 	}
 ]

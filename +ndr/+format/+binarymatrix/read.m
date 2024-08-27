@@ -37,6 +37,7 @@ function [data, total_samples, s0, s1] = read(filename_or_fileobj, num_channels,
 % | byteOrder ('ieee-le')            | The byte order of the data (can be 'ieee-be' also)    |
 % | force_single_channel_read (false)| Force the program to read channels 1 by 1 (may be     |
 % |                                  |   slower but sometimes helpful for debugging)         |
+% | headerSkip (0)                   | Number of header bytes to skip.                       |
 % |----------------------------------|-------------------------------------------------------|
 %
 
@@ -49,6 +50,7 @@ arguments
 	options.dataType char {mustBeTextScalar, mustBeNonempty} = 'double'
 	options.byteOrder char {mustBeTextScalar, mustBeNonempty} = 'ieee-le'
 	options.force_single_channel_read (1,1) logical = false;
+	options.headerSkip (1,1) uint64 = 0;
 end % arguments
 
 if max(channel_indexes)>num_channels,
@@ -90,7 +92,7 @@ switch options.dataType,
 		bytes_per_value = bits / 8;
 end;
 
-total_samples = d.bytes / (num_channels * bytes_per_value);
+total_samples = (d.bytes-double(options.headerSkip)) / (num_channels * bytes_per_value);
 
 if isinf(s1) & (s1>0),
 	s1 = total_samples;
@@ -110,7 +112,8 @@ if ~options.force_single_channel_read & consecutive_channels_requested,
 	channels_to_skip_before_reading = chan_sort(1) - 1;
 	channels_to_skip_after_reading = num_channels - chan_sort(end);
 
-	skip_point = (s0-1)*bytes_per_sample + ... % skip to the sample ...
+	skip_point = double(options.headerSkip) + ...
+		(s0-1)*bytes_per_sample + ... % skip to the sample ...
 		channels_to_skip_before_reading*bytes_per_value; % skip any unrequested channels
 
 	skip_after_each_read = channels_to_skip_after_reading*bytes_per_value + ... % skip remaining channels in this sample
@@ -130,7 +133,8 @@ else,
 		channels_to_skip_before_reading = channel_indexes(c) - 1;
 		channels_to_skip_after_reading = num_channels - channel_indexes(c);
 
-		skip_point = (s0-1)*bytes_per_sample + ... % skip to the sample ...
+		skip_point = double(options.headerSkip) + ...
+			(s0-1)*bytes_per_sample + ... % skip to the sample ...
 			channels_to_skip_before_reading*bytes_per_value; % skip any unrequested channels
 
 		skip_after_each_read = channels_to_skip_after_reading*bytes_per_value + ... % skip remaining channels in this sample
