@@ -21,7 +21,7 @@ if isempty(header),
 end;
 
 if (isinf(t0) & t0<0) | (t0<0),
-	t0 = T0;
+	t0 = 0;
 end;
 
 MaxTime = diff(header.recTime)-header.si*1e-6;
@@ -33,12 +33,18 @@ end;
 switch lower(channel_type),
 	case 'time',
 		data = [t0:header.si*1e-6:t1];
-		data = data(:);
 	case {'ai','analog_in'},
 		channel_names = header.recChNames(channel_numbers);
 		[channel_num_sorted,channel_num_sorted_idx] = sort(channel_numbers);
 		data = abfload2(filename,'start',t0,'stop',t1+1e-6*header.si,'channels',channel_names,...
 			'doDispInfo',false);
+        if size(data,3)>1,
+            data2 = [];
+            for i=1:size(data,3),
+                data2 = cat(1,data2,data(:,:,i));
+            end;
+            data = data2;
+        end;
 		data(:,channel_num_sorted_idx) = data;
     otherwise,
         error(['unknown channel type to ABF ' channel_type])
