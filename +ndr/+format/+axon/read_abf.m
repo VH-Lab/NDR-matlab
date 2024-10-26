@@ -56,7 +56,7 @@ switch lower(channel_type),
 				data2 = cat(1,data2,data(:,:,i));
 			end;
 			data = data2;
-			data = data(find(times>=t0 & times<=t1+0.5*header.si*1e-6));
+			data = data(find(times>=t0 & times<=t1+0.5*header.si*1e-6),:);
 		end;
 		data(:,channel_num_sorted_idx) = data;
 	otherwise,
