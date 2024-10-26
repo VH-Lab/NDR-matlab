@@ -32,22 +32,35 @@ end;
 
 switch lower(channel_type),
 	case 'time',
-		data = [t0:header.si*1e-6:t1];
+		if ~isfield(header,'sweepLengthInPts'),
+			data = [t0:header.si*1e-6:t1];
+		else,
+			data = [];
+			for i=1:numel(header.sweepStartInPts),
+				dt = header.si*1e-6;
+				startTime = header.sweepStartInPts(i)*dt;
+				endTime = startTime + (header.sweepLengthInPts-1) * dt;
+				data = cat(2,data,startTime:dt:endTime);
+			end;
+			data = data(find(data>=t0 & data<=t1+0.5*header.si*1e-6));
+		end;
 	case {'ai','analog_in'},
 		channel_names = header.recChNames(channel_numbers);
 		[channel_num_sorted,channel_num_sorted_idx] = sort(channel_numbers);
 		data = abfload2(filename,'start',t0,'stop',t1+1e-6*header.si,'channels',channel_names,...
 			'doDispInfo',false);
-        if size(data,3)>1,
-            data2 = [];
-            for i=1:size(data,3),
-                data2 = cat(1,data2,data(:,:,i));
-            end;
-            data = data2;
-        end;
+		if size(data,3)>1, % sweeps are different, it seems to read in the whole thing and ignore the times
+			times = ndr.format.axon.read_abf(filename, header, 'time', 1, -inf, inf);
+			data2 = [];
+			for i=1:size(data,3),
+				data2 = cat(1,data2,data(:,:,i));
+			end;
+			data = data2;
+			data = data(find(times>=t0 & times<=t1+0.5*header.si*1e-6));
+		end;
 		data(:,channel_num_sorted_idx) = data;
-    otherwise,
-        error(['unknown channel type to ABF ' channel_type])
+	otherwise,
+		error(['unknown channel type to ABF ' channel_type])
 end;
 
 
