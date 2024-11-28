@@ -154,9 +154,8 @@ if fid == -1
   error(messg);
 end
 % on the occasion, determine absolute file size
-fseek(fid,0,'eof');
-fileSz=ftell(fid);
-fseek(fid,0,'bof');
+fileListing = dir(fn);
+fileSz = fileListing.bytes;
 
 % *** read value of parameter 'fFileSignature' (i.e. abf version) from header ***
 sz=4;

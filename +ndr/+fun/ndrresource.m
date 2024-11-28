@@ -13,7 +13,7 @@ p = ndr.fun.ndrpath;
 
 filename = [p filesep 'resource' filesep resourceName];
 
-if ~exist(filename,'file')
+if ~isfile(filename)
 	error(['File ' filename ' does not exist.']);
 end;
 
