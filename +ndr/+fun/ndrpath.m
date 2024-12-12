@@ -7,7 +7,7 @@ function p = ndrpath()
 %
 %
 
-w = which('ndr.fun.ndrpath');
+w = mfilename('fullpath');
 
 if isempty(w),
 	error(['Cannot determine path; cannot find function ndr.fun.ndr']);

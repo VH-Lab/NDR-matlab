@@ -141,7 +141,7 @@ if ischar(stop)
   end
 end
 % check existence of file
-if ~exist(fn,'file')
+if ~isfile(fn)
   error(['could not find file ' fn]);
 end
 
