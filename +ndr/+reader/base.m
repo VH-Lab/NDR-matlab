@@ -168,7 +168,7 @@ classdef base
 			%
 			%  TIMEREF is an ndi.time.timereference with the NDI_CLOCK of the device, referring to epoch N at time 0 as the reference.
 			%
-				timestamps = []
+				timestamps = [];
 				data = []; % abstract class
 		end; % readevents_epochsamples
 
