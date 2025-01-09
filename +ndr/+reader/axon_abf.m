@@ -38,11 +38,9 @@ classdef axon_abf < ndr.reader.base
 				[filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.axon.read_abf_header(filename);
 
-				t0 = 0;
-				t1 = diff(header.recTime)-header.si*1e-6; 
-				t0t1 = {[t0 t1]};
+				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
 		end % ndr.reader.axon_abf.epochclock
-		
+
 		function channels = getchannelsepoch(axon_abf_obj, epochstreams, epoch_select)
 			% GETCHANNELS - List the channels that are available from this ABF
 			% file for a given set of files
@@ -101,13 +99,13 @@ classdef axon_abf < ndr.reader.base
 					s1_ = 1;
 				end;
 
-				sr = axon_abf_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
+				sr = axon_abf_obj.get_samplerate_from_header(header, channel);
 				sr_unique = unique(sr); % get all sample rates
 				if numel(sr_unique)~=1,
 					error(['Do not know how to handle different sampling rates across channels.']);
 				end;
 
-				t0t1 = axon_abf_obj.t0_t1(epochstreams, epoch_select);
+				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
 				T = ndr.time.fun.samples2times([s0_ s1_], t0t1{1}, sr_unique);
 
 				% in abfread, the reader reads up to s1 -1 instead of s1
@@ -130,13 +128,13 @@ classdef axon_abf < ndr.reader.base
 				if epoch_select~=1,
 					error(['ABF files have 1 epoch per file.']);
 				end;
-				sr = [];
+				
 				filename = axon_abf_obj.filenamefromepochfiles(epochstreams);
 			    
 				header = ndr.format.axon.read_abf_header(filename);
-				sr = 1./(header.si*1e-6 * ones(numel(channel),1));
+				sr = axon_abf_obj.get_samplerate_from_header(header, channel);
 		end % ndr.reader.axon_abf.samplerate
-		
+
 		function [filename] = filenamefromepochfiles(axon_abf_obj, filename_array)
 			% FILENAMEFROMEPOCHFILES - Return the file name that corresponds to the ABF file
 			%
@@ -211,7 +209,19 @@ classdef axon_abf < ndr.reader.base
 
 		
 	end % methods
-	    
+	
+    methods (Static, Access = private)
+        function t0t1 = get_t0_t1_from_header(header)
+			t0 = 0;
+			t1 = diff(header.recTime)-header.si*1e-6; 
+			t0t1 = {[t0 t1]};
+        end
+
+        function sr = get_samplerate_from_header(header, channel)
+			sr = 1./(header.si*1e-6 * ones(numel(channel),1));
+        end
+    end
+
 	methods (Static) % helper functions
         
 	end % methods (Static)
