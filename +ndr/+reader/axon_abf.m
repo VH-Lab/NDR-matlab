@@ -38,9 +38,7 @@ classdef axon_abf < ndr.reader.base
 				[filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.axon.read_abf_header(filename);
 
-				t0 = 0;
-				t1 = diff(header.recTime)-header.si*1e-6; 
-				t0t1 = {[t0 t1]};
+				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
 		end % ndr.reader.axon_abf.epochclock
 
 		function channels = getchannelsepoch(axon_abf_obj, epochstreams, epoch_select)
@@ -130,11 +128,11 @@ classdef axon_abf < ndr.reader.base
 				if epoch_select~=1,
 					error(['ABF files have 1 epoch per file.']);
 				end;
-				sr = [];
+				
 				filename = axon_abf_obj.filenamefromepochfiles(epochstreams);
 			    
 				header = ndr.format.axon.read_abf_header(filename);
-				sr = 1./(header.si*1e-6 * ones(numel(channel),1));
+				sr = axon_abf_obj.get_samplerate_from_header(header, channel);
 		end % ndr.reader.axon_abf.samplerate
 
 		function [filename] = filenamefromepochfiles(axon_abf_obj, filename_array)
