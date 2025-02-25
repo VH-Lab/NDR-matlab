@@ -22,6 +22,24 @@ classdef axon_abf < ndr.reader.base
 			%  ABF file format.
 			%
 		end % ndr.reader.axon_abf.axon_abf
+
+        function ec = epochclock(axon_abf_obj, epochstreams, epoch_select)
+            % EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
+            % 
+            % EC = EPOCHCLOCK(AXON_ABF_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            % Return the clock types available for this epoch as a cell array
+            % of ndr.time.clocktype objects (or sub-class members).
+            %
+            % See also: ndr.time.clocktype
+            %
+                ec = {ndr.time.clocktype('dev_local_time')};
+				[filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
+				header = ndr.format.axon.read_abf_header(filename);
+                if isfield(header,'uFileStartDate')
+                    ec{2} = ndr.time.clocktype('exp_global_time');
+                end
+         end % epochclock
 			
 		function t0t1 = t0_t1(axon_abf_obj, epochstreams, epoch_select)
 			% EPOCHCLOCK - Return the beginning and end epoch times for an
@@ -37,7 +55,6 @@ classdef axon_abf < ndr.reader.base
 			%
 				[filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.axon.read_abf_header(filename);
-
 				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
 		end % ndr.reader.axon_abf.epochclock
 
@@ -89,7 +106,7 @@ classdef axon_abf < ndr.reader.base
 				if ~iscell(channeltype),
 					channeltype = repmat({channeltype},numel(channel),1);
 				end;
-                maxSamples = header.lActualAcqLength / header.nADCNumChannels;
+				maxSamples = header.lActualAcqLength / header.nADCNumChannels;
 				s0_ = max(1, s0);
 				if isinf(s0_), % could be positive inf
 					s0_ = maxSamples;
@@ -211,16 +228,20 @@ classdef axon_abf < ndr.reader.base
 	end % methods
 	
     methods (Static, Access = private)
-        function t0t1 = get_t0_t1_from_header(header)
+		function t0t1 = get_t0_t1_from_header(header)
 			t0 = 0;
-			t1 = diff(header.recTime)-header.si*1e-6; 
-			t0t1 = {[t0 t1]};
-        end
+			t1 = diff(header.recTime)-header.si*1e-6;
+            t0t1 = {[t0 t1]};
+            if isfield(header,'uFileStartDate')
+    			dt = ndr.format.axon.abfTimeToDatetime(header.uFileStartDate,header.uFileStartTimeMS);
+	    		t0t1{2} = [datenum(dt) datenum(dt+seconds(t1))];
+            end;
+		end
 
-        function sr = get_samplerate_from_header(header, channel)
+		function sr = get_samplerate_from_header(header, channel)
 			sr = 1./(header.si*1e-6 * ones(numel(channel),1));
-        end
-    end
+		end
+	end
 
 	methods (Static) % helper functions
         
