@@ -34,6 +34,7 @@ switch lower(channel_type),
 	case 'time',
 		if ~isfield(header,'sweepLengthInPts'),
 			data = [t0:header.si*1e-6:t1];
+            data = data(:); % columnize 
 		else,
 			data = [];
 			for i=1:numel(header.sweepStartInPts),
