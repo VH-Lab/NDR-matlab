@@ -84,6 +84,51 @@ classdef axon_abf < ndr.reader.base
 							'type','analog_in', 'time_channel', 1);
 				end;
 		end % ndr.reader.axon_abf.getchannelsepoch
+
+        function [datatype,p,datasize] = underlying_datatype(axon_abf_obj, epochstreams, epoch_select, channeltype, channel)
+            % UNDERLYING_DATATYPE - get the underlying data type for a channel in an epoch
+            %
+            % [DATATYPE,P,DATASIZE] = UNDERLYING_DATATYPE(AXON_ABF_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
+            %
+            % Return the underlying datatype for the requested channel.
+            %
+            % DATATYPE is a type that is suitable for passing to FREAD or FWRITE
+            %  (e.g., 'float64', 'uint16', etc. See help fread.)
+            %
+            % P is a polynomial that converts between the double data that is returned by
+            % READCHANNEL. RETURNED_DATA = (RAW_DATA+P(1))*P(2)+(RAW_DATA+P(1))*P(3) ...
+            %
+            % DATASIZE is the sample size in bits.
+            %
+            % CHANNELTYPE must be a string. It is assumed that
+            % that CHANNELTYPE applies to every entry of CHANNEL.
+            %
+            [filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
+            header = ndr.format.axon.read_abf_header(filename);
+            
+            switch(channeltype)
+                case {'analog_in','analog_out','auxiliary_in'},
+                    % For the abstract class, keep the data in doubles. This will always work but may not
+                    % allow for optimal compression if not overridden
+                    datasize = ndr.fun.bitDepth(header.lADCResolution);
+                    datatype = ndr.fun.getDataTypeString(true,true,datasize);
+                    p = [0 header.fADCRange/header.lADCResolution];
+                case {'time'},
+                    datatype = 'float64';
+                    datasize = 64;
+                    p = [0 1];
+                case {'digital_in','digital_out'},
+                    datatype = 'char';
+                    datasize = 8;
+                    p = [0 1];
+                case {'eventmarktext','event','marker','text'},
+                    datatype = 'float64';
+                    datasize = 64;
+                    p = [0 1];
+                otherwise,
+                    error(['Unknown channel type ' channeltype '.']);
+            end
+        end
 		
 		function data = readchannels_epochsamples(axon_abf_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
 			% READCHANNELS_EPOCHSAMPLES - Read the data based on specified channels

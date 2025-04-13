@@ -178,6 +178,28 @@ classdef reader
 				channels = ndr_reader_obj.ndr_reader_base.getchannelsepoch(epochstreams, epoch_select);
 		end; % getchannelsepoch()
 
+        function [datatype,p,datasize] = underlying_datatype(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
+            % UNDERLYING_DATATYPE - get the underlying data type for a channel in an epoch
+            %
+            % [DATATYPE,P,DATASIZE] = UNDERLYING_DATATYPE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
+            %
+            % Return the underlying datatype for the requested channel.
+            %
+            % DATATYPE is a type that is suitable for passing to FREAD or FWRITE
+            %  (e.g., 'float64', 'uint16', etc. See help fread.)
+            %
+            % P is a matrix of polynomials that converts between the double data that is returned by
+            % READCHANNEL. RETURNED_DATA = (RAW_DATA+P(i,1))*P(i,2)+(RAW_DATA+P(i,1))*P(i,3) ...
+            % There is one row of P for each entry of CHANNEL.
+            %
+            % DATASIZE is the sample size in bits.
+            %
+            % CHANNELTYPE must be a string. It is assumed that
+            % that CHANNELTYPE applies to every entry of CHANNEL.
+            %
+            [datatype,p,datasize] = ndr_reader_obj.ndr_reader_base.underlying_datatype(epochstreams, epoch_select, channeltype, channel);
+        end
+
 		function data = readchannels_epochsamples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
 			%  FUNCTION READ_CHANNELS - read the data based on specified channels
 			%
