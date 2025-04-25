@@ -421,10 +421,10 @@ classdef reader
                 [timestamps,data] = ndr_reader_obj.ndr_reader_base.readevents_epochsamples_native(channeltype, channel, epochstreams, epoch_select, t0, t1);
         end % readevents_epochsamples_native()
 
-        function sr = samplerate(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select)
+        function sr = samplerate(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
             %SAMPLERATE - Get the sample rate for specific regularly-sampled channels.
             %
-            %   SR = SAMPLERATE(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT)
+            %   SR = SAMPLERATE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
             %
             %   Returns the sampling rate(s) in Hz for the specified regularly-sampled 
             %   channels. This function calls the corresponding method of the 

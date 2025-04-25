@@ -307,7 +307,7 @@ classdef whitematter < ndr.reader.base
 
         end % readchannels_epochsamples()
 
-        function sr = samplerate(obj, epochstreams, epoch_select, channeltype, channel)
+        function sr = samplerate(ndr_reader_wm_obj, epochstreams, epoch_select, channeltype, channel)
             %SAMPLERATE - Get the sample rate for specific channels.
             %
             %   SR = SAMPLERATE(OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
@@ -324,7 +324,7 @@ classdef whitematter < ndr.reader.base
             % See also: ndr.format.whitematter.header, ndr.reader.base/samplerate
 
             arguments
-                obj ndr.reader.whitematter
+                ndr_reader_wm_obj ndr.reader.whitematter
                 epochstreams (1,:) cell
                 epoch_select (1,1) {mustBePositive, mustBeInteger} 
                 channeltype (1,:) char {mustBeNonempty}
@@ -335,7 +335,7 @@ classdef whitematter < ndr.reader.base
                 error('WhiteMatter format only supports a single epoch (epoch_select=1).');
             end
 
-            fname = obj.filenamefromepochfiles(epochstreams);
+            fname = ndr_reader_wm_obj.filenamefromepochfiles(epochstreams);
             header = ndr.format.whitematter.header(fname);
 
             % Sampling rate is the same for all analog channels and time
