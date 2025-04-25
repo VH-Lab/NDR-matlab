@@ -24,6 +24,10 @@
 		"classname": "ndr.reader.axon_abf"
 	},
 	{
+		"type": ["whitematter", "WMHS"],
+		"classname": "ndr.reader.whitematter"
+	},
+	{
 		"type": ["bjg", "bjg_bin"],
 		"classname": "ndr.reader.bjg"
 	}
