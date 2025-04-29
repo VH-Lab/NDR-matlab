@@ -31,7 +31,7 @@ function [data] = read(filename,channeltype,header)
 %                     Values corresponding to time points outside the defined
 %                     steps in 'analog_in'/'analog_out' data will be NaN.
 %
-%   See also: NDR.FORMAT.DABROWSKA.HEADER, NDR.TIME.FUN.TIMES2SAMPLES
+% See also: NDR.FORMAT.DABROWSKA.HEADER, NDR.TIME.FUN.TIMES2SAMPLES
 
 % Input argument validation
 arguments

@@ -10,6 +10,8 @@ function header = header(filename)
 %
 %   Output Arguments:
 %       header   - The content of the 'Pars' variable loaded from the file.
+%
+% See also: NDR.FORMAT.DABROWSKA.READ
 
 % Input argument validation
 arguments
