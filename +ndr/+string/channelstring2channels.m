@@ -31,16 +31,16 @@ seps = [0 find(channelstring==block_separator) numel(channelstring)+1];
 channelnameprefix = {};
 channelnumber = [];
 
-for i=2:numel(seps),
+for i=2:numel(seps)
 	string_here = strtrim(channelstring(seps(i-1)+1:seps(i)-1));
 	letters = isletter(string_here);
 	first_non_letter = find(letters==0,1,'first');
-	if isempty(first_non_letter),
+	if isempty(first_non_letter)
 		error(['No numbers provided in channel string segment ' string_here '.']);
-	end;
+	end
 	prefix_here = {string_here(1:first_non_letter-1)};
 	numbers_here = ndr.string.str2intseq(string_here(first_non_letter:end));
 	channelnameprefix = cat(1,channelnameprefix,repmat(prefix_here,numel(numbers_here),1));
 	channelnumber = cat(1,channelnumber(:),numbers_here(:));
-end;
+end
 

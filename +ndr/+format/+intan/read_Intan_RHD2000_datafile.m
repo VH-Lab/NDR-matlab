@@ -54,9 +54,9 @@ function [data,total_samples,total_time,blockinfo] = read_Intan_RHD2000_datafile
 force_single_channel_read = 0;
 assign(varargin{:});
 
-if isempty(header),
+if isempty(header)
 	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
-end;
+end
 
 [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 
@@ -66,15 +66,15 @@ total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; 
 % NOW, WHICH DATA DID THE USER REQUEST US TO READ?
 
  % fix t0, t1 to be in range
-if t0<0, t0 = 0; end;
-if t1>(total_time-1/header.frequency_parameters.amplifier_sample_rate),
+if t0<0, t0 = 0; end
+if t1>(total_time-1/header.frequency_parameters.amplifier_sample_rate)
 	t1 = total_time-1/header.frequency_parameters.amplifier_sample_rate;
-end;
+end
 
 % determine which channels are going to be read into memory
 ch = zeros(1,8);
-if ischar(channel_type),
-	switch(channel_type),
+if ischar(channel_type)
+	switch(channel_type)
 		case {'time','timestamp'}, channel_type = 1;
 		case {'amp','amplifier'}, channel_type = 2;
 		case {'aux','aux_in'}, channel_type = 3;
@@ -84,8 +84,8 @@ if ischar(channel_type),
 		case {'din','digital_in'}, channel_type = 7;
 		case {'dout','digital_out'}, channel_type = 8;
 		otherwise, error(['Unknown channel_type ' channel_type '.']); 
-	end;
-end;
+	end
+end
 ch(channel_type) = 1;
 c = find(ch);
 
@@ -100,10 +100,10 @@ block0_s = mod(s0,blockinfo(c).samples_per_block) + ...
 block1 = ceil(s1/blockinfo(c).samples_per_block);
 block1_s = mod(s1,blockinfo(c).samples_per_block) + ...
 	(mod(s1,blockinfo(c).samples_per_block)==0)*blockinfo(c).samples_per_block; % s1 is the block1_s sample in block1
-if block1>num_data_blocks, % can happen if we request a non-60 sample per block channel
+if block1>num_data_blocks % can happen if we request a non-60 sample per block channel
 	block1 = num_data_blocks;
 	block1_s = blockinfo(c).samples_per_block;
-end;
+end
 
 
 
@@ -111,35 +111,35 @@ end;
 % NOW, WE KNOW WHAT TO READ, LET'S READ IT
 
 fid = fopen(filename,'r');
-if fileid_value(fid)<0,
+if fileid_value(fid)<0
 	error(['Could not open filename ' filename_value(filename) ' for reading (check path, spelling, permissions).']);
-end;
+end
 
  % now read the data 
 
 data = [];
 
-if blockinfo(c).interleaved==0,
-    if ~all(ismember(channel_numbers,[1:blockinfo(c).numchannels])),
+if blockinfo(c).interleaved==0
+    if ~all(ismember(channel_numbers,[1:blockinfo(c).numchannels]))
         error(['Requested channel(s) ' mat2str(channel_numbers) ' for type ''' blockinfo(c).type ''' out of available range ' mat2str([1:blockinfo(c).numchannels]) '.']);
-    end;
+    end
 	% read it all in one fread call!
 	fseek(fid,header.fileinfo.headersize+bytes_per_block*(block0-1)+blockinfo(c).block_offset,'bof');
 	data=fread(fid,blockinfo(c).samples_per_block*(block1-block0+1),blockinfo(c).precision,bytes_per_block-blockinfo(c).bytes);
-else,
-    if ~all(ismember(channel_numbers,[1:blockinfo(c).numchannels])),
+else
+    if ~all(ismember(channel_numbers,[1:blockinfo(c).numchannels]))
         error(['Requested channel(s) ' mat2str(channel_numbers) ' for type ''' blockinfo(c).type ''' out of available range ' mat2str([1:blockinfo(c).numchannels]) '.']);
-    end;
+    end
 
-	if ~all((channel_numbers>0)&(channel_numbers<=blockinfo(c).numchannels)),
+	if ~all((channel_numbers>0)&(channel_numbers<=blockinfo(c).numchannels))
 		error(['Requested channel list includes an out-of-range channnel: suitable range is 1 to ' int2str(blockinfo(c).numchannels) ', request was ' int2str(channel_numbers) '.']);
-	end;
+	end
 
 	[chan_sort,chan_sort_indexes] = sort(channel_numbers);
 	% do we have consecutive channels requested? (so we can read it with a single fread function call)
 	consecutive_channels_requested = length(channel_numbers)==1|eqlen(diff(chan_sort),ones(1,length(channel_numbers)-1));
 
-	if ~force_single_channel_read & consecutive_channels_requested,
+	if ~force_single_channel_read & consecutive_channels_requested
 			% we want to read samples_per_block * number_channel_samples then skip the rest of the block
 		channels_to_skip_before_reading = chan_sort(1)-1;
 		channels_remaining_after_read = blockinfo(c).numchannels - chan_sort(end);
@@ -164,12 +164,12 @@ else,
 		data = permute(data,[2 1 3]);
 		data = reshape(data,length(channel_numbers),numel(data)/length(channel_numbers))';
 
-		if ~eqlen(chan_sort,channel_numbers),
+		if ~eqlen(chan_sort,channel_numbers)
 			data(:,chan_sort_indexes) = data; % resort to match user request
-		end;
-	else, % numbers not consecutive, read all individually (or user forced individual channel read)
+		end
+	else % numbers not consecutive, read all individually (or user forced individual channel read)
 		data = zeros(blockinfo(c).samples_per_block*(block1-block0+1),length(channel_numbers));
-		for i=1:length(channel_numbers),
+		for i=1:length(channel_numbers)
 			channels_to_skip_before_reading = channel_numbers(i)-1;
 			channels_remaining_after_read = blockinfo(c).numchannels - channel_numbers(i);
 
@@ -186,21 +186,21 @@ else,
 			fseek(fid,skip_point,'bof');
 			data(:,i)=fread(fid,blockinfo(c).samples_per_block*(block1-block0+1),[int2str(blockinfo(c).samples_per_block) blockinfo(c).precision],...
 				skip_after_each_read)';
-		end;
-	end;
-end;
+		end
+	end
+end
 
 fclose(fid);  % close the file
 
 % trim to match user requested samples
-if block0_s~=0 | block1_~=blockinfo(c).samples_per_block,
+if block0_s~=0 | block1_~=blockinfo(c).samples_per_block
 	data = data(block0_s:end-(blockinfo(c).samples_per_block-block1_s),:);
-end;
+end
 
-if blockinfo(c).shift ~=0, 
+if blockinfo(c).shift ~=0 
 	data = double(data) - blockinfo(c).shift;
-end;
+end
 
-if blockinfo(c).scale ~= 1, 
+if blockinfo(c).scale ~= 1 
 	data = double(data) * blockinfo(c).scale;
-end;
+end

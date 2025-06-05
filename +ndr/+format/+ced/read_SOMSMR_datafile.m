@@ -38,11 +38,11 @@ total_time = [];
 blockinfo = [];
 time = [];
 
-if isempty(header),
+if isempty(header)
 	header = ndr.format.ced.read_SOMSMR_header(filename);
-end;
+end
 
-if numel(channel_number)>1,
+if numel(channel_number)>1
 	error([ ...
 	'Note: at this time, we can only read single channels at a time. If CHANNEL_NUMBER is an array, ' ...
 	'there will be an error. If the user need this functionality, please submit an ISSUE on GitHub ' ...
@@ -51,22 +51,22 @@ end
 
 channel_index = find([[header.channelinfo.number]==channel_number]);
 
-if isempty(channel_index),
+if isempty(channel_index)
 	error(['Channel number ' int2str(channel_number) ' not recorded in file ' filename '.']);
 end
 
 [pathname filename2 extension] = fileparts(filename);
-if strcmpi(extension,'.smr'), % little endian
+if strcmpi(extension,'.smr') % little endian
         fid=fopen(filename,'r','l');
-elseif strcmp(extension,'.son'), % big endian
+elseif strcmp(extension,'.son') % big endian
         fid=fopen(filename,'r','b');
-else,
+else
         error(['Unknown extension for SOM/SMR file: .' extension '.']);
-end;
+end
 
-switch (header.channelinfo(channel_index).kind),
+switch (header.channelinfo(channel_index).kind)
 
-	case {1,9}, % ADC
+	case {1,9} % ADC
 		blockinfo = SONGetBlockHeaders(fid,header.channelinfo(channel_index).number);
 		numblocks = size(blockinfo,2);
 		block_length = blockinfo(5,1); % assume all blocks except last have same length
@@ -77,36 +77,36 @@ switch (header.channelinfo(channel_index).kind),
 		[dummy,chheader] = SONGetADCChannel(fid,header.channelinfo(channel_index).number,1,1);
 		total_time = chheader.sampleinterval*1e-6 * total_samples;
 		s0 = point2samplelabel(t0,chheader.sampleinterval*1e-6);
-		if s0<=0, s0 = 1; end;
+		if s0<=0, s0 = 1; end
 		s1 = point2samplelabel(t1,chheader.sampleinterval*1e-6);
 
 		block_start = 1 + floor(s0/block_length);
 		start_sample_within_block = mod(s0,block_length);
 		block_stop = 1 + floor(s1/block_length);
 		stop_sample_within_block = mod(s1,block_length);
-		if block_stop > numblocks,
+		if block_stop > numblocks
 			block_stop = numblocks;
 			stop_sample_within_block = blockinfo(5,block_stop);
-		end;
-		if stop_sample_within_block > blockinfo(5,block_stop), 
+		end
+		if stop_sample_within_block > blockinfo(5,block_stop) 
 			stop_sample_within_block = blockinfo(5,block_stop);
-		end;
+		end
 		actual_s1 = sum(blockinfo(5,1:block_stop-1)) + stop_sample_within_block;
 		samples_to_trim = blockinfo(5,block_stop) - stop_sample_within_block;
 
 		data = SONGetADCChannel(fid,header.channelinfo(channel_index).number,...
 			block_start,block_stop,'scale');
 		data = data(start_sample_within_block:end-samples_to_trim);
-		if any(size(data)==1), data = data(:); end; % ensure column for single vector
+		if any(size(data)==1), data = data(:); end % ensure column for single vector
 		time = chheader.start + ((s0:actual_s1)-1)* chheader.sampleinterval*1e-6;
 		time = time(:);
 
-	case {2,3,4}, % event
+	case {2,3,4} % event
 		blockinfo = SONGetBlockHeaders(fid,header.channelinfo(channel_index).number);
-		if isempty(blockinfo), % no data
+		if isempty(blockinfo) % no data
 			fclose(fid);
 			return;
-		end;
+		end
 		blocktimes = blockinfo(2:3,:)*header.fileinfo.usPerTime*header.fileinfo.dTimeBase;
 		total_time = blocktimes(2,end);
 
@@ -117,36 +117,36 @@ switch (header.channelinfo(channel_index).kind),
 		data = data(find(data>=t0 & data<=t1));
 		data = data(:); % column
 		time = data(:);
-	case {5,6,7,8}, % marker, ADCMarker (WaveMark), Real-valued Marker, Text Marker
+	case {5,6,7,8} % marker, ADCMarker (WaveMark), Real-valued Marker, Text Marker
 		blockinfo = SONGetBlockHeaders(fid,header.channelinfo(channel_index).number);
-		if isempty(blockinfo), % no data
+		if isempty(blockinfo) % no data
 			fclose(fid);
 			return;
-		end;
+		end
 		blocktimes = blockinfo(2:3,:)*header.fileinfo.usPerTime*header.fileinfo.dTimeBase;
 		total_time = blocktimes(2,end);
 		
 		block_start = max([1 find(blocktimes(1,:)<=t0 & blocktimes(2,:)>=t0)]);
 		block_end = min([size(blocktimes,2) find(blocktimes(2,:)<=t1,1,'first')]);
-		if header.channelinfo(channel_index).kind == 5,
+		if header.channelinfo(channel_index).kind == 5
 			[data]=SONGetMarkerChannel(fid,header.channelinfo(channel_index).number,...
 				block_start,block_end);
-		elseif header.channelinfo(channel_index).kind == 6,
+		elseif header.channelinfo(channel_index).kind == 6
 			[data]=SONGetADCMarkerChannel(fid,header.channelinfo(channel_index).number,...
 				block_start,block_end);            
-		elseif header.channelinfo(channel_index).kind == 7,
+		elseif header.channelinfo(channel_index).kind == 7
 			[data]=SONGetRealMarkerChannel(fid,header.channelinfo(channel_index).number,...
 				block_start,block_end);
-		elseif header.channelinfo(channel_index).kind == 8,
+		elseif header.channelinfo(channel_index).kind == 8
 			[data]=SONGetTextMarkerChannel(fid,header.channelinfo(channel_index).number,...
 				block_start,block_end);
 			data.markers = char(data.text);
-		end;
+		end
 		good_indexes = find(data.timings>=t0 & data.timings<=t1);
 		time = data.timings(good_indexes);
 		time = time(:); % enforce column
 		data = data.markers(good_indexes,:);
-	otherwise,
+	otherwise
 		fclose(fid);
 		error(['Unknown channel kind: ' int2str(header.channelinfo(channel_index).kind)  '.']);
 end

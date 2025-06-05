@@ -24,46 +24,46 @@ h = ndr.format.intan.read_Intan_RHD2000_header(filename_in);
 
 fid_i = fopen(filename_in,'r');
 fid_o = fopen(filename_out,'w');
-if fid_o<0,
+if fid_o<0
 	error(['Could not open the file ' filename_out ' for writing.']);
-end;
+end
 
 [block_info,bytes_per_block,bytes_present,num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename_in, h);
 
 header_data = fread(fid_i,h.fileinfo.headersize,'uint8');
-try,
+try
 	fwrite(fid_o,header_data,'uint8');
-catch,
+catch
 	fclose(fid_i);
 	fclose(fid_o);
 	error(['Error writing header data to file ' filename_out '.']);
-end;
+end
 
 
 block_starts = b1:100:b2;
-if block_starts(end)==b2,
+if block_starts(end)==b2
 	block_starts(end) = [];
-end; % trim the last one if it is not a real start
+end % trim the last one if it is not a real start
 
 block_ends = block_starts + (chunk_size-1);
 block_ends(end) = b2;
 
-if any(block_ends>num_data_blocks),
+if any(block_ends>num_data_blocks)
 	error(['Requested block out of the range 1..' int2str(num_data_blocks) '.']);
-end;
+end
 
-for b = 1:length(block_starts),
+for b = 1:length(block_starts)
 	fseek(fid_i,h.fileinfo.headersize+(block_starts(b)-1)*bytes_per_block,'bof');
 	numblocks = block_ends(b) - block_starts(b) + 1;
 	data = fread(fid_i,numblocks*bytes_per_block','uint8');
-	try,
+	try
 		fwrite(fid_o,data,'uint8');
-	catch,
+	catch
 		fclose(fid_i);
 		fclose(fid_o);
 		error(['Error writing to file ' filename_out '.']);
-	end;
-end;
+	end
+end
 
 fclose(fid_i);
 fclose(fid_o);

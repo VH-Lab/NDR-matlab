@@ -23,11 +23,11 @@ function [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = Intan_RH
 %
 % See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, CAT_INTAN_RHD2000_FILES
 
-if nargin<2,
+if nargin<2
 	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
-elseif isempty(header),
+elseif isempty(header)
 	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
-end;
+end
 
 num_amplifier_channels = length(header.amplifier_channels);
 num_aux_input_channels = length(header.aux_input_channels);
@@ -48,7 +48,7 @@ blockinfo    = struct('type','timestamp','block_offset',0,'bytes',60*4,'bytes_pe
 if ((header.fileinfo.data_file_main_version_number == 1 && header.fileinfo.data_file_secondary_version_number >= 2) ...
         || (header.fileinfo.data_file_main_version_number > 1))
         blockinfo(1).precision = ['60*int32=>int32'];
-end;
+end
 blockinfo(2) = struct('type','amp','block_offset',0,'bytes',60*2*num_amplifier_channels,...
 		'bytes_per_sample',2,'samples_per_block',60,'numchannels',num_amplifier_channels,...
 	        'interleaved',1,'precision','*uint16=>uint16','scale',0.195,'shift',32768,...
@@ -70,10 +70,10 @@ blockinfo(6) = struct('type','board_adc','block_offset',0,'bytes',60*2*num_board
 	        'interleaved',1,'precision','*uint16=>uint16','scale',152.59e-6,'shift',32768,...
 		'sample_rate',header.frequency_parameters.amplifier_sample_rate);
 
-if header.fileinfo.eval_board_mode~=1,
+if header.fileinfo.eval_board_mode~=1
         blockinfo(6).scale=50.354e-6;
         blockinfo(6).shift = 0;
-end;
+end
 
 blockinfo(7) = struct('type','din','block_offset',0,'bytes',60*2*(num_board_dig_in_channels>0),...
 		'bytes_per_sample',2,'samples_per_block',60,'numchannels',uint16(num_board_dig_in_channels>0),...
@@ -85,10 +85,10 @@ blockinfo(8) = struct('type','dout','block_offset',0,'bytes',60*2*(num_board_dig
 		'sample_rate',header.frequency_parameters.amplifier_sample_rate);
 
 block_offset = 0;
-for i=1:length(blockinfo),
+for i=1:length(blockinfo)
         blockinfo(i).block_offset = block_offset;
         block_offset = block_offset + blockinfo(i).bytes;
-end;
+end
 bytes_per_block = block_offset;
 
 % How many data blocks are in this file?

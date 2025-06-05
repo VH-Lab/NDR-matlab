@@ -16,11 +16,11 @@ r = ndr.reader('rec'); % open a rec reader
 
 [d,t] = r.read({filename}, 'ai120');
 
-if plotit,
+if plotit
 	figure (1);
 	plot(t,d);
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['Spikegadgets Example Data']);
-end;
+end
 

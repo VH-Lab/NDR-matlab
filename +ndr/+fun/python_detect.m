@@ -11,9 +11,9 @@ function b = python_detect()
 %
 
 b = 0;
-try,
+try
 	P = py.sys.path;
 	b = 1;
-end;
+end
 
 

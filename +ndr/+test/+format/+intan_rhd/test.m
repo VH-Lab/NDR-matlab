@@ -25,10 +25,10 @@ h,
 t = ndr.format.intan.read_Intan_RHD2000_datafile(filename,h,'time',1,0,100); % read first 100 seconds
 d = ndr.format.intan.read_Intan_RHD2000_datafile(filename,h,'amp',1,0,100); % read first 100 seconds
 
-if plotit,
+if plotit
 	figure;
 	plot(t,d);
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['Intan RHD test data']);
-end;
+end

@@ -1,4 +1,4 @@
-function [header] = read_SOMSMR_header(filename);
+function [header] = read_SOMSMR_header(filename)
 % ndr.format.intan.read_SOMSMR_header - Read header information from a CED SOM or SMR file
 %
 % HEADER = ndr.format.ced.read_SOMSMR_header(FILENAME)
@@ -24,13 +24,13 @@ function [header] = read_SOMSMR_header(filename);
 %
 
 [pathname filename2 extension] = fileparts(filename);
-if strcmpi(extension,'.smr'), % little endian
+if strcmpi(extension,'.smr') % little endian
 	fid=fopen(filename,'r','l');
-elseif strcmp(extension,'.son'), % big endian
+elseif strcmp(extension,'.son') % big endian
 	fid=fopen(filename,'r','b');
-else,
+else
 	error(['Unknown extension for SOM/SMR file: .' extension '.']);
-end;
+end
 
 header.fileinfo = SONFileHeader(fid);
 header.channelinfo = SONChanList(fid);

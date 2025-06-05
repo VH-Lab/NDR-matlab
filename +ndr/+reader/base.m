@@ -8,7 +8,7 @@ classdef base
 			%
 			% Creates an Neuroscence Data Reader object of the indicated type.
 			%
-		end; % READER()
+		end % READER()
 
 		function [b,errormsg] = canbereadtogether(ndr_reader_base_obj, channelstruct)
 			% CANBEREADTOGETHER - can the channels in a channel struct be read in a single function call?
@@ -43,21 +43,21 @@ classdef base
 				errormsg = '';
 
 				sr = [channelstruct.samplerate];
-				if ~all(isnan(sr)),
+				if ~all(isnan(sr))
 					% if all are not NaN, then none can be
-					if any(isnan(sr)),
+					if any(isnan(sr))
 						b = 0;
 						errormsg = ['All samplerates must either be the same number or they must all be NaN, indicating they are all not regularly sampled channels.'];
-					else,
+					else
 						sr_ = uniquetol(sr);
-						if numel(sr_)~=1,
+						if numel(sr_)~=1
 							b = 0;
 							errormsg = ['All sample rates must be the same for all requested regularly-sampled channels for a single function call.'];
-						end;
-					end;
-				end;
+						end
+					end
+				end
 
-		end; % canbereadtogether()
+		end % canbereadtogether()
 
 		function channelstruct = daqchannels2internalchannels(ndr_reader_base_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
@@ -96,7 +96,7 @@ classdef base
 				% abstract class returns empty
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');
-		end; % daqchannels2internalchannels
+		end % daqchannels2internalchannels
 
 		function ec = epochclock(ndr_reader_base_obj, epochstreams, epoch_select)
 			% EPOCHCLOCK - return the ndr.time.clocktype objects for an epoch
@@ -132,7 +132,7 @@ classdef base
 			%
 				channels = struct('name',[],'type',[]);
 				channels = channels([]);
-		end; % getchannelsepoch()
+		end % getchannelsepoch()
 
         function [datatype,p,datasize] = underlying_datatype(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
             % UNDERLYING_DATATYPE - get the underlying data type for a channel in an epoch
@@ -155,7 +155,7 @@ classdef base
             %
 
             switch(channeltype)
-                case {'analog_in','analog_out','auxiliary_in','time'},
+                case {'analog_in','analog_out','auxiliary_in','time'}
                     % For the abstract class, keep the data in doubles. This will always work but may not
                     % allow for optimal compression if not overridden
                     datatype = 'float64';
@@ -169,7 +169,7 @@ classdef base
                     datatype = 'float64';
                     datasize = 64;
                     p = repmat([0 1],numel(channel),1);
-                otherwise,
+                otherwise
                     error(['Unknown channel type ' channeltype '.']);
             end
         end
@@ -210,7 +210,7 @@ classdef base
 			%
 				timestamps = [];
 				data = []; % abstract class
-		end; % readevents_epochsamples
+		end % readevents_epochsamples
 
 		function sr = samplerate(ndr_reader_base_obj, epochstreams, epoch_select, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC CHANNEL
@@ -224,7 +224,7 @@ classdef base
 			% If CHANNELTYPE is a single string, then it is assumed that
 			% that CHANNELTYPE applies to every entry of CHANNEL.
 				sr = []; % abstract class;
-		end;
+		end
 
 		function t0t1 = t0_t1(ndr_reader_base_obj, epochstreams, epoch_select)
 			% T0_T1 - return the t0_t1 (beginning and end) epoch times for an epoch
@@ -240,9 +240,9 @@ classdef base
 				t0t1 = {[NaN NaN]};
 		end % t0_t1()
 
-	end; % methods
+	end % methods
 
-	methods (Static), % functions that don't need the object
+	methods (Static) % functions that don't need the object
 		function ct = mfdaq_channeltypes
 			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
 			%
@@ -262,7 +262,7 @@ classdef base
 			%
 			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
 			ct = { 'analog_in', 'aux_in', 'analog_out', 'digital_in', 'digital_out', 'marker', 'event', 'time' };
-		end;
+		end
 
 		function prefix = mfdaq_prefix(channeltype)
 			% MFDAQ_PREFIX - Give the channel prefix for a channel type
@@ -293,36 +293,36 @@ classdef base
 			%
 			% See also: ndi.daq.system.mfdaq/MFDAQ_TYPE
 			%
-				switch channeltype,
-					case {'analog_in','ai'},
+				switch channeltype
+					case {'analog_in','ai'}
 						prefix = 'ai';
-					case {'analog_out','ao'},
+					case {'analog_out','ao'}
 						prefix = 'ao';
-					case {'digital_in','di'},
+					case {'digital_in','di'}
 						prefix = 'di';
-					case {'digital_out','do'},
+					case {'digital_out','do'}
 						prefix = 'do';
-					case {'digital_in_event','digital_in_event_pos','de','dep'},
+					case {'digital_in_event','digital_in_event_pos','de','dep'}
 						prefix = 'dep';
-					case {'digital_in_event_neg','den'},
+					case {'digital_in_event_neg','den'}
 						prefix = 'den';
-					case {'digital_in_mark', 'digital_in_mark_pos','dim','dimp'},
+					case {'digital_in_mark', 'digital_in_mark_pos','dim','dimp'}
 						prefix = 'dimp';
-					case {'digital_in_mark_neg','dimn'},
+					case {'digital_in_mark_neg','dimn'}
 						prefix = 'dimn';
-					case {'time','timestamp','t'},
+					case {'time','timestamp','t'}
 						prefix = 't';
-					case {'auxiliary','aux','ax','auxiliary_in'},
+					case {'auxiliary','aux','ax','auxiliary_in'}
 						prefix = 'ax';
-					case {'marker','mark','mk'},
+					case {'marker','mark','mk'}
 						prefix = 'mk';
-					case {'event','e'},
+					case {'event','e'}
 						prefix = 'e';
-					case {'metadata','md'},
+					case {'metadata','md'}
 						prefix = 'md';
-					case {'text'},
+					case {'text'}
 						prefix = 'text';
-				end;
+				end
 		end % mfdaq_prefix()
 
 		function type = mfdaq_type(channeltype)
@@ -346,29 +346,29 @@ classdef base
 			%
 			% See also: ndi.daq.system.mfdaq/MFDAQ_PREFIX
 			%
-				switch channeltype,
-					case {'analog_in','ai'},
+				switch channeltype
+					case {'analog_in','ai'}
 						type = 'analog_in';
-					case {'analog_out','ao'},
+					case {'analog_out','ao'}
 						type = 'analog_out';
-					case {'digital_in','di'},
+					case {'digital_in','di'}
 						type = 'digital_in';
-					case {'digital_out','do'},
+					case {'digital_out','do'}
 						type = 'digital_out';
-					case {'time','timestamp','t'},
+					case {'time','timestamp','t'}
 						type = 'time';
-					case {'auxiliary','aux','ax','auxiliary_in'},
+					case {'auxiliary','aux','ax','auxiliary_in'}
 						type = 'ax';
-					case {'marker','mark','mk'},
+					case {'marker','mark','mk'}
 						type = 'mark';
-					case {'event','e'},
+					case {'event','e'}
 						type = 'event';
-					case {'text'},
+					case {'text'}
 						type = 'text';
-					otherwise,
+					otherwise
 						error(['Type ' channeltype ' is unknown.']);
-				end;
-		end;
+				end
+		end
 	
 	end % methods (Static)
 end % classdef

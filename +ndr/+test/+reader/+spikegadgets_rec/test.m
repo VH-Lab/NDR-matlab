@@ -17,7 +17,7 @@ r = ndr.reader('rec'); % open an rec reader
 
 channels = r.getchannelsepoch({filename});
 
-for i=1:numel(channels),
+for i=1:numel(channels)
   
   disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 
@@ -36,9 +36,9 @@ end
  t0t1 = r.t0_t1({filename}, epoch_select);
 
  disp(['These are the clocktypes we know and how long the recording lasted:'])
- 	for i=1:numel(ec),
+ 	for i=1:numel(ec)
 		disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0t1{i}(1)) ' and ended at ' num2str(t0t1{i}(2)) '.']);
-	end;
+	end
  
  channelstruct = r.ndr_reader_base.daqchannels2internalchannels('ai', channel, {filename}, epoch_select);
  
@@ -47,10 +47,10 @@ end
  channelstruct % add function as base results in empty struct array 
  
 
-if plotit, 
+if plotit 
 	figure;
 	plot(time,data);
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['SpikeGadgets Example Data']);
-end;
+end

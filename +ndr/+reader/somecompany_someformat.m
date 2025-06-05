@@ -11,8 +11,8 @@ classdef somecompany_someformat < ndr.reader.base
 		% data from a particular company or group SOMECOMPANY in SOMEFORMAT.
 		%
 		% 
-	end; % somecompany_someformat() creator
+	end % somecompany_someformat() creator
   
-  end; % methods()
+  end % methods()
 
-end;
+end

@@ -41,14 +41,14 @@ classdef tdt_sev < ndr.reader.base
 
 				t0 = 0;
 				t1 = 0;
-				if numel(header)>0,
+				if numel(header)>0
 					indexes = find([header.chan]==header(1).chan);
 					header = header(indexes);
 					[hours_sorted,hours_sort_index] = sort([header.hour]);
-					for i=1:numel(hours_sort_index),
+					for i=1:numel(hours_sort_index)
 						t1 = t1 + header(hours_sort_index(i)).duration_seconds;
-					end;
-				end;
+					end
+				end
 				t0t1 = {[t0 t1]};
 		end % ndr.reader.tdt_sev.epochclock
 		
@@ -71,16 +71,16 @@ classdef tdt_sev < ndr.reader.base
 			
 				channels = vlt.data.emptystruct('name','type','time_channel');
 
-				if numel(header)>0,
+				if numel(header)>0
 					channels(1) = struct('name','t1','type','time','time_channel',1);
-				end;
+				end
 
-				for i=1:numel(header),
-					if header(i).hour==0,
+				for i=1:numel(header)
+					if header(i).hour==0
 						channels(end+1) = struct('name',['ai' int2str(header(i).chan)],...
 							'type','analog_in', 'time_channel', 1);
-					end;
-				end;
+					end
+				end
 		end % ndr.reader.tdt_sev.getchannelsepoch
 		
 		function data = readchannels_epochsamples(tdt_sev_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
@@ -101,49 +101,49 @@ classdef tdt_sev < ndr.reader.base
 				[filename] = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.tdt.read_SEV_header(filename);
 
-				if ~iscell(channeltype),
+				if ~iscell(channeltype)
 					channeltype = repmat({channeltype},numel(channel),1);
-				end;
+				end
 
 				% we can only read single channels from tdt_sev files at a time
 
 				index = find([[header.chan] == channel(1)] & [[header.hour]==0]);
-				if isempty(index),
+				if isempty(index)
 					error(['Channel ' int2str(channel(1)) ' not recorded in this epoch.']);
-				end;
+				end
 
 				num_pts = header(index).npts;
 				done = 0;
 				hour = 1;
-				while ~done,
+				while ~done
 					index = find([[header.chan] == channel(1)] & [[header.hour]==hour]);
-					if isempty(index),
+					if isempty(index)
 						done = 1;
-					else,
+					else
 						num_pts = num_pts + header(index).npts;
-					end;
-				end;
+					end
+				end
 
 				s0_ = max(1, s0);
-				if isinf(s0_), % could be positive inf
+				if isinf(s0_) % could be positive inf
 					s0_ = num_pts;
-				end;
+				end
 				s1_ = min(num_pts, s1);
-				if isinf(s1_), % could be negative infinity
+				if isinf(s1_) % could be negative infinity
 					s1_ = 1;
-				end;
+				end
 
 				sr = tdt_sev_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
+				if numel(sr_unique)~=1
 					error(['Do not know how to handle different sampling rates across channels.']);
-				end;
+				end
 
 				data = NaN(s1_-s0_+1,numel(channel));
 
-				for c=1:numel(channel),
+				for c=1:numel(channel)
 					data(:,c) = ndr.format.tdt.read_SEV_channel(filename,header,channeltype{c},channel(c),s0_,s1_);
-				end;
+				end
 
 		end % ndr.reader.tdt_sev.readchannels_epochsamples
 		
@@ -159,20 +159,20 @@ classdef tdt_sev < ndr.reader.base
 			%  If CHANNELTYPE is a single string, then it is assumed that that
 			%  CHANNELTYPE applies to every entry of CHANNEL.
 			%
-				if epoch_select~=1,
+				if epoch_select~=1
 					error(['TDT SEV files have 1 epoch per file.']);
-				end;
+				end
 				sr = [];
 				filename = tdt_sev_obj.filenamefromepochfiles(epochstreams);
 			    
 				header = ndr.format.tdt.read_SEV_header(filename);
 				header_channels = [header.chan];
 				hour0 = [[header.hour]==0];
-				for i=1:numel(channel),
+				for i=1:numel(channel)
 					index = find(hour0 & (channel(i)==header_channels));
-					if isempty(index),
+					if isempty(index)
 						error(['Could not find channel ' int2str(channel(i)) ' in epoch.']);
-					end;
+					end
 					sr(i) = header(index).fs;
 				end
 		end % ndr.reader.tdt_sev.samplerate
@@ -189,14 +189,14 @@ classdef tdt_sev < ndr.reader.base
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
 		    
 				index = find(tf);
-				if numel(index)==0,
+				if numel(index)==0
 					error(['Need at least 1 .sev file per epoch.']);
-				else,
+				else
 					filename = filename_array{index(1)};
 					[parentdir, fname, ext] = fileparts(filename);
 					filename = parentdir;
 				end
-		end; % ndr.reader.tdt_sev.filenamefromepochfiles
+		end % ndr.reader.tdt_sev.filenamefromepochfiles
 
 		function channelstruct = daqchannels2internalchannels(ndr_reader_tdt_sev_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
@@ -237,7 +237,7 @@ classdef tdt_sev < ndr.reader.base
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');
 
-				for i=1:numel(channels),
+				for i=1:numel(channels)
 					newentry.internal_type = channels(i).type;
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
@@ -245,11 +245,11 @@ classdef tdt_sev < ndr.reader.base
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
 					newentry.samplerate = ndr_reader_tdt_sev_obj.samplerate(epochstreams,epoch_select,...
 						CHANNELNAMEPREFIX, numericchannel);
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) )
 						channelstruct(end+1) = newentry;
-					end;
-				end;
-                end; % daqchannels2internalchannels
+					end
+				end
+                end % daqchannels2internalchannels
 
 		
 	end % methods

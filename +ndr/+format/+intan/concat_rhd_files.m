@@ -13,15 +13,15 @@ d = dir([dirname filesep '*.rhd']);
 
 n = {d.name};
 
-for i =1:length(n),
+for i =1:length(n)
 	n{i} = [dirname filesep n{i}];
-end;
+end
 
-if ~isempty(d),
+if ~isempty(d)
 	ndr.format.intan.cat_Intan_RHD2000_files(n{:});
-end;
+end
 
-for i=1:length(n),
+for i=1:length(n)
 	[newpath,newname,newext] = fileparts(n{i});
 	movefile(n{i},fullfile(newpath,[newname '.rhd_original']));
-end;
+end

@@ -200,7 +200,7 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
                                     officialchannels(channelnumber).bit = channelInfoStruct(chInf).Value;
                                 end
 
-                                if (strcmp(channelInfoStruct(chInf).Name,'dataType'));
+                                if (strcmp(channelInfoStruct(chInf).Name,'dataType'))
                                     officialchannels(channelnumber).type = channelInfoStruct(chInf).Value;
                                 end
 

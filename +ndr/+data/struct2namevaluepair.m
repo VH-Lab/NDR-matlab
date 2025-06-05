@@ -20,13 +20,13 @@ function nv = struct2namevaluepair(thestruct)
 
 nv = {};
 
-if isempty(thestruct), 
+if isempty(thestruct) 
 	return;
-end;
+end
 
 fn = fieldnames(thestruct);
-for i=1:length(fn),
+for i=1:length(fn)
 	nv{1,2*(i-1)+1} = fn{i};
 	nv{1,2*(i-1)+2} = getfield(thestruct,fn{i});
-end;
+end
 

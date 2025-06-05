@@ -27,10 +27,10 @@ t1 = 1 * eval(h.samplingRate);  % index number of sample at time 1 s after the f
 [data, time] = ndr.format.spikegadgets.read_rec_trodeChannels(filename,h.numChannels, 1, eval(h.samplingRate), h.headerSize,1,t1);
   
   
-if plotit,
+if plotit
 	figure;
 	plot(time,data);
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['SpikeGadgets test data']);
-end;
+end

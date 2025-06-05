@@ -1,4 +1,4 @@
-function [header] = read_Intan_RHD2000_header(filename);
+function [header] = read_Intan_RHD2000_header(filename)
 % READ_INTAN_RHD2000_HEADER - Read header information from an Intan data file
 %
 %   HEADER = READ_INTAN_RHD2000_HEADER(FILENAME)
@@ -23,20 +23,20 @@ function [header] = read_Intan_RHD2000_header(filename);
 %
 
 fid = fopen(filename,'r');
-if fileid_value(fid)<0,
+if fileid_value(fid)<0
 	error(['Could not open filename ' filename_value(filename) ' for reading (check path, spelling, permissions).']);
-end;
+end
 
 [dirname,fname,ext]=fileparts(filename);
 s = dir(fullfile(dirname,[fname ext]));
-if isempty(s),
+if isempty(s)
     error(['Could not find a file ' filename_value(filename) '; check spelling, permissions, extension']);
-end;
+end
 filesize = s.bytes;
 % Check 'magic number' at beginning of file to make sure this is an Intan
 % Technologies RHD2000 data file.
 magic_number = fread(fid, 1, 'uint32');
-if magic_number ~= hex2dec('c6912702');
+if magic_number ~= hex2dec('c6912702')
 	error('Unrecognized file type.');
 end
 
@@ -169,11 +169,11 @@ for signal_group = 1:number_of_signal_groups
 	signal_group_num_channels = fread(fid, 1, 'int16');
 	signal_group_num_amp_channels = fread(fid, 1, 'int16');
 
-	if (signal_group_num_channels > 0 && signal_group_enabled > 0),
+	if (signal_group_num_channels > 0 && signal_group_enabled > 0)
 		new_channel(1).port_name = signal_group_name;
 		new_channel(1).port_prefix = signal_group_prefix;
 		new_channel(1).port_number = signal_group;
-		for signal_channel = 1:signal_group_num_channels,
+		for signal_channel = 1:signal_group_num_channels
 			new_channel(1).native_channel_name = ndr.format.intan.fread_QString(fid);
 			new_channel(1).custom_channel_name = ndr.format.intan.fread_QString(fid);
 			new_channel(1).native_order = fread(fid, 1, 'int16');
@@ -198,10 +198,10 @@ for signal_group = 1:number_of_signal_groups
 					case 1 % aux input channel
 						header.aux_input_channels(aux_input_index) = new_channel;
 						aux_input_index = aux_input_index + 1;
-					case 2, % supply voltage channels
+					case 2 % supply voltage channels
 						header.supply_voltage_channels(supply_voltage_index) = new_channel;
 						supply_voltage_index = supply_voltage_index + 1;
-					case 3, % adc channel
+					case 3 % adc channel
 						header.board_adc_channels(board_adc_index) = new_channel;
 						board_adc_index = board_adc_index + 1;
 					case 4 % digital in

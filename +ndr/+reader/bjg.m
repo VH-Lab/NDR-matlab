@@ -64,10 +64,10 @@ classdef bjg < ndr.reader.base
 
 				channels(1) = struct('name','t1','type','time','time_channel',1);
 
-				for i=1:numel(header.channel_names),
+				for i=1:numel(header.channel_names)
 					channels(end+1) = struct('name',['ai' int2str(i)],...
 							'type','analog_in', 'time_channel', 1);
-				end;
+				end
 		end % ndr.reader.bjg.getchannelsepoch
 		
 		function data = readchannels_epochsamples(bjg_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
@@ -88,25 +88,25 @@ classdef bjg < ndr.reader.base
 				[filename] = bjg_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.bjg.read_bjg_header(filename);
 
-				if ~iscell(channeltype),
+				if ~iscell(channeltype)
 					channeltype = repmat({channeltype},numel(channel),1);
-				end;
+				end
 
 				maxSamples = header.samples;
 				s0_ = max(1, s0);
-				if isinf(s0_), % could be positive inf
+				if isinf(s0_) % could be positive inf
 					s0_ = maxSamples;
-				end;
+				end
 				s1_ = min(maxSamples, s1);
-				if isinf(s1_), % could be negative infinity
+				if isinf(s1_) % could be negative infinity
 					s1_ = 1;
-				end;
+				end
 
 				sr = bjg_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
+				if numel(sr_unique)~=1
 					error(['Do not know how to handle different sampling rates across channels.']);
-				end;
+				end
 
 				t0t1 = bjg_obj.t0_t1(epochstreams, epoch_select);
 				T = ndr.time.fun.samples2times([s0_ s1_], t0t1{1}, sr_unique);
@@ -128,9 +128,9 @@ classdef bjg < ndr.reader.base
 			%  If CHANNELTYPE is a single string, then it is assumed that that
 			%  CHANNELTYPE applies to every entry of CHANNEL.
 			%
-				if epoch_select~=1,
+				if epoch_select~=1
 					error(['BJG .bin files have 1 epoch per file.']);
-				end;
+				end
 				sr = [];
 				filename = bjg_obj.filenamefromepochfiles(epochstreams);
 			    
@@ -151,12 +151,12 @@ classdef bjg < ndr.reader.base
 					s1,filename_array,'UseSubstituteString',0);
 		    
 				index = find(tf);
-				if numel(index)==0,
+				if numel(index)==0
 					error(['Need at least 1 .bin file per epoch.']);
-				else,
+				else
 					filename = filename_array{index(1)};
 				end
-		end; % ndr.reader.bjg.filenamefromepochfiles
+		end % ndr.reader.bjg.filenamefromepochfiles
 
 		function channelstruct = daqchannels2internalchannels(ndr_reader_bjg_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
@@ -197,7 +197,7 @@ classdef bjg < ndr.reader.base
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');
 
-				for i=1:numel(channels),
+				for i=1:numel(channels)
 					newentry.internal_type = channels(i).type;
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
@@ -205,11 +205,11 @@ classdef bjg < ndr.reader.base
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
 					newentry.samplerate = ndr_reader_bjg_obj.samplerate(epochstreams,epoch_select,...
 						CHANNELNAMEPREFIX, numericchannel);
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) )
 						channelstruct(end+1) = newentry;
-					end;
-				end;
-                end; % daqchannels2internalchannels
+					end
+				end
+                end % daqchannels2internalchannels
 
 		
 	end % methods

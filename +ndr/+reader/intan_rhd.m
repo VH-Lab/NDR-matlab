@@ -100,29 +100,29 @@ classdef intan_rhd < ndr.reader.base
 				channelstruct_here.ndr_type = [];
 				channelstruct_here.samplerate = [];
 			    
-				for c=1:numel(channelnumber),
+				for c=1:numel(channelnumber)
 					[intan_type,absolute] = ndr.reader.intan_rhd.intananychannelname2intanchanneltype(channelprefix{c});
 					channelstruct_here.internal_type = ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype(intan_type);
 					channelstruct_here.ndr_type = ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype(intan_type);
 					header_name = ndr.reader.intan_rhd.mfdaqchanneltype2intanheadertype(channelstruct_here.ndr_type);
 					header_chunk = getfield(header,header_name);
-					if ~absolute, % relative reference
+					if ~absolute % relative reference
 						channelstruct_here.internal_number = channelnumber;
 						native_names = {header_chunk.native_channel_name};
 						channelstruct_here.internal_channelname = native_names{channelstruct_here.internal_number};
 						channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,channelprefix,channelnumber);
-					elseif absolute, % absolute reference
+					elseif absolute % absolute reference
 						channelstruct_here.internal_channelname = [channelprefix{c} '-' sprintf('%.3d',channelnumber(c))];
 						index = find(strcmp(channelstruct_here.internal_channelname,{header_chunk.native_channel_name}));
-						if isempty(index),
+						if isempty(index)
 							error(['Requested channel ' channelstruct_here.internal_channelname ' was not recorded in this file.']);
-						end;
+						end
 						channelstruct_here.internal_number = index; % make sure to fix index line above
 						channelstruct_here.samplerate = intan_rhd_obj.samplerate(epochstreams,epoch_select,...
 							channelstruct_here.ndr_type,channelstruct_here.internal_number);
-					end; % switch
+					end % switch
 					channelstruct(end+1) = channelstruct_here;
-				end;
+				end
 		end % ndr.reader.intan_rhd.daqchannels2internalchannels
 		
 		function t0t1 = t0_t1(intan_rhd_obj, epochstreams, epoch_select)
@@ -142,16 +142,16 @@ classdef intan_rhd < ndr.reader.base
 				[filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
 				
-				if ~isdirectory,
+				if ~isdirectory
 					[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 					total_samples = 60 * num_data_blocks;
-				else,
+				else
 					finfo = dir([parentdir filesep 'time.dat']);
-					if isempty(finfo),
+					if isempty(finfo)
 						error(['File time.dat necessary in directory ' parentdir ' but it was not found.']);
-					end;
+					end
 					total_samples = finfo.bytes / 4;
-				end;
+				end
 			    
 				total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
 				t0 = 0;
@@ -194,12 +194,12 @@ classdef intan_rhd < ndr.reader.base
 				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
 		    
 				for k=1:length(intan_channel_types)
-					if isfield(header,intan_channel_types{k}),
+					if isfield(header,intan_channel_types{k})
 						channel_type_entry = intan_rhd_obj.intanheadertype2mfdaqchanneltype(...
 					intan_channel_types{k});
 					channel = getfield(header, intan_channel_types{k});
 					num = numel(channel); % number of channels with specific type
-					for p=1:numel(channel),
+					for p=1:numel(channel)
 						newchannel.type = channel_type_entry;
 						newchannel.name = intan_rhd_obj.intanname2mfdaqname(...
 							intan_rhd_obj,...
@@ -230,8 +230,8 @@ classdef intan_rhd < ndr.reader.base
             % that CHANNELTYPE applies to every entry of CHANNEL.
             %
             
-            switch(channeltype),
-                case {'analog_in','analog_out'},
+            switch(channeltype)
+                case {'analog_in','analog_out'}
                     % For the abstract class, keep the data in doubles. This will always work but may not
                     % allow for optimal compression if not overridden
                     datatype = 'uint16';
@@ -241,19 +241,19 @@ classdef intan_rhd < ndr.reader.base
                     datatype = 'uint16';
                     datasize = 16;
                     p = [0 3.7400e-05];
-                case {'time'},
+                case {'time'}
                     datatype = 'float64';
                     datasize = 64;
                     p = [0 1];
-                case {'digital_in','digital_out'},
+                case {'digital_in','digital_out'}
                     datatype = 'char';
                     datasize = 8;
                     p = [0 1];
-                case {'eventmarktext','event','marker','text'},
+                case {'eventmarktext','event','marker','text'}
                     datatype = 'float64';
                     datasize = 64;
                     p = [0 1];
-                otherwise,
+                otherwise
                     error(['Unknown channel type ' channeltype '.']);
             end
         end
@@ -279,24 +279,24 @@ classdef intan_rhd < ndr.reader.base
 
 				sr = intan_rhd_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
+				if numel(sr_unique)~=1
 					error(['Do not know how to handle different sampling rates across channels.']);
-				end;
+				end
 
 				sr = sr_unique;
 
 				t0 = (s0-1)/sr;
 				t1 = (s1-1)/sr;
 
-				if strcmp(intanchanneltype,'time'),
+				if strcmp(intanchanneltype,'time')
 					channel = 1; % time only has 1 channel in Intan RHD
-				end;
+				end
 
-				if ~isdirectory,
+				if ~isdirectory
 					data = ndr.format.intan.read_Intan_RHD2000_datafile(filename,'',intanchanneltype,channel,t0,t1);
-				else,
+				else
 					data = ndr.format.intan.read_Intan_RHD2000_directory(parentdir,'',intanchanneltype,channel,t0,t1);
-				end;
+				end
 		end % ndr.reader.intan_rhd.readchannels_epochsamples
 		
 		function sr = samplerate(intan_rhd_obj, epochstreams, epoch_select, channeltype, channel)
@@ -311,14 +311,14 @@ classdef intan_rhd < ndr.reader.base
 			%  If CHANNELTYPE is a single string, then it is assumed that that
 			%  CHANNELTYPE applies to every entry of CHANNEL.
 			%
-				if epoch_select~=1,
+				if epoch_select~=1
 					error(['Intan RHD files have 1 epoch per file.']);
-				end;
+				end
 				sr = [];
 				filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
 			    
 				head = ndr.format.intan.read_Intan_RHD2000_header(filename);
-				for i=1:numel(channel),
+				for i=1:numel(channel)
 					channeltype_here = vlt.data.celloritem(channeltype,i);
 					freq_fieldname = intan_rhd_obj.mfdaqchanneltype2intanfreqheader(channeltype_here);
 					sr(i) = getfield(head.frequency_parameters,freq_fieldname);
@@ -340,23 +340,23 @@ classdef intan_rhd < ndr.reader.base
 				isdirectory = 0;
 		    
 				index = find(tf);
-				if numel(index)>1,
+				if numel(index)>1
 					error(['Need only 1 .rhd file per epoch.']);
-				elseif numel(index)==0,
+				elseif numel(index)==0
 					error(['Need 1 .rhd file per epoch.']);
-				else,
+				else
 					filename = filename_array{index};
 					[parentdir, fname, ext] = fileparts(filename);
-					if strcmp(fname,'info'),
+					if strcmp(fname,'info')
 						s2 = ['time\.dat\>']; % equivalent of *.ext on the command line
 						tf2 = vlt.string.strcmp_substitution(s2,filename_array,'UseSubstituteString',0);
-						if any(tf),
+						if any(tf)
 							% we will call it a directory
 							isdirectory = 1;
-						end;
-					end;
+						end
+					end
 				end
-		end; % ndr.reader.intan_rhd.filenamefromepochfiles
+		end % ndr.reader.intan_rhd.filenamefromepochfiles
 		
 	end % methods
 	    
@@ -370,18 +370,18 @@ classdef intan_rhd < ndr.reader.base
 		%  Given a standard ndr.ndr.reader.mfdaq channel type, returns the name of the type as
 		%  indicated in Intan header files.
 		%
-			switch (channeltype),
-				case {'analog_in','ai'},
+			switch (channeltype)
+				case {'analog_in','ai'}
 					intanchanheadertype = 'amplifier_channels';
-				case {'digital_in','di'},
+				case {'digital_in','di'}
 					intanchanheadertype = 'board_dig_in_channels';
-				case {'digital_out','do'},
+				case {'digital_out','do'}
 					intanchanheadertype = 'board_dig_out_channels';
-				case {'auxiliary','aux','ax','auxiliary_in','auxiliary_input'},
+				case {'auxiliary','aux','ax','auxiliary_in','auxiliary_input'}
 					intanchanheadertype = 'aux_input_channels';
-				otherwise,
+				otherwise
 					error(['Could not convert channeltype ' channeltype '.']);
-			end;
+			end
 		end % ndr.reader.mfdaqchanneltype2intanheadertype
 		
 		function channeltype = intanheadertype2mfdaqchanneltype(intanchanneltype)
@@ -392,17 +392,17 @@ classdef intan_rhd < ndr.reader.base
 			%  Given an Intan header file type, returns the standard ndi.ndr.reader.mfdaq channel type.
 			%
 				switch (intanchanneltype)
-					case {'amplifier_channels'},
+					case {'amplifier_channels'}
 						channeltype = 'analog_in';
-					case {'board_dig_in_channels'},
+					case {'board_dig_in_channels'}
 						channeltype = 'digital_in';
-					case {'board_dig_out_channels'},
+					case {'board_dig_out_channels'}
 						channeltype = 'digital_out';
-					case {'aux_input_channels'},
+					case {'aux_input_channels'}
 						channeltype = 'auxiliary_in';
-					otherwise,
+					otherwise
 						error(['Could not convert channeltype ' intanchanneltype '.']);
-				end;
+				end
 		end % ndr.reader.intan_rhd.intanheadertype2mfdaqchanneltype
 		
 		function intanchanneltype = mfdaqchanneltype2intanchanneltype(channeltype)
@@ -413,21 +413,21 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%  The intanchanneltype is a string of the specific channel type for Intan.
 			%
-				switch lower(channeltype),
-					case {'analog_in','ai'},
+				switch lower(channeltype)
+					case {'analog_in','ai'}
 						intanchanneltype = 'amp';
-					case {'digital_in','di'},
+					case {'digital_in','di'}
 						intanchanneltype = 'din';
-					case {'digital_out','do'},
+					case {'digital_out','do'}
 						intanchanneltype = 'dout';
-					case {'time','timestamp'},
+					case {'time','timestamp'}
 						intanchanneltype = 'time';
-					case {'auxiliary','aux','auxiliary_input','auxiliary_in'},
+					case {'auxiliary','aux','auxiliary_input','auxiliary_in'}
 						intanchanneltype = 'aux';
-					otherwise,
+					otherwise
 						error(['Do not know how to convert channel type ' channeltype '.']);
-				end;
-		end; % ndr.reader.intan_rhd.mfdaqchanneltype2intanchanneltype
+				end
+		end % ndr.reader.intan_rhd.mfdaqchanneltype2intanchanneltype
 
 		function mfdaqchanneltype = intanchanneltype2mfdaqchanneltype(channeltype)
 			% INTANCHANNELTYPE2MFDAQCHANNELTYPE - Convert the channel type to generic format of multifuncdaqchannel
@@ -437,21 +437,21 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%  The intanchanneltype is a string of the specific channel type for Intan.
 			%
-				switch lower(channeltype),
-					case 'amp',
+				switch lower(channeltype)
+					case 'amp'
 						mfdaqchanneltype = 'ai';
-					case 'din',
+					case 'din'
 						mfdaqchanneltype = 'di';
-					case 'dout',
+					case 'dout'
 						mfdaqchanneltype = 'do';
-					case 'time',
+					case 'time'
 						mfdaqchanneltype = 'time';
-					case 'aux',
+					case 'aux'
 						mfdaqchanneltype = 'ai';
-					otherwise,
+					otherwise
 						error(['Do not know how to convert channel type ' channeltype '.']);
-				end;
-		end; % ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype()
+				end
+		end % ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype()
 	
 		function [channame] = intanname2mfdaqname(intan_rhd_obj, type, name)
 			% INTANNAME2MFDAQNAME - Converts a channel name from Intan native format to ndr.ndr.reader.mfdaq format
@@ -466,7 +466,7 @@ classdef intan_rhd < ndr.reader.base
 				chan_intan = str2num(name(sep+1:end));
 				chan = chan_intan + 1; % Intan numbers from 0
 				channame = [ndr.reader.base.mfdaq_prefix(type) int2str(chan)];
-		end; % ndr.reader.intan_rhd.intanname2mfdaqname
+		end % ndr.reader.intan_rhd.intanname2mfdaqname
 		
 		function headername = mfdaqchanneltype2intanfreqheader(channeltype)
 			% MFDAQCHANNELTYPE2INTANFREQHEADER - Return header name with frequency information for channel type
@@ -475,18 +475,18 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%  Given an ndr.ndr.mfdaq channel type string, this function returns the associated fieldname.
 			%
-				switch lower(channeltype),
-					case {'analog_in','ai'},
+				switch lower(channeltype)
+					case {'analog_in','ai'}
 					    headername = 'amplifier_sample_rate';
-					case {'digital_in','di'},
+					case {'digital_in','di'}
 					    headername = 'board_dig_in_sample_rate';
-					case {'time','timestamp'},
+					case {'time','timestamp'}
 					    headername = 'amplifier_sample_rate';
-					case{'auxiliary','aux'},
+					case{'auxiliary','aux'}
 					    headername = 'aux_input_sample_rate';
-					otherwise,
+					otherwise
 					    error(['Do not know frequency header for channel type ' channeltype '.']);
-				end;
+				end
 		end % ndr.reader.intan_rhd.mfdaqchanneltype2intanfreqheader
 		
 		function [intanchanneltype,absolute] = intananychannelname2intanchanneltype(intananychannelname)
@@ -504,24 +504,24 @@ classdef intan_rhd < ndr.reader.base
 			%        intanchanneltype = ndr.reader.intan_rhd.intananychannelname2intanchanneltype('DIN') % returns 'din', 0
 			%
 				absolute = 0;
-				try,
+				try
 					intanchanneltype = ndr.reader.intan_rhd.mfdaqchanneltype2intanchanneltype(intananychannelname);
 					% if we got it, we are done
 					return;
-				end;
+				end
 				% if we are still here, we did not get an answer and need to see if it is Intan channel format
 
 				absolute = 1;
-				switch lower(intananychannelname),
-					case {'a','b','c','d'},
+				switch lower(intananychannelname)
+					case {'a','b','c','d'}
 					    intanchanneltype = 'amp';
-					case {'aaux','baux','caux','daux'},
+					case {'aaux','baux','caux','daux'}
 					    intanchanneltype = 'aux';
-					case {'avdd1','bvdd1','cbdd1','dvdd1'},
+					case {'avdd1','bvdd1','cbdd1','dvdd1'}
 					    intanchanneltype = 'supply';
-					otherwise,
+					otherwise
 						error(['Do not know how to convert channel bank ' intananychannelname'.']);
-				end;
+				end
 		end % ndr.reader.intan_rhd.intanchannelbank2intanchanneltype
 		
 	end % methods (Static)

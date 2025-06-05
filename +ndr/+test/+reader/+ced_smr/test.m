@@ -18,7 +18,7 @@ r = ndr.reader('smr'); % open an smr reader
 
 channels = r.getchannelsepoch({filename});
 
-for i=1:numel(channels),
+for i=1:numel(channels)
 	disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 end
 
@@ -33,17 +33,17 @@ ec = r.epochclock({filename}, epoch_select),
 t0_t1 = r.t0_t1({filename}, epoch_select);
 
 disp(['These are the clocktypes we know and how long the recording lasted:'])
-for i=1:numel(ec),
+for i=1:numel(ec)
     disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0_t1{i}(1)) ' and ended at ' num2str(t0_t1{i}(2)) '.']);
-end;
+end
 
  
-if plotit,
+if plotit
 	figure (1);
 	plot(t,d);
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['CED example data']);
-end;
+end
 
  % okay, here demonstrate use of r.readchannels_epochsamples by reading from channel ai1 and read samples 1 through 10000

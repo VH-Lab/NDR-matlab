@@ -60,9 +60,9 @@ function [data,total_samples,total_time] = read_Intan_RHD2000_directory(director
 force_single_channel_read = 0;
 assign(varargin{:});
 
-if isempty(header),
+if isempty(header)
 	header = ndr.format.intan.read_Intan_RHD2000_header([directoryname filesep 'info.rhd'] );
-end;
+end
 
 [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo('', header);
 
@@ -71,9 +71,9 @@ end;
 
 fileinfo = dir([directoryname filesep 'time.dat']);
 
-if isempty(fileinfo),
+if isempty(fileinfo)
 	error(['No file ' directoryname filesep 'time.dat, required file.']);
-end;
+end
 
 total_samples = fileinfo.bytes / 4;
 total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
@@ -81,10 +81,10 @@ total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; 
 % NOW, WHICH DATA DID THE USER REQUEST US TO READ?
 
  % fix t0, t1 to be in range
-if t0<1, t0 = 0; end;
-if t1>(total_time-1/header.frequency_parameters.amplifier_sample_rate),
+if t0<1, t0 = 0; end
+if t1>(total_time-1/header.frequency_parameters.amplifier_sample_rate)
 	t1 = total_time-1/header.frequency_parameters.amplifier_sample_rate;
-end;
+end
 
  % now compute starting and ending samples to read
 s0 = 1+fix(t0 * header.frequency_parameters.amplifier_sample_rate);
@@ -92,8 +92,8 @@ s1 = 1+fix(t1 * header.frequency_parameters.amplifier_sample_rate);
 
  % determine which channels are going to be read into memory
 ch = zeros(1,8);
-if ischar(channel_type),
-	switch(channel_type),
+if ischar(channel_type)
+	switch(channel_type)
 		case {'time','timestamp'}, channel_type = 1;
 		case {'amp','amplifier'}, channel_type = 2;
 		case {'aux','aux_in'}, channel_type = 3;
@@ -103,8 +103,8 @@ if ischar(channel_type),
 		case {'din','digital_in'}, channel_type = 7;
 		case {'dout','digital_out'}, channel_type = 8;
 		otherwise, error(['Unknown channel_type ' channel_type '.']); 
-	end;
-end;
+	end
+end
 
 data = []; % start out with blank data initially
 
@@ -118,41 +118,41 @@ sample_size_bytes = [ 4 2 2 2 2 2 2];
 sample_precision = { 'int32', 'int16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16' };
 conversion_scale = [ 0 0.195 0.0000374 0.0000748 0 0.000050354 1 1];
 conversion_shift = [ 0 0 0 0 0 0 0 ];
-if header.fileinfo.eval_board_mode ~=0,
+if header.fileinfo.eval_board_mode ~=0
 	conversion_shift(6) = -32768;
 	conversion_scale(6) = 0.0003125;
-end;
+end
 
-switch channel_type,
-	case 1, % time
-		if numel(channel_numbers)~=1,
+switch channel_type
+	case 1 % time
+		if numel(channel_numbers)~=1
 			error(['Only 1 time channel, ' int2str(channel_numbers) ' requested.']);
-		end;
+		end
 		fid = fopen([directoryname filesep 'time.dat'],'r','ieee-le');
-		if fid<0,
+		if fid<0
 			error(['Could not open file ' directoryname filesep 'time.dat for reading.']);
-		end;
+		end
 		% time samples are int32, 4 bytes
 		fseek(fid,4*(s0-1),'bof');
 		data = fread(fid,s1-s0+1,'int32');
 		data = data(:) / header.frequency_parameters.amplifier_sample_rate; % make sure it is column vector using (:)
 		fclose(fid); % close the filename
-	case {2,3,4,6,7,8},
+	case {2,3,4,6,7,8}
 		hinfo = getfield(header, relevant_headers{channel_type});
-		for i=1:numel(channel_numbers),
-			if channel_numbers(i) > numel(hinfo) | channel_numbers(i)<1,
+		for i=1:numel(channel_numbers)
+			if channel_numbers(i) > numel(hinfo) | channel_numbers(i)<1
 				error(['Channel ' int2str(channel_numbers(i)) ' not in range 1 ... ' int2str(numel(hinfo)) ' listed in header.']);
-			end;
+			end
 			fname = [fileprefix{channel_type} hinfo(channel_numbers(i)).custom_channel_name '.dat'];
 			fid = fopen([directoryname filesep fname],'r','ieee-le');
 			fseek(fid,sample_size_bytes(channel_type)*(s0-1),'bof'); % move to point in file where our samples are saved
 			data_here = double(fread(fid,s1-s0+1,sample_precision{channel_type}));
 			fclose(fid);
-			if conversion_shift(channel_type) ~=0,
+			if conversion_shift(channel_type) ~=0
 				data_here = data_here - conversion_shift(channel_type);
-			end;
+			end
 			data(:,end+1) = data_here(:) * conversion_scale(channel_type); 
-		end;	
-	case 5,
+		end	
+	case 5
 		error(['Do not know how to read temperature in this mode yet.']);
-end;
+end

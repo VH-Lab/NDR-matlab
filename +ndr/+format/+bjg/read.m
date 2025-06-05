@@ -14,28 +14,28 @@ function [data] = read(filename, header, channel_type, channel_numbers, t0, t1)
 %   T1 - time to end reading; can be Inf to indicate the end of the record
 %
 
-if isempty(header),
+if isempty(header)
 	header = ndr.format.bjg.read_bjg_header(filename);
-end;
+end
 
 T0 = header.local_t0;
 T1 = header.local_t1;
 
-if (isinf(t0) & t0<0) | (t0<0),
+if (isinf(t0) & t0<0) | (t0<0)
 	t0 = T0;
-end;
+end
 
 if (t1>header.local_t1)
 	t1 = T1;
-end;
+end
 
 S = ndr.time.fun.times2samples([t0 t1],[T0 T1],header.sample_rate);
 
-if strcmp(channel_type,'time') | strcmp(channel_type,'ti'),
+if strcmp(channel_type,'time') | strcmp(channel_type,'ti')
 	data = t0:1/header.sample_rate:t1;
-else,
+else
 	data = ndr.format.binarymatrix.read(filename, header.num_channels, channel_numbers, S(1), S(2), ...
 		'headerSkip',header.header_size,'byteOrder','ieee-le','dataType','single');
-end;
+end
 
 

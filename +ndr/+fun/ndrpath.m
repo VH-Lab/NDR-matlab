@@ -9,17 +9,17 @@ function p = ndrpath()
 
 w = mfilename('fullpath');
 
-if isempty(w),
+if isempty(w)
 	error(['Cannot determine path; cannot find function ndr.fun.ndr']);
-end;
+end
 
-try,
+try
 	parent1 = fileparts(w);
 	parent2 = fileparts(parent1);
 	parent3 = fileparts(parent2);
-catch,
+catch
 	error(['Cannot find third parent directory of ' w '.']);
-end;
+end
 
 p = parent3;
 

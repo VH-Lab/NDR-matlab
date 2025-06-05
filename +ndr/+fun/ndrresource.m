@@ -15,20 +15,20 @@ filename = [p filesep 'resource' filesep resourceName];
 
 if ~isfile(filename)
 	error(['File ' filename ' does not exist.']);
-end;
+end
 
 s = '';
 
-try,
+try
 	s = ndr.file.textfile2char(filename);
-catch,
+catch
 	error(['Error reading file ' filename '; ' lasterr]);
-end;
+end
 
 j = [];
-try,
+try
 	j = jsondecode(s);
-catch,
+catch
 	error(['Could not decode JSON file ' filename '; ' lasterr]);
-end;
+end
 

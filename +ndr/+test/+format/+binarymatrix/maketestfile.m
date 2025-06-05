@@ -17,16 +17,16 @@ A = uint32(1:100);
 
 fid = fopen(filename,'w','ieee-le');
 
-if fid<0,
+if fid<0
 	error(['Could not open ' filename '.']);
-end;
+end
 
 n = fwrite(fid,A,'uint32');
 
 fclose(fid);
 
-if n~=numel(A),
+if n~=numel(A)
 	error(['Could not write full information to file ' filename '.']);
-end;
+end
 
 

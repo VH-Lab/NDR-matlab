@@ -31,7 +31,7 @@ classdef clocktype
 			%
 				obj.type = '';
 
-				if nargin>0,
+				if nargin>0
 					obj = setclocktype(obj,type);
 				end
 		end % clocktype()
@@ -59,18 +59,18 @@ classdef clocktype
 			% 'inherited'               | The timing information is inherited from another device.
 			%
 			%
-				if ~ischar(type),
+				if ~ischar(type)
 					error(['TYPE must be a character string.']);
 				end
 
 				type = lower(type);
 
-				switch type,
+				switch type
 					case {'utc','approx_utc','exp_global_time','approx_exp_global_time',...
 						'dev_global_time', 'approx_dev_global_time', 'dev_local_time', ...
-						'no_time','inherited'},
+						'no_time','inherited'}
 						% no error
-					otherwise,
+					otherwise
 						error(['Unknown clock type ' type '.']);
 				end
 

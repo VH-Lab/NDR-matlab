@@ -17,18 +17,18 @@ function assign (varargin)
 %       where VAR1 is the first field name of the input, VAL1 is the value of the field name,
 %       etc.
 
-if numel(varargin)==1,
-    if isstruct(varargin{1}),
+if numel(varargin)==1
+    if isstruct(varargin{1})
         varargin = ndr.data.struct2namevaluepair(varargin{1});
-    elseif iscell(varargin{1}),
+    elseif iscell(varargin{1})
         varargin = varargin{1};
-    end;
-end;
+    end
+end
 
 vars = {varargin{1:2:end}};
 vals = {varargin{2:2:end}};
 
 % use length(vals) not length(vars) in case of odd number of arguments
-for i = 1:length(vals), % changed 1 to a 2
+for i = 1:length(vals) % changed 1 to a 2
   assignin('caller', vars{i}, vals{i});
 end

@@ -12,7 +12,7 @@ end
 		%
 		% Creates an Neuroscence Data Reader object of SpikeGadgets.
 		
-		end; % READER()
+		end % READER()
 		
         % extract times, spikes
 
@@ -262,7 +262,7 @@ end
 					data = ndr.format.spikegadgets.read_rec_analogChannels(filename,header.numChannels,byteandbit,sr,header.headerSize,s0,s1);
 
 
-				elseif (strcmp(channeltype,'digital_in') || strcmp(channeltype, 'digital_out')), %Reads digital inputs
+				elseif (strcmp(channeltype,'digital_in') || strcmp(channeltype, 'digital_out')) %Reads digital inputs
 					%for every channel in device
 					for i=1:length(detailedchannels)
 						%based on every channel to read
@@ -291,11 +291,11 @@ end
 				s1 = ['.*\.rec\>']; % equivalent of *.ext on the command line
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename,'UseSubstituteString',0);
 				index = find(tf);
-				if numel(index)> 1,
+				if numel(index)> 1
 					error(['Need only 1 .rec file per epoch.']);
-				elseif numel(index)==0,
+				elseif numel(index)==0
 					error(['Need 1 .rec file per epoch.']);
-				else,
+				else
 					filename = filename{index};
 				end
 		end % filenamefromepoch
@@ -339,19 +339,19 @@ end
 					
  				channels = ndr_reader_base_spikegadgets_obj.getchannelsepoch(epochstreams, epoch_select);
 					
-				for i=1:numel(channels),
+				for i=1:numel(channels)
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) )
 						newentry.internal_type = channels(i).type;
 						newentry.internal_channelname = channels(i).name;
 						newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
 						newentry.samplerate = ndr_reader_base_spikegadgets_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
 						channelstruct(end+1) = newentry;
-					end;
-				end;					
+					end
+				end					
 
-		end; % daqchannels2internalchannels
+		end % daqchannels2internalchannels
 		
 		function test(varargin)
 		% ndr.test.reader.spikegadgets_rec.test - test reading using NDR reader
@@ -371,7 +371,7 @@ end
 
 		channels = r.getchannelsepoch({filename});
 
-		for i=1:numel(channels),
+		for i=1:numel(channels)
 		    disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
 		end
 
@@ -386,18 +386,18 @@ end
 		t0_t1 = r.t0_t1({filename}, epoch_select);
 
 		disp(['These are the clocktypes we know and how long the recording lasted:'])
-		for i=1:numel(ec),
+		for i=1:numel(ec)
 		    disp(['On clock of type ' ec{i}.ndr_clocktype2char() ' the recording started at ' num2str(t0_t1{i}(1)) ' and ended at ' num2str(t0_t1{i}(2)) '.']);
-		end;
+		end
 
 
-		if plotit,
+		if plotit
 		    figure (1);
 		    plot(t,d);
 		    xlabel('Time(s)');
 		    ylabel('Data values');
 		    title(['Spikegadgets Example Data']);
-		end;
+		end
 		end % test
 
     end % methods

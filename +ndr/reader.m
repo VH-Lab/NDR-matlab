@@ -37,13 +37,13 @@ classdef reader
             %
                 j = ndr.fun.ndrresource('ndr_reader_types.json');
                 match = 0;
-                for i=1:numel(j),
-                    if any(strcmpi(ndr_reader_type, j(i).type)),
+                for i=1:numel(j)
+                    if any(strcmpi(ndr_reader_type, j(i).type))
                         match = i;
                         break;
                     end
                 end
-                if match==0,
+                if match==0
                     error(['Do not know how to make a reader of type ''' ndr_reader_type '''.']);
                 end
                 ndr_reader_obj.ndr_reader_base = feval(j(match).classname);
@@ -119,43 +119,43 @@ classdef reader
 
                 is_neo = strcmp(class(ndr_reader_obj.ndr_reader_base), 'ndr.reader.neo');
 
-                if is_neo,
+                if is_neo
                     channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, {}, channelstring, epochstreams, epoch_select);
-                else,
+                else
                     [channelprefix, channelnumber] = ndr.string.channelstring2channels(channelstring);
                     channelstruct = daqchannels2internalchannels(ndr_reader_obj.ndr_reader_base, channelprefix, channelnumber, epochstreams, epoch_select);
                 end
 
                 [b, errormsg] = ndr_reader_obj.ndr_reader_base.canbereadtogether(channelstruct);
 
-                if b,
-                    switch (channelstruct(1).ndr_type),
+                if b
+                    switch (channelstruct(1).ndr_type)
                         % readchannels_epochsamples
-                        case {'analog_input','analog_output','analog_in','analog_out','ai','ao'},
-                            if ~useSamples, % must compute the samples to be read
+                        case {'analog_input','analog_output','analog_in','analog_out','ai','ao'}
+                            if ~useSamples % must compute the samples to be read
                                 s0 = round(1+t0*channelstruct(1).samplerate);
                                 s1 = round(1+t1*channelstruct(1).samplerate);
                             end
 
-                            if is_neo,
+                            if is_neo
                                 channels = channelstring;
-                            else,
+                            else
                                 channels = [channelstruct.internal_number];
                             end
 
                             data = ndr_reader_obj.readchannels_epochsamples(channelstruct(1).internal_type, channels, epochstreams, epoch_select, s0, s1);
                             time = ndr_reader_obj.readchannels_epochsamples('time', channels, epochstreams, epoch_select, s0, s1);
                         % readevents_epochsamples
-                        otherwise,
-                            if is_neo,
+                        otherwise
+                            if is_neo
                                 channels = channelstring;
-                            else,
+                            else
                                 channels = channelstruct.internal_number;
                             end
 
                             [data, time] = ndr_reader_obj.readevents_epochsamples({channelstruct.internal_type}, channels, epochstreams, epoch_select, t0, t1);
                     end
-                else, % we can't do it, report an error
+                else % we can't do it, report an error
                     error(['Specified channels cannot be read in a single function call. Please split channel reading by similar channel types. ' errormsg]);
                 end
         end % read() 
@@ -180,7 +180,7 @@ classdef reader
             %
             % See also: ndr.time.clocktype, ndr.reader.base/epochclock
             %   
-                if nargin<3,
+                if nargin<3
                     epoch_select = 1;
                 end
                 ec = ndr_reader_obj.ndr_reader_base.epochclock(epochstreams, epoch_select);
@@ -208,7 +208,7 @@ classdef reader
             %
             % See also: ndr.reader/epochclock, ndr.reader.base/t0_t1
             %
-                if nargin<3,
+                if nargin<3
                     epoch_select = 1;
                 end
                 t0t1 = ndr_reader_obj.ndr_reader_base.t0_t1(epochstreams, epoch_select);
@@ -236,7 +236,7 @@ classdef reader
             %
             % See also: ndr.reader.base/getchannelsepoch
             %
-                if nargin<3,
+                if nargin<3
                     epoch_select = 1; % most devices have only a single epoch per file
                 end
                 channels = ndr_reader_obj.ndr_reader_base.getchannelsepoch(epochstreams, epoch_select);
@@ -345,26 +345,26 @@ classdef reader
                  %       (like dep, den, dimp, dimn, which are derived from the data of sampled digital channels)
                  %       If the user does request a derived event type, then compute it
  
-                if ~isempty(intersect(channeltype,{'dep','den','dimp','dimn'})),
+                if ~isempty(intersect(channeltype,{'dep','den','dimp','dimn'}))
                     timestamps = {};
                     data = {};
-                    for i=1:numel(channel),
+                    for i=1:numel(channel)
                         % optimization speed opportunity
                         srd = ndr_reader_obj.samplerate(epochfiles,{'di'}, channel(i)); % Note: This assumes samplerate works with cell type
                         s0d = 1+round(srd*t0);
                         s1d = 1+round(srd*t1);
                         data_here = ndr_reader_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochstreams,epoch_select,s0d,s1d); % Pass epoch_select
                         time_here = ndr_reader_obj.readchannels_epochsamples(repmat({'time'},1,numel(channel(i))),channel(i),epochstreams,epoch_select,s0d,s1d); % Pass epoch_select
-                        if any(strcmp(channeltype{i},{'dep','dimp'})), % look for 0 to 1 transitions
+                        if any(strcmp(channeltype{i},{'dep','dimp'})) % look for 0 to 1 transitions
                             transitions_on_samples = find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
-                            if strcmp(channeltype{i},'dimp'),
+                            if strcmp(channeltype{i},'dimp')
                                 transitions_off_samples = 1+ find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
                             else
                                 transitions_off_samples = [];
                             end
-                        elseif any(strcmp(channeltype{i},{'den','dimn'})), % look for 1 to 0 transitions
+                        elseif any(strcmp(channeltype{i},{'den','dimn'})) % look for 1 to 0 transitions
                             transitions_on_samples = find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
-                            if strcmp(channeltype{i},'dimp'), % Should be 'dimn' for neg impulse off? Check logic. Assuming 'dimn' means 0->1 is off.
+                            if strcmp(channeltype{i},'dimp') % Should be 'dimn' for neg impulse off? Check logic. Assuming 'dimn' means 0->1 is off.
                                 transitions_off_samples = 1+ find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
                             else
                                 transitions_off_samples = [];
@@ -372,14 +372,14 @@ classdef reader
                         end
                         timestamps{i} = [ndr.data.colvec(time_here(transitions_on_samples)); ndr.data.colvec(time_here(transitions_off_samples)) ]; 
                         data{i} = [ones(numel(transitions_on_samples),1); -ones(numel(transitions_off_samples),1) ];
-                        if ~isempty(transitions_off_samples),
+                        if ~isempty(transitions_off_samples)
                             [~,order] = sort(timestamps{i}(:,1)); % Use ~ for unused output
                             timestamps{i} = timestamps{i}(order,:);
                             data{i} = data{i}(order,:); % sort by on/off
                         end
                     end
 
-                    if numel(channel)==1,
+                    if numel(channel)==1
                         timestamps = timestamps{1};
                         data = data{1};
                     end

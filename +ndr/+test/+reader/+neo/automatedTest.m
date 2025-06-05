@@ -181,13 +181,13 @@ end
 
 % Utils
 function utils_disp_channels(channels)
-  for i=1:numel(channels),
+  for i=1:numel(channels)
     disp(['Channel found (' int2str(i) '/' int2str(numel(channels)) '): ' channels(i).name ' of type ' channels(i).type]);
   end
 end
 
 function utils_disp_channelstruct(channelstruct)
-  for i=1:numel(channelstruct),
+  for i=1:numel(channelstruct)
     channel = channelstruct{1}
     disp([
       'internal_type: ' channel.internal_type...

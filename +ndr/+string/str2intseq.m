@@ -27,16 +27,16 @@ a = [];
 
 beginnings_endings = [ 0 find(str==sep) numel(str)+1];
 
-for i=2:numel(beginnings_endings),
+for i=2:numel(beginnings_endings)
 	strhere = str(1+beginnings_endings(i-1):beginnings_endings(i)-1);
 	strhere(find(isspace(strhere))) = []; % kill white space
 	hasseq = any(strhere==seq);
-	if hasseq,
+	if hasseq
 		[a1]=sscanf(strhere,['%d' seq '%d']);
 		a=cat(2,a,a1(1):a1(2));
-	else,
+	else
 		a1=sscanf(strhere,'%d');
 		a=cat(2,a,a1);
-	end;
-end;
+	end
+end
 

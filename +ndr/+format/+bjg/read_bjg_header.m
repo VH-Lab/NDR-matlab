@@ -10,9 +10,9 @@ header_length = 4096;
 
 fid = fopen(filename,'r','ieee-le');
 
-if fid<0,
+if fid<0
 	error(['Could not read header of ' filename '.']);
-end;
+end
 
 hdr = fread(fid,header_length);
 
@@ -31,42 +31,42 @@ h.bytes_per_sample = 4;
 reading_header = true;
 i = 1;
 
-while reading_header,
-	if ~isempty(findstr(linedata{i},'BJG')),
+while reading_header
+	if ~isempty(findstr(linedata{i},'BJG'))
 		h.format = linedata{i};
-	end;
-	if numel(find(linedata{i}==':'))==2 & numel(find(linedata{i}=='-'))==3,
+	end
+	if numel(find(linedata{i}==':'))==2 & numel(find(linedata{i}=='-'))==3
 		h.datestamp = linedata{i};
-	end;
-	if ~isempty(findstr(linedata{i},'Channels')),
+	end
+	if ~isempty(findstr(linedata{i},'Channels'))
 		h.num_channels = sscanf(linedata{i},'%dChannels');
-	end;
-	if ~isempty(findstr(linedata{i},'Samples/Second per Channel'));
+	end
+	if ~isempty(findstr(linedata{i},'Samples/Second per Channel'))
 		h.sample_rate = sscanf(linedata{i},'%fSamples/Second per Channel');
-	end;
-	if strcmpi(linedata{i},'start'),
+	end
+	if strcmpi(linedata{i},'start')
 		start_Count = i;
 		i = i + 1;
 		gotstop = false;
 		channel_names = {};
-		while ~gotstop,
-			if strcmpi(linedata{i},'stop'),
+		while ~gotstop
+			if strcmpi(linedata{i},'stop')
 				reading_header = false;
 				gotstop = true;
-			elseif i-start_Count>h.num_channels,
+			elseif i-start_Count>h.num_channels
 				error(['Read too many channel names without stop.']);
-			else,
+			else
 				channel_names{end+1} = linedata{i};
 				i = i + 1;
-			end;
-		end;
+			end
+		end
 		h.channel_names = channel_names(:);
-	end;
+	end
 	i = i + 1;
-	if i>numel(linedata),
+	if i>numel(linedata)
 		reading_header = false;
-	end;
-end;
+	end
+end
 
 h.samples = h.data_size / (h.num_channels * h.bytes_per_sample);
 h.local_t0 = 0;

@@ -7,9 +7,9 @@ function header = read_SEV_header(dirname, varargin)
 %
 
 
-if ~isfolder(dirname),
+if ~isfolder(dirname)
 	error(['Expected a directory for ' dirname '.']);
-end;
+end
 
 
 	% mimicked from SEV2mat.m by TDT
@@ -30,7 +30,7 @@ VALID_PARS = {'CHANNEL','EVENTNAME','DEVICE','TANK','BLOCK','T1','T2' ...
     'RANGES','VERBOSE','JUSTNAMES','FS'};
 
 % parse varargin
-for ii = 1:2:length(varargin),
+for ii = 1:2:length(varargin)
     if ~ismember(upper(varargin{ii}), VALID_PARS)
         error('%s is not a valid parameter. See help SEV2mat.', upper(varargin{ii}));
     end
@@ -43,7 +43,7 @@ if any([~isempty(DEVICE) ~isempty(TANK) ~isempty(BLOCK)])
     else
         dirname = sprintf('\\\\%s\\data\\%s\\%s\\', DEVICE, TANK, BLOCK);
     end
-end;
+end
 
 data = [];
 sample_info = []; 
@@ -59,7 +59,7 @@ if JUSTNAMES == 0
 	sample_info = ndr.format.tdt.read_SEV_logs(dirname,'VERBOSE',VERBOSE);
 end
 
-for ii=1:numel(file_list),
+for ii=1:numel(file_list)
 
 	[pathstr, name, ext] = fileparts(file_list(ii).name);
 
@@ -225,15 +225,15 @@ for ii=1:numel(file_list),
 	file_list(ii).start_time = '';
 	% get start date
 	sp = split(file_list(ii).name,'-');
-	if numel(sp)==5,
+	if numel(sp)==5
 		file_list(ii).start_date = ['20' sp{4}];
 		file_list(ii).start_time = sp{5}(1:6);
-	else,
+	else
 		% do not know how to interpret the date
-	end; 
+	end 
 	
 	fclose(fid);
 
-end; % loop over file_list
+end % loop over file_list
 
 header = file_list;

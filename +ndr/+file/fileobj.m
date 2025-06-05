@@ -12,9 +12,9 @@ classdef fileobj < handle
 		fid;              % The Matlab file identifier
 		permission;       % The file permission
 		machineformat     % 'big-endian' or 'little-endian'
-	end; % properties
+	end % properties
 
-	methods,
+	methods
 		function fileobj_obj = fileobj(varargin)
 			% FILEOBJ - create a new binary file object
 			%
@@ -32,7 +32,7 @@ classdef fileobj < handle
 
 				fileobj_obj = fileobj_obj.setproperties('fullpathfilename',fullpathfilename,'fid',fid,...
 						'permission',permission,'machineformat',machineformat);
-		end; % fileobj()
+		end % fileobj()
 
 		function fileobj_obj = setproperties(fileobj_obj, varargin)
 			% SETPROPERTIES - set the properties of a FILEOBJ
@@ -48,20 +48,20 @@ classdef fileobj < handle
 			%   machineformat     % big-endian ('b'), little-endian ('l'), or native ('n')
 
 				fn = fieldnames(fileobj_obj);
-				for i=1:numel(fn),
+				for i=1:numel(fn)
 					eval([fn{i} '=getfield(fileobj_obj,fn{i});']);
-				end;
+				end
 
 				assign(varargin{:});
 
 				% check for accuracy would be a good idea
 
 				fn = fieldnames(fileobj_obj);
-				for i=1:numel(fn),
+				for i=1:numel(fn)
 					eval(['fileobj_obj.' fn{i} '= ' fn{i} ';']);
-				end;
+				end
 
-		end; % setproperties()
+		end % setproperties()
 
 		function fileobj_obj = fopen(fileobj_obj, permission, machineformat, filename)
 			% FOPEN - open a FILEOBJ 
@@ -81,21 +81,21 @@ classdef fileobj < handle
 			%
 			% See also: FOPEN, FILEOBJ/FCLOSE, FCLOSE
 			%
-				if fileobj_obj.fid > 0,  % if file is already open, close it first
+				if fileobj_obj.fid > 0  % if file is already open, close it first
 					fileobj_obj.fclose();
-				end; 
+				end 
 
 				% now work on opening
 
-				if nargin<2,
+				if nargin<2
 					permission = fileobj_obj.permission;
-				end;
-				if nargin<3,
+				end
+				if nargin<3
 					machineformat = fileobj_obj.machineformat;
-				end;
-				if nargin<4,
+				end
+				if nargin<4
 					filename = fileobj_obj.fullpathfilename;
-				end;
+				end
 			
 				filename = fullfilename(filename);
 				fileobj_obj = fileobj_obj.setproperties('fullpathfilename',filename,...
@@ -105,7 +105,7 @@ classdef fileobj < handle
 				fileobj_obj.fid = fopen(fileobj_obj.fullpathfilename,...
 					fileobj_obj.permission,fileobj_obj.machineformat);
 
-		end; %fopen
+		end %fopen
 
 		function fileobj_obj = fclose(fileobj_obj, filename, permission, machineformat)
 			% FCLOSE - close a FILEOBJ
@@ -116,13 +116,13 @@ classdef fileobj < handle
 			%
 			% Attempt to close the file and then set FILEOBJ_OBJ.fid to -1.
 			%
-				if fileobj_obj.fid >= 0,
-					try,
+				if fileobj_obj.fid >= 0
+					try
 						fclose(fileobj_obj.fid);
-					end;
+					end
 					fileobj_obj.fid = -1;
-				end;
-		end; %fclose()
+				end
+		end %fclose()
 
 		function B = fseek(fileobj_obj, offset, reference)
 			% FSEEK - seek to a location within a FILEOBJ
@@ -139,10 +139,10 @@ classdef fileobj < handle
 			%
 			% See also: FSEEK, FILEOBJ/FTELL
 				b = -1;
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					b = fseek(fileobj_obj.fid,offset,reference);
-				end;
-		end; % fseek()
+				end
+		end % fseek()
 
 		function location = ftell(fileobj_obj)
 			% FTELL - find current location within a FILEOBJ
@@ -154,10 +154,10 @@ classdef fileobj < handle
 			%
 			% See also: FSEEK, FILEOBJ/FSEEK, FTELL
 				location = -1;
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					location = ftell(fileobj_obj.fid);
-				end;
-		end; % ftell()
+				end
+		end % ftell()
 
 		function frewind(fileobj_obj)
 			% FREWIND - 'rewind' a FILEOBJ back to the beginning
@@ -167,10 +167,10 @@ classdef fileobj < handle
 			% Seeks to the beginning of the file.
 			%
 			% See also: FSEEK, FILEOBJ/FSEEK, FTELL
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					frewind(fileobj_obj.fid);
 				end
-		end; % frewind()
+		end % frewind()
 
 		function b = feof(fileobj_obj)
 			% FEOF - test to see if a FILEOBJ is at END-OF-FILE
@@ -181,10 +181,10 @@ classdef fileobj < handle
 			%
 			% See also: FSEEK, FILEOBJ/FSEEK, FTELL
 				b = -1;
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					b = feof(fileobj_obj.fid);
-				end;
-		end; % feof
+				end
+		end % feof
 
 		function count = fwrite(fileobj_obj, data, precision, skip, machineformat)
 			% FWRITE - write data to a FILEOBJ
@@ -199,21 +199,21 @@ classdef fileobj < handle
 			%
 			% See also: FWRITE
 
-				if nargin<3,
+				if nargin<3
 					precision = 'char';
-				end;
-				if nargin<4,
+				end
+				if nargin<4
 					skip = 0;
-				end;
-				if nargin<5,
+				end
+				if nargin<5
 					machineformat = fileobj_obj.machineformat;
-				end;
+				end
 
 				count = 0;
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					count = fwrite(fileobj_obj.fid, data, precision, skip, machineformat);
-				end;
-		end; % fwrite
+				end
+		end % fwrite
 
 		function [data,count] = fread(fileobj_obj, count, precision, skip, machineformat)
 			% FREAD - read data from a FILEOBJ
@@ -230,22 +230,22 @@ classdef fileobj < handle
 
 				data = [];
 
-				if nargin<3,
+				if nargin<3
 					precision = 'char';
-				end;
-				if nargin<4,
+				end
+				if nargin<4
 					skip = 0;
-				end;
-				if nargin<5,
+				end
+				if nargin<5
 					machineformat = fileobj_obj.machineformat;
-				end;
+				end
 				
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					[data,count] = fread(fileobj_obj.fid, count, precision, skip, machineformat);
-				else,
+				else
 					count = 0;
-				end;
-		end; % fread
+				end
+		end % fread
 
 		function tline = fgetl(fileobj_obj, nchar)
 			% FGETL - get a line from a FILEOBJ
@@ -256,10 +256,10 @@ classdef fileobj < handle
 			%
 			% See also: FGETL
 				tline = '';
-				if fileobj_obj.fid >=0,
+				if fileobj_obj.fid >=0
 					tline = fgetl(fileobj_obj.fid);
-				end;
-		end; % fgetl()
+				end
+		end % fgetl()
 
 		function tline = fgets(fileobj_obj, nchar)
 			% FGETS - get a line from a FILEOBJ
@@ -270,14 +270,14 @@ classdef fileobj < handle
 			%
 			% See also: FGETS
 				tline = '';
-				if fileobj_obj.fid >=0,
-					if nargin<2,
+				if fileobj_obj.fid >=0
+					if nargin<2
 						tline = fgets(fileobj_obj.fid);
-					else,
+					else
 						tline = fgets(fileobj_obj.fid, nchar);
-					end;
-				end;
-		end; % fgets()
+					end
+				end
+		end % fgets()
 
 		function [message,errnum] = ferror(fileobj_obj, command)
 			% FERROR - return the last file error message for FILEOBJ
@@ -289,14 +289,14 @@ classdef fileobj < handle
 			%
 				message='';
 				errnum=0;
-				if fileobj_obj.fid >= 0,
-					if nargin<2,
+				if fileobj_obj.fid >= 0
+					if nargin<2
 						[message,errnum]=ferror(fileobj_obj.fid);
-					else,
+					else
 						[message,errnum]=ferror(fileobj_obj.fid,command);
-					end;
-				end;
-		end; % ferror
+					end
+				end
+		end % ferror
 
 		function [a, count] = fscanf(fileobj_obj, format, sizea)
 			% FSCANF - scan data from a FILEOBJ_OBJ
@@ -308,14 +308,14 @@ classdef fileobj < handle
 			%
 				a = [];
 				count = 0;
-				if fileobj_obj.fid >= 0,
-					if nargin<3,
+				if fileobj_obj.fid >= 0
+					if nargin<3
 						[a, count] = fscanf(fileobj_obj.fid,format);
-					else,
+					else
 						[a, count] = fscanf(fileobj_obj.fid,format,sizea);
-					end;
-				end;
-		end; % fscanf()
+					end
+				end
+		end % fscanf()
 
 		function [count] = fprintf(fileobj_obj, varargin)
 			% FPRINTF - print data to a FILEOBJ_OBJ
@@ -326,10 +326,10 @@ classdef fileobj < handle
 			% FILEOBJ_OBJ.
 			%
 				count = 0;
-				if fileobj_obj.fid >= 0,
+				if fileobj_obj.fid >= 0
 					count = fprintf(fileobj_obj.fid,varargin{:});
-				end;
-		end; % fprintf()
+				end
+		end % fprintf()
 
 		function [pathstr,name,ext] = fileparts(fileobj_obj)
 			% FILEPARTS - return filename parts for the file associated with FILEOBJ
@@ -353,7 +353,7 @@ classdef fileobj < handle
 
 				fclose(fileobj_obj);
 				delete@handle(fileobj_obj);
-		end; % delete()
-	end; % methods
+		end % delete()
+	end % methods
 end % classdef
 

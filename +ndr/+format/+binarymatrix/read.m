@@ -51,52 +51,52 @@ arguments
 	options.headerSkip (1,1) uint64 = 0;
 end % arguments
 
-if max(channel_indexes)>num_channels,
+if max(channel_indexes)>num_channels
 	error(['CHANNEL_INDEX out of range..must be 1..' int2str(num_channels)]);
-end;
+end
 
-if ~any(strcmp({'ieee-le','ieee-be'},options.byteOrder)),
+if ~any(strcmp({'ieee-le','ieee-be'},options.byteOrder))
 	error(['Byte order must be ieee-le or ieee-be. No other values accepted. Got: ' options.byteOrder]);
-end;
+end
 
 if isinf(s0) & (s0 < 0)
 	s0 = 1;
-end;
+end
 
-if ischar(filename_or_fileobj),
+if ischar(filename_or_fileobj)
 	b = isfile(filename_or_fileobj);
-	if ~b,
+	if ~b
 		error(['No file found with name ' filename_or_fileobj '.']);
-	end;
+	end
 	d = dir(filename_or_fileobj);
-elseif isa(filename_or_fileobj,'fileobj'),
+elseif isa(filename_or_fileobj,'fileobj')
 	d = dir(filename_or_fileobj.fullpathfilename);
-end;
+end
 
 
 bytes_per_value = 0;
 
-switch options.dataType,
-	case 'double',
+switch options.dataType
+	case 'double'
 		bytes_per_value = 8;
-	case 'single',
+	case 'single'
 		bytes_per_value = 4;
-    case 'uint16',
+    case 'uint16'
         bytes_per_value = 2;
-	otherwise,
+	otherwise
 		[match_start,match_end] = regexp(options.dataType,'\d+','forceCellOutput');
-		if numel(match_start)>1 | numel(match_start)==0,
+		if numel(match_start)>1 | numel(match_start)==0
 			error(['Expected dataType to have a single number; instead, found ' options.dataType]);
-		end;
+		end
 		bits = str2num(options.dataType(match_start{1}:match_end{1}));
 		bytes_per_value = bits / 8;
-end;
+end
 
 total_samples = (d.bytes-double(options.headerSkip)) / (num_channels * bytes_per_value);
 
-if isinf(s1) & (s1>0),
+if isinf(s1) & (s1>0)
 	s1 = total_samples;
-end;
+end
 
 bytes_per_sample = bytes_per_value * num_channels;
 
@@ -108,7 +108,7 @@ consecutive_channels_requested = numel(channel_indexes)==1|isequal(diff(double(c
 
 fid = fopen(filename_or_fileobj,'r',options.byteOrder);
 
-if ~options.force_single_channel_read & consecutive_channels_requested,
+if ~options.force_single_channel_read & consecutive_channels_requested
 	channels_to_skip_before_reading = chan_sort(1) - 1;
 	channels_to_skip_after_reading = num_channels - chan_sort(end);
 
@@ -124,12 +124,12 @@ if ~options.force_single_channel_read & consecutive_channels_requested,
 		skip_after_each_read);
 
 	data = reshape(data, numel(channel_indexes), numel(data)/numel(channel_indexes))'; % 1 channel per column
-	if ~isequal(chan_sort,channel_indexes),
+	if ~isequal(chan_sort,channel_indexes)
 		data(:,chan_sort_indexes) = data; % re-sort
-	end;
-else,
+	end
+else
 	data = zeros(s1-s0+1,numel(channel_indexes));
-	for c=1:numel(channel_indexes),
+	for c=1:numel(channel_indexes)
 		channels_to_skip_before_reading = channel_indexes(c) - 1;
 		channels_to_skip_after_reading = num_channels - channel_indexes(c);
 
@@ -143,8 +143,8 @@ else,
 		fseek(fid,skip_point,'bof');
 
 		data(:,c) = fread(fid,s1-s0+1,options.dataType,skip_after_each_read);
-	end;
-end;
+	end
+end
 
 fclose(fid);
 

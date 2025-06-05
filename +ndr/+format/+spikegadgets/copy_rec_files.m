@@ -7,9 +7,9 @@ fid_in = fopen(filename_in,'r');
 %Open file out to write
 fid_out = fopen(filename_out,'w');
 
-if fid_out<0,
+if fid_out<0
 	error(['Could not open the file ' filename_out ' for writing.']);
-end;
+end
 
 %File config stored in fileconfig
 fileconfig = readTrodesFileConfig(filename_in);

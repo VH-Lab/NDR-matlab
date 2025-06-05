@@ -21,7 +21,7 @@ classdef ced_smr < ndr.reader.base
 			%
 			%  Creates a new object for reading Cambridge Electronic Design SMR files. 
 			%
-		end; % ced_smr() creator
+		end % ced_smr() creator
 
 		function channels = getchannelsepoch(ndr_reader_cedsmr_obj, epochfiles, epochselect)
 			% GETCHANNELS - List the channels that are available on this device
@@ -36,12 +36,12 @@ classdef ced_smr < ndr.reader.base
 			% 'type'             | The type of data stored in the channel
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
-				if nargin<3,
+				if nargin<3
 				    epochselect = 1;
-				end;
-				if epochselect~=1, 
+				end
+				if epochselect~=1 
 				    error(['For CED SOM/SMR files, epochselect should be 1.']);
-				end;
+				end
 				channels = vlt.data.emptystruct('name','type');
 
 				% open SMR files, and examine the headers for all channels present
@@ -51,11 +51,11 @@ classdef ced_smr < ndr.reader.base
 
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
-				if isempty(header.channelinfo),
+				if isempty(header.channelinfo)
 					channels = struct('name','t1','type','time');
-				end;
+				end
 
-				for k=1:length(header.channelinfo),
+				for k=1:length(header.channelinfo)
 					%header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
@@ -76,45 +76,45 @@ classdef ced_smr < ndr.reader.base
 			%
 			%  DATA is the channel data (each column contains data from an indvidual channel) 
 			%
-				if epochselect~=1, 
+				if epochselect~=1 
 					error(['For CED SOM/SMR files, epochselect should be 1.']);
-				end;
+				end
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 				sr = ndr_ndr_reader_cedsmr_obj.samplerate(epochfiles, epochselect, channeltype, channel);
 				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
+				if numel(sr_unique)~=1
 					error(['Do not know how to handle different sampling rates across channels.']);
-				end;
+				end
 
 				sr = sr_unique;
 
 				t0 = (s0-1)/sr;
 				t1 = (s1-1)/sr;
 
-				if isinf(t0) | isinf(t1),
+				if isinf(t0) | isinf(t1)
 					t0_orig = t0;
 					t1_orig = t1;
 					t0t1_here = ndr_ndr_reader_cedsmr_obj.t0_t1(epochfiles);
-					if isinf(t0_orig),
-						if t0_orig<0,
+					if isinf(t0_orig)
+						if t0_orig<0
 							t0 = t0t1_here{1}(1);
-						elseif t0_orig>0,
+						elseif t0_orig>0
 							t0 = t0t1_here{1}(2);
-						end;
-					end;
-					if isinf(t1_orig),
-						if t1_orig<0,
+						end
+					end
+					if isinf(t1_orig)
+						if t1_orig<0
 							t1 = t0t1_here{1}(1);
 						elseif t1_orig>0
 							t2 = t0t1_here{1}(2);
-						end;
-					end;
-				end;
+						end
+					end
+				end
 
-				for i=1:length(channel), % can only read 1 channel at a time
-					if strcmpi(channeltype,'time'),
+				for i=1:length(channel) % can only read 1 channel at a time
+					if strcmpi(channeltype,'time')
 						[dummy,dummy,dummy,dummy,data(:,i)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
-					else,
+					else
 						[data(:,i)] = ndr.format.ced.read_SOMSMR_datafile(filename,'',channel(i),t0,t1);  % this needs editing, right? No function with that name right now, needs to have the package name
 					end
 				end
@@ -132,12 +132,12 @@ classdef ced_smr < ndr.reader.base
 			%
 			% See also: ndi.time.clocktype, EPOCHCLOCK
 			%
-				if nargin<3,
+				if nargin<3
 				    epochselect = 1;
-				end;
-				if epochselect~=1, 
+				end
+				if epochselect~=1 
 				    error(['For CED SOM/SMR files, epochselect should be 1.']);
-				end;
+				end
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
@@ -166,14 +166,14 @@ classdef ced_smr < ndr.reader.base
 				timestamps = {};
 				data = {};
 				filename = ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
-				for i=1:numel(channel),
+				for i=1:numel(channel)
 					[data{i},dummy,dummy,dummy,timestamps{i}]= ndr.format.ced.read_SOMSMR_datafile(filename, ... 
 						'',channel(i),t0,t1);
 				end
-				if numel(channel)==1,
+				if numel(channel)==1
 					timestamps = timestamps{1};
 					data = data{1};
-				end;
+				end
 		end % readevents_epoch()
 
 		function sr = samplerate(ndr_ndr_reader_cedsmr_obj, epochfiles, epochselect, channeltype, channel)
@@ -182,13 +182,13 @@ classdef ced_smr < ndr.reader.base
 			% SR = SAMPLERATE(DEV, EPOCHFILES, CHANNELTYPE, CHANNEL)
 			%
 			% SR is the list of sample rate from specified channels
-				if epochselect~=1, 
+				if epochselect~=1 
 				    error(['For CED SOM/SMR files, epochselect should be 1.']);
-				end;
+				end
 				filename = ndr_ndr_reader_cedsmr_obj.cedsmrfile(epochfiles);
 
 				sr = [];
-				for i=1:numel(channel),
+				for i=1:numel(channel)
 					sr(i) = 1/ndr.format.ced.read_SOMSMR_sampleinterval(filename,[],channel(i)); %   % this needs editing, right? No function with that name right now, needs to have the package name
 				end
 		end % samplerate()
@@ -232,19 +232,19 @@ classdef ced_smr < ndr.reader.base
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');                
                 
-				for i=1:numel(channels),
+				for i=1:numel(channels)
 					newentry.internal_type = channels(i).type;
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
 					newentry.internal_channelname = channels(i).name;
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
                     newentry.samplerate = ndr_reader_cedsmr_obj.samplerate(epochstreams,epoch_select,CHANNELNAMEPREFIX, numericchannel);
-                    if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+                    if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) )
 						channelstruct(end+1) = newentry;
-					end;
-				end;					
+					end
+				end					
 
-		end; % daqchannels2internalchannels
+		end % daqchannels2internalchannels
         
 	end % methods
 
@@ -258,12 +258,12 @@ classdef ced_smr < ndr.reader.base
 			% Given a cell array of strings FILELIST with full-path file names,
 			% this function identifies the first file with an extension '.smr' (case insensitive)
 			% and returns the result in FILENAME (full-path file name).
-				for k=1:numel(filelist),
+				for k=1:numel(filelist)
 					[pathpart,filenamepart,extpart] = fileparts(filelist{k});
-					if strcmpi(extpart,'.smr'),
+					if strcmpi(extpart,'.smr')
 						smrfile = filelist{k}; % assume only 1 file
 						return;
-					end; % got the .smr file
+					end % got the .smr file
 				end
 				error(['Could not find any .smr file in the file list.']);
 		end
@@ -275,27 +275,27 @@ classdef ced_smr < ndr.reader.base
 		% 
 		% Given an Intan header file type, returns the standard ndr.ndr.reader channel type
 
-			switch (cedsmrchanneltype),
-				case {1,9},
+			switch (cedsmrchanneltype)
+				case {1,9}
 					% 1 is integer, 9 is single precision floating point
 					channeltype = 'analog_in';
-				case {2,3,4},
+				case {2,3,4}
 					channeltype = 'event'; % event indicator
 						% 2 - positive-to-negative transition
 						% 3 - negative-to-positive transition
 						% 4 - either transition
-				case {5,6,7}, % various marker types
+				case {5,6,7} % various marker types
 					% 5 - generic mark
 					% 6 - wavemark, a Spike2-detected event
 					% 7 - real-valued marker
 					channeltype = 'mark';
-				case 8, % text mark
+				case 8 % text mark
 					channeltype = 'text';
-				case {11},
+				case {11}
 					error(['do not know this event yet--programmer should look it up.']);
-				otherwise,
+				otherwise
 					error(['Could not convert channeltype ' cedspike2channeltype '.']);
-			end;
+			end
 
 		end % readercedsmrheadertype()
 

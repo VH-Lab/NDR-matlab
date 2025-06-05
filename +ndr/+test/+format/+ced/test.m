@@ -23,7 +23,7 @@ h.fileinfo,
 
 disp(['Now will print channel info:']);
 
-for i=1:numel(h.channelinfo),
+for i=1:numel(h.channelinfo)
 	disp(['Channel information ' int2str(i) ' of ' int2str(numel(h.channelinfo))]);
 	h.channelinfo(i),
 end
@@ -36,11 +36,11 @@ end
 
 sample_rate = 1/ndr.format.ced.read_SOMSMR_sampleinterval(filename, h, 21)
 
-if plotit,
+if plotit
 	figure;
 	plot(time,data); 
 	xlabel('Time(s)');
 	ylabel('Data values');
 	title(['CED test data']);
-end;
+end
 
