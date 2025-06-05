@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,6 +28,4 @@ jobs:
       code_directory: '.'
       matlab_use_cache: true
     secrets:
-      commit_email_address: ${{ secrets.COMMIT_EMAIL_ADDRESS }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
