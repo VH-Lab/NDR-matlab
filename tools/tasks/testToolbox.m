@@ -1,4 +1,6 @@
 function testToolbox(varargin)
+
+    disp('here')
     projectRootDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
     matbox.installRequirements(fullfile(projectRootDir, 'tools'))
     matbox.tasks.testToolbox(projectRootDir, ...
