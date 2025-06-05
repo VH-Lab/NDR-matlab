@@ -6,7 +6,6 @@
 [![MATLAB Code Issues](.github/badges/code_issues.svg)](https://github.com/ehennestad/NDR-matlab/security/code-scanning)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/ehennestad/NDR-matlab/graphs/commit-activity)
 
-
 [Neuroscience Data Readers](https://ndr.vhlab.org) - A Matlab conglomerative package for reading neuroscience data files
 
 ## About

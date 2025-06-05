@@ -134,6 +134,46 @@ classdef base
 				channels = channels([]);
 		end; % getchannelsepoch()
 
+        function [datatype,p,datasize] = underlying_datatype(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
+            % UNDERLYING_DATATYPE - get the underlying data type for a channel in an epoch
+            %
+            % [DATATYPE,P,DATASIZE] = UNDERLYING_DATATYPE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, CHANNELTYPE, CHANNEL)
+            %
+            % Return the underlying datatype for the requested channel.
+            %
+            % DATATYPE is a type that is suitable for passing to FREAD or FWRITE
+            %  (e.g., 'float64', 'uint16', etc. See help fread.)
+            %
+            % P is a matrix of polynomials that converts between the double data that is returned by
+            % READCHANNEL. RETURNED_DATA = (RAW_DATA+P(i,1))*P(i,2)+(RAW_DATA+P(i,1))*P(i,3) ...
+            % There is one row of P for each entry of CHANNEL.
+            %
+            % DATASIZE is the sample size in bits.
+            %
+            % CHANNELTYPE must be a string. It is assumed that
+            % that CHANNELTYPE applies to every entry of CHANNEL.
+            %
+
+            switch(channeltype)
+                case {'analog_in','analog_out','auxiliary_in','time'},
+                    % For the abstract class, keep the data in doubles. This will always work but may not
+                    % allow for optimal compression if not overridden
+                    datatype = 'float64';
+                    datasize = 64;
+                    p = repmat([0 1],numel(channel),1);
+                case {'digital_in','digital_out'}
+                    datatype = 'char';
+                    datasize = 8;
+                    p = repmat([0 1],numel(channel),1);
+                case {'eventmarktext','event','marker','text'}
+                    datatype = 'float64';
+                    datasize = 64;
+                    p = repmat([0 1],numel(channel),1);
+                otherwise,
+                    error(['Unknown channel type ' channeltype '.']);
+            end
+        end
+
 		function data = readchannels_epochsamples(ndr_reader, channeltype, channel, epochstreams, epoch_select, s0, s1)
 			%  FUNCTION READ_CHANNELS - read the data based on specified channels
 			%

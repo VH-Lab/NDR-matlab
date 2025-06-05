@@ -1,7 +1,5 @@
 function [data, total_samples, s0, s1] = read(filename_or_fileobj, num_channels, channel_indexes, s0, s1, options)
 
-% 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-
 % READ - read a binary matrix file
 %
 % [DATA, TOTAL_SAMPLES, S0, S1] = READ(FILENAME_OR_FILEOBJ, NUM_CHANNELS, CHANNEL_INDEXES, S0, S1)
@@ -83,6 +81,8 @@ switch options.dataType,
 		bytes_per_value = 8;
 	case 'single',
 		bytes_per_value = 4;
+    case 'uint16',
+        bytes_per_value = 2;
 	otherwise,
 		[match_start,match_end] = regexp(options.dataType,'\d+','forceCellOutput');
 		if numel(match_start)>1 | numel(match_start)==0,
