@@ -1,5 +1,11 @@
 # NDR-matlab
 
+[![Version Number](https://img.shields.io/github/v/release/ehennestad/NDR-matlab?label=version)](https://github.com/ehennestad/NDR-matlab/releases/latest)
+[![MATLAB Tests](.github/badges/tests.svg)](https://github.com/ehennestad/NDR-matlab/actions/workflows/run_tests.yml)
+[![codecov](https://codecov.io/gh/ehennestad/NDR-matlab/graph/badge.svg?token=W7YPFA11JF)](https://codecov.io/gh/ehennestad/NDR-matlab)
+[![MATLAB Code Issues](.github/badges/code_issues.svg)](https://github.com/ehennestad/NDR-matlab/security/code-scanning)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/ehennestad/NDR-matlab/graphs/commit-activity)
+
 [Neuroscience Data Readers](https://ndr.vhlab.org) - A Matlab conglomerative package for reading neuroscience data files
 
 ## About
