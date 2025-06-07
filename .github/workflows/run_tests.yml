@@ -25,7 +25,7 @@ jobs:
     name: Test
     uses: ehennestad/matbox/.github/workflows/reusable_test_workflow.yml@add-reusable-test-workflow
     with:
-      code_directory: '.'
+      code_directory: '+ndr'
       matlab_use_cache: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
