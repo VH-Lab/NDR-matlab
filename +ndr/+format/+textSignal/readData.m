@@ -142,6 +142,8 @@ function [events, file_t_start, file_t_end] = read_and_sort_events(filename, tim
     raw_events = struct();
     file_times = [];
 
+    event_template = struct('time', NaN, 'command', '', 'value1', NaN, 'value2', NaN, 'endtime', NaN);
+
     while ~feof(fid)
         line = fgetl(fid);
         if ischar(line) && ~isempty(line)
@@ -149,23 +151,23 @@ function [events, file_t_start, file_t_end] = read_and_sort_events(filename, tim
 
             channel = str2double(parts{1});
 
-            if strcmp(time_units, 'datestamp')
-                time = posixtime(datetime(parts{2}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z''', 'TimeZone', 'UTC'));
+            event = event_template;
+
+            if strcmpi(time_units, 'datestamp')
+                event.time = posixtime(datetime(parts{2}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z''', 'TimeZone', 'UTC'));
             else
-                time = str2double(parts{2});
+                event.time = str2double(parts{2});
             end
-            file_times(end+1) = time;
+            file_times(end+1) = event.time;
 
-            command = parts{3};
+            event.command = upper(parts{3});
 
-            event = struct('time', time, 'command', command);
-
-            if strcmp(command, 'Set')
+            if strcmpi(event.command, 'SET')
                 event.value1 = str2double(parts{4});
-            elseif strcmp(command, 'RAMP')
+            elseif strcmpi(event.command, 'RAMP')
                 event.value1 = str2double(parts{4});
                 event.value2 = str2double(parts{5});
-                if strcmp(time_units, 'datestamp')
+                if strcmpi(time_units, 'datestamp')
                     event.endtime = posixtime(datetime(parts{6}, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z''', 'TimeZone', 'UTC'));
                 else
                     event.endtime = str2double(parts{6});

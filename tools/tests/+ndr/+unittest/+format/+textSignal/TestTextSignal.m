@@ -101,8 +101,8 @@ classdef TestTextSignal < matlab.unittest.TestCase
         function testReadDataDatestamp(testCase)
             t0_str = '2024-07-17T12:00:00.000Z';
             t1_str = '2024-07-17T12:00:05.000Z';
-            t0 = datetime(t0_str, 'TimeZone', 'UTC');
-            t1 = datetime(t1_str, 'TimeZone', 'UTC');
+            t0 = datetime(t0_str, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z''', 'TimeZone', 'UTC');
+            t1 = datetime(t1_str, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z''', 'TimeZone', 'UTC');
 
             [D, T] = ndr.format.textSignal.readData(testCase.datestamp_file, [1], posixtime(t0), posixtime(t1));
 
