@@ -1,7 +1,15 @@
-classdef readerTest_whitematter < matlab.unittest.TestCase
-    %READERTEST_WHITEMATTER Unit tests for the ndr.reader.whitematter class
-    %   Tests the functionality of the WhiteMatter LLC reader by creating
-    %   temporary test files and verifying the output of various reader methods.
+classdef TestWhitematter < matlab.unittest.TestCase
+    %TESTWHITEMATTER Unit tests for the ndr.reader.whitematter class.
+    %
+    %   This test class verifies the functionality of the ndr.reader.whitematter
+    %   class. It operates by programmatically generating temporary binary
+    %   '.wm' data files with known properties (sampling rate, channel count,
+    %   etc.). It then uses the reader to parse these files and verifies that
+    %   the output of various reader methods (e.g., for reading data, headers,
+    %   sample rates) matches the known properties of the generated files.
+    %
+    %   The tests are parameterized to run against multiple channel counts.
+    %   The test class handles the creation and cleanup of all temporary files.
 
     properties (Constant)
         SR = 20000; % Sampling rate for test files (Hz)
