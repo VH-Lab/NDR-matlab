@@ -2,15 +2,14 @@ classdef TestTextSignal < matlab.unittest.TestCase
     properties
         numeric_file
         datestamp_file
-        project_root
     end
 
     methods (TestClassSetup)
         function setupOnce(testCase)
-            % Find the project root and build full paths to data files
-            testCase.project_root = fileparts(fileparts(fileparts(fileparts(fileparts(mfilename('fullpath'))))));
-            testCase.numeric_file = fullfile(testCase.project_root, 'example_data', 'textSignal', 'example_numeric.tsv');
-            testCase.datestamp_file = fullfile(testCase.project_root, 'example_data', 'textSignal', 'example_datestamp.tsv');
+            % Find the project root using the ndr.fun.ndrpath function
+            project_root = ndr.fun.ndrpath();
+            testCase.numeric_file = fullfile(project_root, 'example_data', 'textSignal', 'example_numeric.tsv');
+            testCase.datestamp_file = fullfile(project_root, 'example_data', 'textSignal', 'example_datestamp.tsv');
         end
     end
 
