@@ -1,4 +1,4 @@
-name: Call reusable test workflow
+name: Test code
 
 on:
   # Triggers the workflow on push or pull request events for the "main" branch
@@ -23,9 +23,10 @@ concurrency:
 jobs:
   call-workflow-test-toolbox:
     name: Test
-    uses: ehennestad/matbox/.github/workflows/reusable_test_workflow.yml@add-reusable-test-workflow
+    uses: ehennestad/matbox-actions/.github/workflows/test-code-workflow.yml@v1
     with:
-      code_directory: '+ndr'
+      source_directory: '+ndr'
+      tests_directory: 'tools/tests'
       matlab_use_cache: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
