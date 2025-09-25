@@ -84,8 +84,11 @@ t1_local_steps = seconds(t1_global_steps - t0_global);
 t0_local = min(t0_local_steps);
 t1_local = max(t1_local_steps);
 
-% Get indices corresponding to step trigger times
-stepInd = zeros(header.stepsNo, 2);
+% Trigger time is a reliable metric for how many steps were executed
+numberSteps = numel(header.triggerTime);
+
+% Get step indices
+stepInd = zeros(numberSteps, 2);
 stepInd(:,1) = ndr.time.fun.times2samples(t0_local_steps,[t0_local t1_local],...
     header.sampleRate);
 stepInd(:,2) = ndr.time.fun.times2samples(t1_local_steps,[t0_local t1_local],...
@@ -100,13 +103,13 @@ switch lower(channeltype) % Use lower for case-insensitivity
         % epoch (dev_local_time)
         data(:) = linspace(t0_local,t1_local,numSamples);
     case {'analog_in','ai'}
-        for i = 1:header.stepsNo
+        for i = 1:numberSteps
             ind = stepInd(i,1):stepInd(i,2)-1;
             data(ind) = inputData(:,i)';
         end
     case {'analog_out','ao'}
         data = nan(numSamples,1);
-        for i = 1:header.stepsNo
+        for i = 1:numberSteps
             ind = stepInd(i,1):stepInd(i,2)-1;
             data(ind) = outputData(:,i)';
         end
