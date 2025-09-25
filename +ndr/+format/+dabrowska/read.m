@@ -84,15 +84,10 @@ t1_local_steps = seconds(t1_global_steps - t0_global);
 t0_local = min(t0_local_steps);
 t1_local = max(t1_local_steps);
 
-% Get indices corresponding to step trigger times
-   % aside: stepsNo is not reliable
-%if header.stepsNo ~= numel(header.triggerTime)
-    %disp('number of steps mismatch');
-    % this happens occasionally, no need to report
-%end;
-
+% Trigger time is a reliable metric for how many steps were executed
 numberSteps = numel(header.triggerTime);
 
+% Get step indices
 stepInd = zeros(numberSteps, 2);
 stepInd(:,1) = ndr.time.fun.times2samples(t0_local_steps,[t0_local t1_local],...
     header.sampleRate);
