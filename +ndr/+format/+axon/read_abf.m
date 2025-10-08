@@ -48,7 +48,7 @@ switch lower(channel_type),
 	case {'ai','analog_in'},
 		channel_names = header.recChNames(channel_numbers);
 		[channel_num_sorted,channel_num_sorted_idx] = sort(channel_numbers);
-		data = abfload2(filename,'start',t0,'stop',t1+1e-6*header.si,'channels',channel_names,...
+		data = abfload3(filename,'start',t0,'stop',t1+1e-6*header.si,'channels',channel_names,...
 			'doDispInfo',false);
 		if size(data,3)>1, % sweeps are different, it seems to read in the whole thing and ignore the times
 			times = ndr.format.axon.read_abf(filename, header, 'time', 1, -inf, inf);
