@@ -45,7 +45,11 @@ data_file_main_version_number = fread(fid, 1, 'int16');
 data_file_secondary_version_number = fread(fid, 1, 'int16');
 
 % Read information of sampling rate and amplifier frequency settings.
-sample_rate = fread(fid, 1, 'single');
+if (data_file_main_version_number < 2)
+    sample_rate = fread(fid, 1, 'int32');
+else
+    sample_rate = fread(fid, 1, 'single');
+end
 dsp_enabled = fread(fid, 1, 'int16');
 actual_dsp_cutoff_frequency = fread(fid, 1, 'single');
 actual_lower_bandwidth = fread(fid, 1, 'single');
@@ -64,8 +68,13 @@ elseif (notch_filter_mode == 2)
 	notch_filter_frequency = 60;
 end
 
-desired_impedance_test_frequency = fread(fid, 1, 'single');
-actual_impedance_test_frequency = fread(fid, 1, 'single');
+if (data_file_main_version_number >= 1 && data_file_secondary_version_number >= 2)
+    desired_impedance_test_frequency = fread(fid, 1, 'single');
+    actual_impedance_test_frequency = fread(fid, 1, 'single');
+else
+    desired_impedance_test_frequency = fread(fid, 1, 'int16');
+    actual_impedance_test_frequency = fread(fid, 1, 'int16');
+end
 
 % Place notes in data strucure
 notes = struct( ...
@@ -91,6 +100,7 @@ end
 header.fileinfo = struct(...
 	'dirname',dirname,...
 	'filename',fname,...
+	'is_rhd_version_3_or_later', 0, ...
 	'filesize',filesize,...
 	'magic_number', magic_number,...
 	'data_file_main_version_number',data_file_main_version_number,...
@@ -137,7 +147,8 @@ channel_struct = struct( ...
 	'port_prefix', {}, ...
 	'port_number', {}, ...
 	'electrode_impedance_magnitude', {}, ...
-	'electrode_impedance_phase', {} );
+	'electrode_impedance_phase', {}, ...
+	'ref_channel_enabled', {} );
 
 new_channel = struct(channel_struct); % an empty structure to use to build a record for each channel
 
@@ -192,6 +203,10 @@ for signal_group = 1:number_of_signal_groups
 			if (channel_enabled)
 				switch (signal_type)
 					case 0 % amplifier channel
+						if (data_file_main_version_number >= 3)
+							new_channel(1).ref_channel_enabled = fread(fid, 1, 'int16');
+							header.fileinfo.is_rhd_version_3_or_later = 1;
+						end
 						header.amplifier_channels(amplifier_index) = new_channel;
 						header.spike_triggers(amplifier_index) = new_trigger_channel;
 						amplifier_index = amplifier_index + 1;
