@@ -45,11 +45,7 @@ data_file_main_version_number = fread(fid, 1, 'int16');
 data_file_secondary_version_number = fread(fid, 1, 'int16');
 
 % Read information of sampling rate and amplifier frequency settings.
-if (data_file_main_version_number < 2)
-    sample_rate = fread(fid, 1, 'int32');
-else
-    sample_rate = fread(fid, 1, 'single');
-end
+sample_rate = fread(fid, 1, 'single');
 dsp_enabled = fread(fid, 1, 'int16');
 actual_dsp_cutoff_frequency = fread(fid, 1, 'single');
 actual_lower_bandwidth = fread(fid, 1, 'single');
@@ -68,13 +64,8 @@ elseif (notch_filter_mode == 2)
 	notch_filter_frequency = 60;
 end
 
-if (data_file_main_version_number >= 1 && data_file_secondary_version_number >= 2)
-    desired_impedance_test_frequency = fread(fid, 1, 'single');
-    actual_impedance_test_frequency = fread(fid, 1, 'single');
-else
-    desired_impedance_test_frequency = fread(fid, 1, 'int16');
-    actual_impedance_test_frequency = fread(fid, 1, 'int16');
-end
+desired_impedance_test_frequency = fread(fid, 1, 'single');
+actual_impedance_test_frequency = fread(fid, 1, 'single');
 
 % Place notes in data strucure
 notes = struct( ...
@@ -97,15 +88,21 @@ if ((data_file_main_version_number == 1 && data_file_secondary_version_number >=
 		eval_board_mode = fread(fid, 1, 'int16');
 end
 
+reference_channel = '';
+if (data_file_main_version_number > 1),
+	reference_channel = ndr.format.intan.fread_QString(fid);
+end;
+
 header.fileinfo = struct(...
 	'dirname',dirname,...
 	'filename',fname,...
-	'is_rhd_version_3_or_later', 0, ...
 	'filesize',filesize,...
+	'is_rhd_version_3_or_later',0,...
 	'magic_number', magic_number,...
 	'data_file_main_version_number',data_file_main_version_number,...
 	'data_file_secondary_version_number',data_file_secondary_version_number,...
 	'eval_board_mode',eval_board_mode,...
+	'reference_channel',reference_channel,...
 	'notes',notes);
 
 % Place frequency-related information in data structure.
@@ -199,14 +196,15 @@ for signal_group = 1:number_of_signal_groups
 			new_trigger_channel(1).digital_edge_polarity = fread(fid, 1, 'int16');
 			new_channel(1).electrode_impedance_magnitude = fread(fid, 1, 'single');
 			new_channel(1).electrode_impedance_phase = fread(fid, 1, 'single');
+
+			if (data_file_main_version_number >= 3)
+				new_channel(1).ref_channel_enabled = fread(fid, 1, 'int16');
+				header.fileinfo.is_rhd_version_3_or_later = 1;
+			end;
             
 			if (channel_enabled)
 				switch (signal_type)
 					case 0 % amplifier channel
-						if (data_file_main_version_number >= 3)
-							new_channel(1).ref_channel_enabled = fread(fid, 1, 'int16');
-							header.fileinfo.is_rhd_version_3_or_later = 1;
-						end
 						header.amplifier_channels(amplifier_index) = new_channel;
 						header.spike_triggers(amplifier_index) = new_trigger_channel;
 						amplifier_index = amplifier_index + 1;
