@@ -448,6 +448,7 @@ else
       h.DACEpoch(1).fEpochLevelInc=h.fEpochLevelInc(1:10);
       h.DACEpoch(1).lEpochInitDuration=h.lEpochInitDuration(1:10);
       h.DACEpoch(1).lEpochDurationInc=h.lEpochDurationInc(1:10);
+      h.DACEpoch(1).sDACChannelUnit = deblank(h.sDACChannelUnit(1,:));
       if h.nDigitalEnable > 0
           h.DACEpoch(1).nDigitalValue = h.nDigitalValue;
           h.DACEpoch(1).nDigitalTrainValue = h.nDigitalTrainValue;
@@ -778,7 +779,11 @@ switch h.nOperationMode
                     end
                     pointStart = pointStart + duration;
                 end
-                dac_waveforms(:, i, dac_num) = waveform;
+                if h.fFileVersionNumber >= 2
+                    dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor + h.DACsec(dac_num).fDACHoldingLevel;
+                else
+                    dac_waveforms(:, i, dac_num) = waveform * h.fDACScaleFactor(dac_num) + h.fDACHoldingLevel(dac_num);
+                end
             end
         end
 
@@ -816,7 +821,11 @@ switch h.nOperationMode
         d = cat(2, d, dac_waveforms_permuted);
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
-            h.recChUnits{end+1} = 'pA';
+            if h.fFileVersionNumber >= 2
+                h.recChUnits{end+1} = h.recChUnits{h.DACEpoch(dac_num).nDACNum+1};
+            else
+                h.recChUnits{end+1} = h.DACEpoch(dac_num).sDACChannelUnit;
+            end
         end
 
         if digital_dac_num > 0
@@ -1038,7 +1047,11 @@ switch fileSig
      'fEpochLevelInc',1324,'float',repmat(-1,1,20);
      'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
      'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
+     'fDACScaleFactor', 1592, 'float', repmat(-1,1,2));
+     'fDACHoldingLevel', 1600, 'float', repmat(-1,1,2));
      'nDigitalEnable',1582,'int16',-1;
+     'sDACChannelName',1894,'uchar',repmat(-1,1,20));
+     'sDACChannelUnit',1914,'uchar',repmat(-1,1,16));
      'nDigitalValue',1684,'int16',repmat(-1,1,10);
      'nDigitalTrainValue',1704,'int16',repmat(-1,1,10);
      'nDigitalHolding',1724,'int16',-1;
