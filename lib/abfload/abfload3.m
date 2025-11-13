@@ -822,11 +822,11 @@ switch h.nOperationMode
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
             if h.fFileVersionNumber >= 2
-                unit = h.recChUnits{h.DACEpoch(dac_num).nDACNum+1};
+                unit = Strings{h.DACsec(dac_num).lDACChannelUnitsIndex};
             else
-                unit = h.DACEpoch(dac_num).sDACChannelUnit;
+                unit = deblank(char(h.DACEpoch(dac_num).sDACChannelUnit));
             end
-            if isempty(unit) || isspace(unit)
+            if isempty(unit) || all(isspace(unit))
                 unit = 'pA';
             end
             h.recChUnits{end+1} = unit;
