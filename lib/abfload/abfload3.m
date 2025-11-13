@@ -816,6 +816,7 @@ switch h.nOperationMode
         d = cat(2, d, dac_waveforms_permuted);
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
+            h.recChUnits{end+1} = 'pA';
         end
 
         if digital_dac_num > 0
@@ -823,6 +824,7 @@ switch h.nOperationMode
             d = cat(2, d, digital_waveforms_permuted);
             for i=1:8
                  h.recChNames{end+1} = ['DIGITAL_OUT_' int2str(i-1)];
+                 h.recChUnits{end+1} = '';
             end
         end
     end
