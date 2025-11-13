@@ -1047,11 +1047,11 @@ switch fileSig
      'fEpochLevelInc',1324,'float',repmat(-1,1,20);
      'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
      'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
-     'fDACScaleFactor', 1592, 'float', repmat(-1,1,2));
-     'fDACHoldingLevel', 1600, 'float', repmat(-1,1,2));
+     'fDACScaleFactor', 1592, 'float', repmat(-1,1,2);
+     'fDACHoldingLevel', 1600, 'float', repmat(-1,1,2);
      'nDigitalEnable',1582,'int16',-1;
-     'sDACChannelName',1894,'uchar',repmat(-1,1,20));
-     'sDACChannelUnit',1914,'uchar',repmat(-1,1,16));
+     'sDACChannelName',1894,'uchar',repmat(-1,1,20);
+     'sDACChannelUnit',1914,'uchar',repmat(-1,1,16);
      'nDigitalValue',1684,'int16',repmat(-1,1,10);
      'nDigitalTrainValue',1704,'int16',repmat(-1,1,10);
      'nDigitalHolding',1724,'int16',-1;
