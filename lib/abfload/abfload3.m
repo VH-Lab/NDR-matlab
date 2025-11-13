@@ -782,7 +782,7 @@ switch h.nOperationMode
                 if h.fFileVersionNumber >= 2
                     dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor / h.fInstrumentScaleFactor(dac_num) + h.DACsec(dac_num).fDACHoldingLevel;
                 else
-                    dac_waveforms(:, i, dac_num) = waveform * h.fDACScaleFactor(dac_num) + h.fDACHoldingLevel(dac_num);
+                    dac_waveforms(:, i, dac_num) = waveform;
                 end
             end
         end
