@@ -7,6 +7,8 @@ classdef intanTest < matlab.unittest.TestCase
             % Get a list of all .rhd files in the directory
             rhd_files = dir(fullfile(example_data_path, '*.rhd'));
 
+            testCase.assertNotEmpty(rhd_files, 'No .rhd files found in the example_data directory.');
+
             % Create a temporary directory for the output
             temp_dir = tempname;
             mkdir(temp_dir);
@@ -22,13 +24,60 @@ classdef intanTest < matlab.unittest.TestCase
 
                 % Run our lab's code
                 header = ndr.format.intan.read_Intan_RHD2000_header(filename);
-                amp_channels = 1:numel(header.amplifier_channels);
-                [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'amp',amp_channels,0,Inf);
 
-                % Compare the outputs
-                testCase.verifyEqual(our_data, manufacturer_output.amplifier_data', 'Amplifier data does not match');
+                % Amplifier channels
+                if isfield(header, 'amplifier_channels') && ~isempty(header.amplifier_channels)
+                    amp_channels = 1:numel(header.amplifier_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'amp',amp_channels,0,Inf);
+                    testCase.verifyEqual(our_data, manufacturer_output.amplifier_data', 'Amplifier data does not match');
+                end
 
-                % To do: compare time signals
+                % Time channel
+                if isfield(manufacturer_output, 't_amplifier')
+                    [our_time,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'time',1,0,Inf);
+                    testCase.verifyEqual(our_time, manufacturer_output.t_amplifier', 'Time data does not match');
+                end
+
+                % Aux channels
+                if isfield(header, 'aux_input_channels') && ~isempty(header.aux_input_channels)
+                    aux_channels = 1:numel(header.aux_input_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'aux',aux_channels,0,Inf);
+                    testCase.verifyEqual(our_data, manufacturer_output.aux_input_data', 'Aux data does not match');
+                end
+
+                % Supply channels
+                if isfield(header, 'supply_voltage_channels') && ~isempty(header.supply_voltage_channels)
+                    supply_channels = 1:numel(header.supply_voltage_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'supply',supply_channels,0,Inf);
+                    testCase.verifyEqual(our_data, manufacturer_output.supply_voltage_data', 'Supply data does not match');
+                end
+
+                % Temp channels
+                if isfield(manufacturer_output, 'temp_sensor_data')
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'temp',1,0,Inf);
+                    testCase.verifyEqual(our_data, manufacturer_output.temp_sensor_data', 'Temp data does not match');
+                end
+
+                % ADC channels
+                if isfield(header, 'board_adc_channels') && ~isempty(header.board_adc_channels)
+                    adc_channels = 1:numel(header.board_adc_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'adc',adc_channels,0,Inf);
+                    testCase.verifyEqual(our_data, manufacturer_output.board_adc_data', 'ADC data does not match');
+                end
+
+                % Din channels
+                if isfield(header, 'board_dig_in_channels') && ~isempty(header.board_dig_in_channels)
+                    din_channels = 1:numel(header.board_dig_in_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'din',din_channels,0,Inf);
+                    testCase.verifyEqual(logical(our_data), manufacturer_output.board_dig_in_data', 'Din data does not match');
+                end
+
+                % Dout channels
+                if isfield(header, 'board_dig_out_channels') && ~isempty(header.board_dig_out_channels)
+                    dout_channels = 1:numel(header.board_dig_out_channels);
+                    [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'dout',dout_channels,0,Inf);
+                    testCase.verifyEqual(logical(our_data), manufacturer_output.board_dig_out_data', 'Dout data does not match');
+                end
             end
 
             % Clean up the temporary directory
