@@ -240,6 +240,47 @@ classdef base
 				t0t1 = {[NaN NaN]};
 		end % t0_t1()
 
+		function t = samples2times(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, s)
+			% SAMPLES2TIMES - convert sample numbers to time
+			%
+			% T = SAMPLES2TIMES(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, S)
+			%
+			% Given sample numbers S, returns the time T of these samples.
+			%
+			% This function assumes a constant sampling rate. If the recording device permits
+			% gaps, then this function should be overridden.
+			%
+			% See also: ndr.reader.base/times2samples
+			%
+				sr = ndr_reader_base_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
+				sr_unique = unique(sr);
+				if numel(sr_unique)~=1,
+					error(['Do not know how to handle different sampling rates across channels.']);
+				end;
+				t0t1 = ndr_reader_base_obj.t0_t1(epochstreams, epoch_select);
+				t = ndr.time.fun.samples2times(s, t0t1{1}(1), sr_unique);
+		end; % samples2times()
+
+		function s = times2samples(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t)
+			% TIMES2SAMPLES - convert time to sample numbers
+			%
+			% S = TIMES2SAMPLES(NDR_READER_BASE_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T)
+			%
+			% Given sample times T, returns the sample numbers S of these samples.
+			%
+			% This function assumes a constant sampling rate. If the recording device permits
+			% gaps, then this function should be overridden.
+			%
+			% See also: ndr.reader.base/samples2times
+			%
+				sr = ndr_reader_base_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
+				sr_unique = unique(sr);
+				if numel(sr_unique)~=1,
+					error(['Do not know how to handle different sampling rates across channels.']);
+				end;
+				t0t1 = ndr_reader_base_obj.t0_t1(epochstreams, epoch_select);
+				s = ndr.time.fun.times2samples(t, t0t1{1}(1), sr_unique);
+		end; % times2samples()
 	end; % methods
 
 	methods (Static), % functions that don't need the object
