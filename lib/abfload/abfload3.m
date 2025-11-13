@@ -366,6 +366,14 @@ if h.fFileVersionNumber>=2
   h.fADCRange=ProtocolSec.fADCRange;
   h.lADCResolution=ProtocolSec.lADCResolution;
 
+  % --- read in the DAC and Epoch sections
+  for i=1:DACSection.llNumEntries
+    h.DACsec(i)=ReadSection(fid,DACSection.uBlockIndex*BLOCKSIZE+DACSection.uBytes*(i-1),DACInfo);
+  end
+  for i=1:EpochSection.llNumEntries
+    h.Esec(i)=ReadSection(fid,EpochSection.uBlockIndex*BLOCKSIZE+EpochSection.uBytes*(i-1),EpochInfo);
+  end
+
   % --- read in the Epoch section, rearrange values and place in header
   % struct h
   for i=1:EpochPerDACSection.llNumEntries
@@ -376,7 +384,7 @@ if h.fFileVersionNumber>=2
     uniqueAO=unique([EPDsec.nDACNum]);
     for k=1:numel(uniqueAO)
       % index to elements of EDPsec dealing with current AO channel
-      ix=[EPDsec.nDACNum]==uniqueAO(k);
+      ix=find([EPDsec.nDACNum]==uniqueAO(k));
       % struct DACEpoch contains one element per AO channel; the values of
       % its fields represent the values of the different epochs (columns
       % labeled A, B and so on in the waveform tab in clampex), the only
@@ -400,6 +408,14 @@ if h.fFileVersionNumber>=2
       for fIx=1:numel(fieldNm)
         h.DACEpoch(k).(fieldNm{fIx})=[EPDsec(ix).(fieldNm{fIx})];
       end
+      if h.DACsec(k).nWaveformEnable > 0 && h.DACsec(k).nWaveformSource > 0
+          if uniqueAO(k) == ProtocolSec.nActiveDACChannel
+              for i=1:numel(ix)
+                  h.DACEpoch(k).nDigitalValue(i) = h.Esec(ix(i)).nDigitalValue;
+                  h.DACEpoch(k).nDigitalTrainValue(i) = h.Esec(ix(i)).nDigitalTrainValue;
+              end
+          end
+      end
     end
   else
     h.DACEpoch=[];
@@ -409,14 +425,6 @@ if h.fFileVersionNumber>=2
   UserListSec=ReadSection(fid,UserListSection.uBlockIndex*BLOCKSIZE,UserListInfo);
   %   fseek(fid,UserListSec.lULParamValueListIndex*BLOCKSIZE,'bof');
   %   nada=fread(fid,100,'uchar=>char')
-
-  % --- read in the DAC and Epoch sections
-  for i=1:DACSection.llNumEntries
-    h.DACsec(i)=ReadSection(fid,DACSection.uBlockIndex*BLOCKSIZE+DACSection.uBytes*(i-1),DACInfo);
-  end
-  for i=1:EpochSection.llNumEntries
-    h.Esec(i)=ReadSection(fid,EpochSection.uBlockIndex*BLOCKSIZE+EpochSection.uBytes*(i-1),EpochInfo);
-  end
 
   % --- in contrast to procedures with all other sections do not read the
   % sync array section but rather copy the values of its fields to the
@@ -432,6 +440,28 @@ else
   TagSection.llNumEntries=h.lNumTagEntries;
   TagSection.uBlockIndex=h.lTagSectionPtr;
   TagSection.uBytes=64;
+
+  if h.nWaveformEnable(1) > 0 && h.nWaveformSource(1)>0
+      h.DACEpoch(1).nDACNum=0;
+      h.DACEpoch(1).nEpochType=h.nEpochType(1:10);
+      h.DACEpoch(1).fEpochInitLevel=h.fEpochInitLevel(1:10);
+      h.DACEpoch(1).fEpochLevelInc=h.fEpochLevelInc(1:10);
+      h.DACEpoch(1).lEpochInitDuration=h.lEpochInitDuration(1:10);
+      h.DACEpoch(1).lEpochDurationInc=h.lEpochDurationInc(1:10);
+      if h.nDigitalEnable > 0
+          h.DACEpoch(1).nDigitalValue = h.nDigitalValue;
+          h.DACEpoch(1).nDigitalTrainValue = h.nDigitalTrainValue;
+      end
+  end
+  if h.nWaveformEnable(2) > 0 && h.nWaveformSource(2)>0
+      h.DACEpoch(2).nDACNum=1;
+      h.DACEpoch(2).nEpochType=h.nEpochType(11:20);
+      h.DACEpoch(2).fEpochInitLevel=h.fEpochInitLevel(11:20);
+      h.DACEpoch(2).fEpochLevelInc=h.fEpochLevelInc(11:20);
+      h.DACEpoch(2).lEpochInitDuration=h.lEpochInitDuration(11:20);
+      h.DACEpoch(2).lEpochDurationInc=h.lEpochDurationInc(11:20);
+  end
+
 end
 % -------------------------------------------------------------------------
 %    PART 2d: groom parameters & perform some plausibility checks
@@ -729,6 +759,9 @@ switch h.nOperationMode
     if doLoadData && isfield(h,'DACEpoch') && ~isempty(h.DACEpoch)
         num_dacs = numel(h.DACEpoch);
         dac_waveforms = zeros(h.sweepLengthInPts, nSweeps, num_dacs);
+        digital_waveforms = zeros(h.sweepLengthInPts, nSweeps, 8); % 8 digital outputs
+
+        % --- Generate Analog DAC waveforms ---
         for dac_num=1:num_dacs
             for i=1:nSweeps
                 waveform = zeros(h.sweepLengthInPts, 1);
@@ -748,10 +781,49 @@ switch h.nOperationMode
                 dac_waveforms(:, i, dac_num) = waveform;
             end
         end
+
+        % --- Generate Digital waveforms ---
+        % Find the dac that has digital data associated with it
+        digital_dac_num = -1;
+        for dac_num=1:num_dacs
+            if isfield(h.DACEpoch(dac_num), 'nDigitalValue')
+                digital_dac_num = dac_num;
+                break;
+            end
+        end
+
+        if digital_dac_num > 0
+            for i=1:nSweeps
+                digital_waveform = zeros(h.sweepLengthInPts, 8);
+                pointStart = 0;
+                for epochIdx = 1:numel(h.DACEpoch(digital_dac_num).nEpochType)
+                    duration = h.DACEpoch(digital_dac_num).lEpochInitDuration(epochIdx) + (sweeps(i)-1) * h.DACEpoch(digital_dac_num).lEpochDurationInc(epochIdx);
+                    if pointStart + duration > h.sweepLengthInPts
+                        duration = h.sweepLengthInPts - pointStart;
+                    end
+                    if (duration > 0)
+                        digital_value = h.DACEpoch(digital_dac_num).nDigitalValue(epochIdx);
+                        digital_waveform(pointStart+1:pointStart+duration,:) = repmat(dec2bin(digital_value,8)-'0',duration,1);
+                    end
+                    pointStart = pointStart + duration;
+                end
+                digital_waveforms(:, i, :) = digital_waveform;
+            end
+        end
+
+        % --- Append DAC and Digital Waveforms to the data ---
         dac_waveforms_permuted = permute(dac_waveforms, [1 3 2]);
         d = cat(2, d, dac_waveforms_permuted);
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
+        end
+
+        if digital_dac_num > 0
+            digital_waveforms_permuted = permute(digital_waveforms, [1 3 2]);
+            d = cat(2, d, digital_waveforms_permuted);
+            for i=1:8
+                 h.recChNames{end+1} = ['DIGITAL_OUT_' int2str(i-1)];
+            end
         end
     end
 
@@ -956,6 +1028,19 @@ switch fileSig
      'fInstrumentOffset', 986, 'float', tmp;
      'fSignalGain', 1050, 'float', tmp;
      'fSignalOffset', 1114, 'float', tmp;
+     'nWaveformEnable',1198,'int16',[-1 -1];
+     'nWaveformSource',1200,'int16',[-1 -1];
+     'nInterEpisodeLevel',1202,'int16',[-1 -1];
+     'nEpochType',1204,'int16',repmat(-1,1,20);
+     'fEpochInitLevel',1244,'float',repmat(-1,1,20);
+     'fEpochLevelInc',1324,'float',repmat(-1,1,20);
+     'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
+     'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
+     'nDigitalEnable',1582,'int16',-1;
+     'nDigitalValue',1684,'int16',repmat(-1,1,10);
+     'nDigitalTrainValue',1704,'int16',repmat(-1,1,10);
+     'nDigitalHolding',1724,'int16',-1;
+     'nDigitalInterEpisode',1726,'int16',-1;
      'nTelegraphEnable',4512,'int16',tmp;
      'fTelegraphAdditGain',4576,'float',tmp
      };
