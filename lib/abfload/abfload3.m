@@ -448,7 +448,7 @@ else
       h.DACEpoch(1).fEpochLevelInc=h.fEpochLevelInc(1:10);
       h.DACEpoch(1).lEpochInitDuration=h.lEpochInitDuration(1:10);
       h.DACEpoch(1).lEpochDurationInc=h.lEpochDurationInc(1:10);
-      h.DACEpoch(1).sDACChannelUnit = deblank(h.sDACChannelUnit(1,:));
+      h.DACEpoch(1).sDACChannelUnit = deblank(char(h.sDACChannelUnit(1,:)));
       if h.nDigitalEnable > 0
           h.DACEpoch(1).nDigitalValue = h.nDigitalValue;
           h.DACEpoch(1).nDigitalTrainValue = h.nDigitalTrainValue;
@@ -782,7 +782,7 @@ switch h.nOperationMode
                 if h.fFileVersionNumber >= 2
                     dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor / h.fInstrumentScaleFactor(dac_num) + h.DACsec(dac_num).fDACHoldingLevel;
                 else
-                    dac_waveforms(:, i, dac_num) = waveform * h.fADCRange / h.lADCResolution;
+                    dac_waveforms(:, i, dac_num) = waveform * h.fDACScaleFactor(dac_num) + h.fDACHoldingLevel(dac_num);
                 end
             end
         end
@@ -1051,9 +1051,11 @@ switch fileSig
      'fEpochLevelInc',1324,'float',repmat(-1,1,20);
      'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
      'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
+     'fDACScaleFactor', 1592, 'float', repmat(-1,1,4);
+     'fDACHoldingLevel', 1608, 'float', repmat(-1,1,4);
      'nDigitalEnable',1582,'int16',-1;
      'sDACChannelName',1894,'uchar',repmat(-1,1,20);
-     'sDACChannelUnit',1914,'uchar',repmat(-1,1,16);
+     'sDACChannelUnit',1914,'uchar',repmat(-1,1,32);
      'nDigitalValue',1684,'int16',repmat(-1,1,10);
      'nDigitalTrainValue',1704,'int16',repmat(-1,1,10);
      'nDigitalHolding',1724,'int16',-1;
