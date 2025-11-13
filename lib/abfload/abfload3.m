@@ -448,6 +448,7 @@ else
       h.DACEpoch(1).fEpochLevelInc=h.fEpochLevelInc(1:10);
       h.DACEpoch(1).lEpochInitDuration=h.lEpochInitDuration(1:10);
       h.DACEpoch(1).lEpochDurationInc=h.lEpochDurationInc(1:10);
+      h.DACEpoch(1).sDACChannelUnit = deblank(char(h.sDACChannelUnit(1,:)));
       if h.nDigitalEnable > 0
           h.DACEpoch(1).nDigitalValue = h.nDigitalValue;
           h.DACEpoch(1).nDigitalTrainValue = h.nDigitalTrainValue;
@@ -778,7 +779,11 @@ switch h.nOperationMode
                     end
                     pointStart = pointStart + duration;
                 end
-                dac_waveforms(:, i, dac_num) = waveform;
+                if h.fFileVersionNumber >= 2
+                    dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor / h.fInstrumentScaleFactor(dac_num) + h.DACsec(dac_num).fDACHoldingLevel;
+                else
+                    dac_waveforms(:, i, dac_num) = waveform;
+                end
             end
         end
 
@@ -816,6 +821,15 @@ switch h.nOperationMode
         d = cat(2, d, dac_waveforms_permuted);
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
+            if h.fFileVersionNumber >= 2
+                unit = Strings{h.DACsec(dac_num).lDACChannelUnitsIndex};
+            else
+                unit = deblank(char(h.DACEpoch(dac_num).sDACChannelUnit));
+            end
+            if isempty(unit) || all(isspace(unit))
+                unit = 'pA';
+            end
+            h.recChUnits{end+1} = unit;
         end
 
         if digital_dac_num > 0
@@ -823,6 +837,7 @@ switch h.nOperationMode
             d = cat(2, d, digital_waveforms_permuted);
             for i=1:8
                  h.recChNames{end+1} = ['DIGITAL_OUT_' int2str(i-1)];
+                 h.recChUnits{end+1} = '';
             end
         end
     end
@@ -1036,7 +1051,11 @@ switch fileSig
      'fEpochLevelInc',1324,'float',repmat(-1,1,20);
      'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
      'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
+     'fDACScaleFactor', 1592, 'float', repmat(-1,1,4);
+     'fDACHoldingLevel', 1608, 'float', repmat(-1,1,4);
      'nDigitalEnable',1582,'int16',-1;
+     'sDACChannelName',1894,'uchar',repmat(-1,1,20);
+     'sDACChannelUnit',1914,'uchar',repmat(-1,1,32);
      'nDigitalValue',1684,'int16',repmat(-1,1,10);
      'nDigitalTrainValue',1704,'int16',repmat(-1,1,10);
      'nDigitalHolding',1724,'int16',-1;
