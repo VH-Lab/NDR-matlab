@@ -60,7 +60,7 @@ end;
 
 [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 
-total_samples = 60 * num_data_blocks;
+total_samples = header.fileinfo.num_samples_per_data_block * num_data_blocks;
 total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
 
 % NOW, WHICH DATA DID THE USER REQUEST US TO READ?
