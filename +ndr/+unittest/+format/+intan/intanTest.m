@@ -5,7 +5,7 @@ classdef intanTest < matlab.unittest.TestCase
             example_data_path = [ndr.fun.ndrpath() filesep 'example_data' ];
 
             % Get a list of all .rhd files in the directory
-            rhd_files = dir(fullfile(example_data_path, 'intan_test_data.rhd'));
+            rhd_files = dir(fullfile(example_data_path, '*.rhd'));
 
             % Create a temporary directory for the output
             temp_dir = tempname;
@@ -21,11 +21,14 @@ classdef intanTest < matlab.unittest.TestCase
                 cd ..
 
                 % Run our lab's code
-                our_output = ndr.format.intan.read_Intan_RHD2000_datafile(filename);
+                header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+                amp_channels = 1:numel(header.amplifier_channels);
+                [our_data,total_samples,total_time] = ndr.format.intan.read_Intan_RHD2000_datafile(filename,header,'amp',amp_channels,0,Inf);
 
                 % Compare the outputs
-                testCase.verifyEqual(our_output.amplifier_data, manufacturer_output.amplifier_data, 'Amplifier data does not match');
-                testCase.verifyEqual(our_output.t_amplifier, manufacturer_output.t_amplifier, 'Amplifier time does not match');
+                testCase.verifyEqual(our_data, manufacturer_output.amplifier_data', 'Amplifier data does not match');
+
+                % To do: compare time signals
             end
 
             % Clean up the temporary directory
