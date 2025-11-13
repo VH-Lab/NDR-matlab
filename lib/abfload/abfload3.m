@@ -780,9 +780,9 @@ switch h.nOperationMode
                     pointStart = pointStart + duration;
                 end
                 if h.fFileVersionNumber >= 2
-                    dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor + h.DACsec(dac_num).fDACHoldingLevel;
+                    dac_waveforms(:, i, dac_num) = waveform * h.DACsec(dac_num).fDACScaleFactor / h.fInstrumentScaleFactor(dac_num) + h.DACsec(dac_num).fDACHoldingLevel;
                 else
-                    dac_waveforms(:, i, dac_num) = waveform * h.fDACScaleFactor(dac_num) + h.fDACHoldingLevel(dac_num);
+                    dac_waveforms(:, i, dac_num) = waveform * h.fADCRange / h.lADCResolution;
                 end
             end
         end
@@ -822,10 +822,14 @@ switch h.nOperationMode
         for dac_num=1:num_dacs
             h.recChNames{end+1} = ['DAC_' int2str(h.DACEpoch(dac_num).nDACNum)];
             if h.fFileVersionNumber >= 2
-                h.recChUnits{end+1} = h.recChUnits{h.DACEpoch(dac_num).nDACNum+1};
+                unit = h.recChUnits{h.DACEpoch(dac_num).nDACNum+1};
             else
-                h.recChUnits{end+1} = h.DACEpoch(dac_num).sDACChannelUnit;
+                unit = h.DACEpoch(dac_num).sDACChannelUnit;
             end
+            if isempty(unit) || isspace(unit)
+                unit = 'pA';
+            end
+            h.recChUnits{end+1} = unit;
         end
 
         if digital_dac_num > 0
@@ -1047,8 +1051,6 @@ switch fileSig
      'fEpochLevelInc',1324,'float',repmat(-1,1,20);
      'lEpochInitDuration',1404,'int32',repmat(-1,1,20);
      'lEpochDurationInc',1484,'int32',repmat(-1,1,20);
-     'fDACScaleFactor', 1592, 'float', repmat(-1,1,2);
-     'fDACHoldingLevel', 1600, 'float', repmat(-1,1,2);
      'nDigitalEnable',1582,'int16',-1;
      'sDACChannelName',1894,'uchar',repmat(-1,1,20);
      'sDACChannelUnit',1914,'uchar',repmat(-1,1,16);
