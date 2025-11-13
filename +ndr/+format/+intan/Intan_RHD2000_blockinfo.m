@@ -93,4 +93,8 @@ bytes_per_block = block_offset;
 
 % How many data blocks are in this file?
 bytes_present = header.fileinfo.filesize - header.fileinfo.headersize;
-num_data_blocks = bytes_present / bytes_per_block;
+num_data_blocks_float = bytes_present / bytes_per_block;
+num_data_blocks = floor(num_data_blocks_float);
+if num_data_blocks~=num_data_blocks_float,
+	warning(['File ' filename ' may be truncated or corrupted. Proceeding with ' int2str(num_data_blocks) ' of ' num2str(num_data_blocks_float) ' data blocks.']);
+end;
