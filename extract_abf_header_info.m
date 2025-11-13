@@ -1,8 +1,8 @@
 % --- INSTRUCTIONS ---
 % 1. Make sure 'abfload3.m' is in your MATLAB path.
 % 2. Replace the placeholder path in the 'abfFilePath' variable below with the full path to your ABF file.
-% 3. Run this script. It will create a file named 'abf_header_info.mat' in your current MATLAB directory.
-% 4. Please upload the 'abf_header_info.mat' file for analysis.
+% 3. Run this script.
+% 4. Copy the entire text output from the MATLAB command window and paste it back for analysis.
 % --------------------
 
 % --- CONFIGURATION ---
@@ -23,13 +23,22 @@ try
     % Get the size of the data array
     d_size = size(d);
 
-    % Save the header and data size to a .mat file
-    outputFileName = 'abf_header_info.mat';
-    fprintf('Saving header info to: %s\n', outputFileName);
-    save(outputFileName, 'h', 'd_size');
+    % Display the header and data size
+    fprintf('\n--- ABF HEADER INFORMATION ---\n');
+    disp(h);
+
+    fprintf('\n--- DATA SIZE ---\n');
+    disp(d_size);
+
+    fprintf('\n--- DACEpoch FIELD ---\n');
+    if isfield(h, 'DACEpoch')
+        disp(h.DACEpoch);
+    else
+        fprintf('DACEpoch field not found in the header.\n');
+    end
 
     fprintf('\n--- DIAGNOSTIC SCRIPT COMPLETED SUCCESSFULLY ---\n');
-    fprintf('Please upload the file named ''%s'' for analysis.\n', outputFileName);
+    fprintf('Please copy and paste the full text output from the command window for analysis.\n');
 
 catch ME
     fprintf('\n--- AN ERROR OCCURRED ---\n');
