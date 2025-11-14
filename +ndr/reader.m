@@ -448,6 +448,34 @@ classdef reader
                 sr = ndr_reader_obj.ndr_reader_base.samplerate(epochstreams, epoch_select, channeltype, channel);
         end % samplerate()
 
+        function t = samples2times(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, s)
+            %SAMPLES2TIMES - convert sample numbers to time
+            %
+            %   T = SAMPLES2TIMES(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, S)
+            %
+            %   Given sample numbers S, returns the time T of these samples.
+            %
+            %   This function calls the samples2times method of the ndr.reader.base object.
+            %
+            %   See also: ndr.reader.base/samples2times
+            %
+            t = ndr_reader_obj.ndr_reader_base.samples2times(channeltype, channel, epochstreams, epoch_select, s);
+        end % samples2times()
+
+        function s = times2samples(ndr_reader_obj, channeltype, channel, epochstreams, epoch_select, t)
+            %TIMES2SAMPLES - convert time to sample numbers
+            %
+            %   S = TIMES2SAMPLES(NDR_READER_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T)
+            %
+            %   Given sample times T, returns the sample numbers S of these samples.
+            %
+            %   This function calls the times2samples method of the ndr.reader.base object.
+            %
+            %   See also: ndr.reader.base/times2samples
+            %
+            s = ndr_reader_obj.ndr_reader_base.times2samples(channeltype, channel, epochstreams, epoch_select, t);
+        end % times2samples()
+
     end % methods
 end % classdef
 
