@@ -7,6 +7,7 @@ header = struct();
 header.fileinfo.headersize = 100;
 header.fileinfo.filesize = 2048;
 header.frequency_parameters.amplifier_sample_rate = 20000;
+header.frequency_parameters.aux_input_sample_rate = 5000;
 header.amplifier_channels = struct('native_channel_name', 'A-000');
 header.aux_input_channels = struct();
 header.supply_voltage_channels = struct();
