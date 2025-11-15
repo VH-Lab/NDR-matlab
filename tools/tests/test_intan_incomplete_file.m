@@ -3,12 +3,22 @@
 % 1. Create a dummy .rhd file with a partial data block.
 
 % Create a dummy header
-header = struct();
-header.fileinfo.headersize = 100;
-header.fileinfo.filesize = 2048;
-
 sample_rate = 20000;
 num_samples_per_data_block = 60;
+
+header = struct();
+header.fileinfo = struct(...
+	'dirname', '.', ...
+	'filename', 'test_incomplete_file',...
+	'filesize', 0, ... % will be updated later
+	'magic_number', hex2dec('c6912702'),...
+	'data_file_main_version_number', 1,...
+	'data_file_secondary_version_number', 2,...
+	'eval_board_mode',0,...
+    'reference_channel','',...
+    'num_samples_per_data_block',num_samples_per_data_block,...
+	'notes',struct('note1','','note2','','note3',''));
+header.fileinfo.headersize = 100;
 
 header.frequency_parameters = struct( ...
 	'amplifier_sample_rate', sample_rate, ...
@@ -64,9 +74,6 @@ header.board_adc_channels.native_channel_name = 'ANALOG-IN-00';
 header.board_dig_in_channels = empty_channel_struct;
 header.board_dig_out_channels = empty_channel_struct;
 header.num_temp_sensor_channels = 0;
-header.fileinfo.eval_board_mode = 0;
-header.fileinfo.data_file_main_version_number = 1;
-header.fileinfo.data_file_secondary_version_number = 2;
 
 
 % Create a dummy file
@@ -83,8 +90,8 @@ dummy_data = zeros(1, floor(bytes_per_block * 1.5), 'uint8');
 fwrite(fid, dummy_data, 'uint8');
 fclose(fid);
 
-header.fileinfo.filesize = ftell(fopen(filename,'r'));
-frewind(fopen(filename,'r'));
+s = dir(filename);
+header.fileinfo.filesize = s.bytes;
 
 % 2. Call ndr.format.intan.read_Intan_RHD2000_datafile to read the file.
 disp('Testing with incomplete file...');
