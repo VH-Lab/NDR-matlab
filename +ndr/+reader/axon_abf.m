@@ -173,6 +173,10 @@ classdef axon_abf < ndr.reader.base
 				% in abfread, the reader reads up to s1 -1 instead of s1
 				data = ndr.format.axon.read_abf(filename,header,channeltype{1},channel,T(1),T(2));
 
+				if numel(channel) == 1
+					data = data(:);
+				end
+
 		end % ndr.reader.axon_abf.readchannels_epochsamples
 		
 		function sr = samplerate(axon_abf_obj, epochstreams, epoch_select, channeltype, channel)
@@ -278,7 +282,7 @@ classdef axon_abf < ndr.reader.base
 			%
 			% This function overrides the base class to handle gaps by reading the time channel.
 			%
-				t_all = axon_abf_obj.readchannels_epochsamples('time', 1, epochstreams, epoch_select, -inf, inf);
+				t_all = axon_abf_obj.readchannels_epochsamples({'time'}, 1, epochstreams, epoch_select, -inf, inf);
 				t_all = t_all(:);
 				s_all = (1:numel(t_all))';
 
@@ -294,7 +298,7 @@ classdef axon_abf < ndr.reader.base
 			%
 			% This function overrides the base class to handle gaps by reading the time channel.
 			%
-				t_all = axon_abf_obj.readchannels_epochsamples('time', 1, epochstreams, epoch_select, -inf, inf);
+				t_all = axon_abf_obj.readchannels_epochsamples({'time'}, 1, epochstreams, epoch_select, -inf, inf);
 				t_all = t_all(:);
 				s_all = (1:numel(t_all))';
 

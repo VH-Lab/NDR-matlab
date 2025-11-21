@@ -9,22 +9,20 @@ classdef TestAxonAbf < matlab.unittest.TestCase
             % Define a time vector with a gap (simulating concatenated sweeps)
             % Sweep 1: 0, 0.1, 0.2
             % Sweep 2: 0.4, 0.5 (Gap of 0.2 between 0.2 and 0.4, assuming dt=0.1)
-            t_vec = [0 0.1 0.2 0.4 0.5]';
+            t_vec = [0; 0.1; 0.2; 0.4; 0.5];
             reader = ndr.unittest.reader.MockAxonAbf(t_vec);
 
-            % Test exact samples
-            s = [1 2 3 4 5];
+            % Test exact samples - Use Column Vector for s
+            s = [1; 2; 3; 4; 5];
             t = reader.samples2times('ai', 1, {}, 1, s);
 
-            % Ensure expected has same shape as output/input (interp1 respects input shape)
+            % Expect column output
             expected_t = t_vec(s);
-            % Force shape match to be robust
-            expected_t = reshape(expected_t, size(s));
 
             testCase.verifyEqual(t, expected_t, 'AbsTol', 1e-9);
 
             % Test interpolation within a sweep
-            s_interp = 1.5; % Between sample 1 (0.0) and 2 (0.1)
+            s_interp = 1.5; % Scalar
             t_interp = reader.samples2times('ai', 1, {}, 1, s_interp);
             expected = 0.05;
             testCase.verifyEqual(t_interp, expected, 'AbsTol', 1e-9);
@@ -37,14 +35,14 @@ classdef TestAxonAbf < matlab.unittest.TestCase
         end
 
         function testTimes2Samples(testCase)
-            t_vec = [0 0.1 0.2 0.4 0.5]';
+            t_vec = [0; 0.1; 0.2; 0.4; 0.5];
             reader = ndr.unittest.reader.MockAxonAbf(t_vec);
 
-            % Test exact times
-            t = [0 0.1 0.2 0.4 0.5];
+            % Test exact times - Use Column Vector
+            t = [0; 0.1; 0.2; 0.4; 0.5];
             s = reader.times2samples('ai', 1, {}, 1, t);
-            expected_s = [1 2 3 4 5];
-            % Verify s matches expected_s (row vector)
+            expected_s = [1; 2; 3; 4; 5];
+            % Verify s matches expected_s (column vector)
             testCase.verifyEqual(s, expected_s);
 
             % Test interpolation & rounding
