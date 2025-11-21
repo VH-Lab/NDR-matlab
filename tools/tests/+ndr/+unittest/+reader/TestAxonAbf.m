@@ -15,7 +15,13 @@ classdef TestAxonAbf < matlab.unittest.TestCase
             % Test exact samples
             s = [1 2 3 4 5];
             t = reader.samples2times('ai', 1, {}, 1, s);
-            testCase.verifyEqual(t, t_vec(s), 'AbsTol', 1e-9);
+
+            % Ensure expected has same shape as output/input (interp1 respects input shape)
+            expected_t = t_vec(s);
+            % Force shape match to be robust
+            expected_t = reshape(expected_t, size(s));
+
+            testCase.verifyEqual(t, expected_t, 'AbsTol', 1e-9);
 
             % Test interpolation within a sweep
             s_interp = 1.5; % Between sample 1 (0.0) and 2 (0.1)
@@ -38,7 +44,8 @@ classdef TestAxonAbf < matlab.unittest.TestCase
             t = [0 0.1 0.2 0.4 0.5];
             s = reader.times2samples('ai', 1, {}, 1, t);
             expected_s = [1 2 3 4 5];
-            testCase.verifyEqual(s, expected_s');
+            % Verify s matches expected_s (row vector)
+            testCase.verifyEqual(s, expected_s);
 
             % Test interpolation & rounding
             % t=0.05 -> s=1.5 -> round to 2
