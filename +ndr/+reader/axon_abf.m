@@ -173,6 +173,10 @@ classdef axon_abf < ndr.reader.base
 				% in abfread, the reader reads up to s1 -1 instead of s1
 				data = ndr.format.axon.read_abf(filename,header,channeltype{1},channel,T(1),T(2));
 
+				if numel(channel) == 1
+					data = data(:);
+				end
+
 		end % ndr.reader.axon_abf.readchannels_epochsamples
 		
 		function sr = samplerate(axon_abf_obj, epochstreams, epoch_select, channeltype, channel)
@@ -269,6 +273,38 @@ classdef axon_abf < ndr.reader.base
 				end;
                 end; % daqchannels2internalchannels
 
+		function t = samples2times(axon_abf_obj, channeltype, channel, epochstreams, epoch_select, s)
+			% SAMPLES2TIMES - convert sample numbers to time
+			%
+			% T = SAMPLES2TIMES(AXON_ABF_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, S)
+			%
+			% Given sample numbers S, returns the time T of these samples.
+			%
+			% This function overrides the base class to handle gaps by reading the time channel.
+			%
+				t_all = axon_abf_obj.readchannels_epochsamples({'time'}, 1, epochstreams, epoch_select, -inf, inf);
+				t_all = t_all(:);
+				s_all = (1:numel(t_all))';
+
+				t = interp1(s_all, t_all, s, 'linear', 'extrap');
+		end % samples2times
+
+		function s = times2samples(axon_abf_obj, channeltype, channel, epochstreams, epoch_select, t)
+			% TIMES2SAMPLES - convert time to sample numbers
+			%
+			% S = TIMES2SAMPLES(AXON_ABF_OBJ, CHANNELTYPE, CHANNEL, EPOCHSTREAMS, EPOCH_SELECT, T)
+			%
+			% Given sample times T, returns the sample numbers S of these samples.
+			%
+			% This function overrides the base class to handle gaps by reading the time channel.
+			%
+				t_all = axon_abf_obj.readchannels_epochsamples({'time'}, 1, epochstreams, epoch_select, -inf, inf);
+				t_all = t_all(:);
+				s_all = (1:numel(t_all))';
+
+				s = interp1(t_all, s_all, t, 'linear', 'extrap');
+				s = round(s);
+		end % times2samples
 		
 	end % methods
 	
