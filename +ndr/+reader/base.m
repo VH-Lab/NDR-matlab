@@ -258,7 +258,7 @@ classdef base
 					error(['Do not know how to handle different sampling rates across channels.']);
 				end;
 				t0t1 = ndr_reader_base_obj.t0_t1(epochstreams, epoch_select);
-				t = ndr.time.fun.samples2times(s, t0t1{1}(1), sr_unique);
+				t = ndr.time.fun.samples2times(s, t0t1{1}, sr_unique);
 		end; % samples2times()
 
 		function s = times2samples(ndr_reader_base_obj, channeltype, channel, epochstreams, epoch_select, t)
@@ -279,7 +279,7 @@ classdef base
 					error(['Do not know how to handle different sampling rates across channels.']);
 				end;
 				t0t1 = ndr_reader_base_obj.t0_t1(epochstreams, epoch_select);
-				s = ndr.time.fun.times2samples(t, t0t1{1}(1), sr_unique);
+				s = ndr.time.fun.times2samples(t, t0t1{1}, sr_unique);
 		end; % times2samples()
 	end; % methods
 
