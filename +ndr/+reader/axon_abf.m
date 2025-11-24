@@ -161,17 +161,20 @@ classdef axon_abf < ndr.reader.base
 					s1_ = 1;
 				end;
 
-				sr = axon_abf_obj.get_samplerate_from_header(header, channel);
-				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
-					error(['Do not know how to handle different sampling rates across channels.']);
+				if strcmpi(channeltype{1},'time'),
+					% we want to avoid infinite recursion
+					t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
+					T = t0t1{1};
+				else,
+					T = axon_abf_obj.samples2times(channeltype{1}, channel, epochstreams, epoch_select, [s0_ s1_]);
 				end;
-
-				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
-				T = ndr.time.fun.samples2times([s0_ s1_], t0t1{1}, sr_unique);
 
 				% in abfread, the reader reads up to s1 -1 instead of s1
 				data = ndr.format.axon.read_abf(filename,header,channeltype{1},channel,T(1),T(2));
+
+				if strcmpi(channeltype{1},'time'),
+					data = data(s0_:s1_);
+				end;
 
 				if numel(channel) == 1
 					data = data(:);
