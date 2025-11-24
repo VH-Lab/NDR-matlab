@@ -79,10 +79,10 @@ classdef axon_abf < ndr.reader.base
 
 				channels(1) = struct('name','t1','type','time','time_channel',1);
 
-				for i=1:numel(header.recChNames),
+				for i=1:numel(header.recChNames)
 					channels(end+1) = struct('name',['ai' int2str(i)],...
 							'type','analog_in', 'time_channel', 1);
-				end;
+				end
 		end % ndr.reader.axon_abf.getchannelsepoch
 
         function [datatype,p,datasize] = underlying_datatype(axon_abf_obj, epochstreams, epoch_select, channeltype, channel)
@@ -107,25 +107,25 @@ classdef axon_abf < ndr.reader.base
             header = ndr.format.axon.read_abf_header(filename);
             
             switch(channeltype)
-                case {'analog_in','analog_out','auxiliary_in'},
+                case {'analog_in','analog_out','auxiliary_in'}
                     % For the abstract class, keep the data in doubles. This will always work but may not
                     % allow for optimal compression if not overridden
                     datasize = ndr.fun.bitDepth(header.lADCResolution);
                     datatype = ndr.fun.getDataTypeString(true,true,datasize);
                     p = [0 header.fADCRange/header.lADCResolution];
-                case {'time'},
+                case {'time'}
                     datatype = 'float64';
                     datasize = 64;
                     p = [0 1];
-                case {'digital_in','digital_out'},
+                case {'digital_in','digital_out'}
                     datatype = 'char';
                     datasize = 8;
                     p = [0 1];
-                case {'eventmarktext','event','marker','text'},
+                case {'eventmarktext','event','marker','text'}
                     datatype = 'float64';
                     datasize = 64;
                     p = [0 1];
-                otherwise,
+                otherwise
                     error(['Unknown channel type ' channeltype '.']);
             end
         end
@@ -148,30 +148,33 @@ classdef axon_abf < ndr.reader.base
 				[filename] = axon_abf_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.axon.read_abf_header(filename);
 
-				if ~iscell(channeltype),
+				if ~iscell(channeltype)
 					channeltype = repmat({channeltype},numel(channel),1);
-				end;
+				end
 				maxSamples = header.lActualAcqLength / header.nADCNumChannels;
 				s0_ = max(1, s0);
-				if isinf(s0_), % could be positive inf
+				if isinf(s0_) % could be positive inf
 					s0_ = maxSamples;
-				end;
+				end
 				s1_ = min(maxSamples, s1);
-				if isinf(s1_), % could be negative infinity
+				if isinf(s1_) % could be negative infinity
 					s1_ = 1;
-				end;
+				end
 
-				sr = axon_abf_obj.get_samplerate_from_header(header, channel);
-				sr_unique = unique(sr); % get all sample rates
-				if numel(sr_unique)~=1,
-					error(['Do not know how to handle different sampling rates across channels.']);
-				end;
-
-				t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
-				T = ndr.time.fun.samples2times([s0_ s1_], t0t1{1}, sr_unique);
+				if strcmpi(channeltype{1},'time')
+					% we want to avoid infinite recursion
+					t0t1 = axon_abf_obj.get_t0_t1_from_header(header);
+					T = t0t1{1};
+				else
+					T = axon_abf_obj.samples2times(channeltype{1}, channel, epochstreams, epoch_select, [s0_ s1_]);
+				end
 
 				% in abfread, the reader reads up to s1 -1 instead of s1
 				data = ndr.format.axon.read_abf(filename,header,channeltype{1},channel,T(1),T(2));
+
+				if strcmpi(channeltype{1},'time')
+					data = data(s0_:s1_);
+				end
 
 				if numel(channel) == 1
 					data = data(:);
@@ -191,9 +194,9 @@ classdef axon_abf < ndr.reader.base
 			%  If CHANNELTYPE is a single string, then it is assumed that that
 			%  CHANNELTYPE applies to every entry of CHANNEL.
 			%
-				if epoch_select~=1,
+				if epoch_select~=1
 					error(['ABF files have 1 epoch per file.']);
-				end;
+				end
 				
 				filename = axon_abf_obj.filenamefromepochfiles(epochstreams);
 			    
@@ -213,12 +216,12 @@ classdef axon_abf < ndr.reader.base
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
 		    
 				index = find(tf);
-				if numel(index)==0,
+				if numel(index)==0
 					error(['Need at least 1 .abf file per epoch.']);
-				else,
+				else
 					filename = filename_array{index(1)};
 				end
-		end; % ndr.reader.axon_abf.filenamefromepochfiles
+		end % ndr.reader.axon_abf.filenamefromepochfiles
 
 		function channelstruct = daqchannels2internalchannels(ndr_reader_axon_abf_obj, channelprefix, channelnumber, epochstreams, epoch_select)
 			% DAQCHANNELS2INTERNALCHANNELS - convert a set of DAQ channel prefixes and channel numbers to an internal structure to pass to internal reading functions
@@ -259,7 +262,7 @@ classdef axon_abf < ndr.reader.base
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');
 
-				for i=1:numel(channels),
+				for i=1:numel(channels)
 					newentry.internal_type = channels(i).type;
 					[CHANNELNAMEPREFIX, numericchannel] = ndr.string.channelstring2channels(channels(i).name);
 					newentry.internal_number = numericchannel;
@@ -267,11 +270,11 @@ classdef axon_abf < ndr.reader.base
 					newentry.ndr_type = ndr.reader.base.mfdaq_type(newentry.internal_type);
 					newentry.samplerate = ndr_reader_axon_abf_obj.samplerate(epochstreams,epoch_select,...
 						CHANNELNAMEPREFIX, numericchannel);
-					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) ),
+					if any(   (newentry.internal_number(:) == channelnumber) & strcmp(channelprefix,CHANNELNAMEPREFIX) )
 						channelstruct(end+1) = newentry;
-					end;
-				end;
-                end; % daqchannels2internalchannels
+					end
+				end
+                end % daqchannels2internalchannels
 
 		function t = samples2times(axon_abf_obj, channeltype, channel, epochstreams, epoch_select, s)
 			% SAMPLES2TIMES - convert sample numbers to time
@@ -316,7 +319,7 @@ classdef axon_abf < ndr.reader.base
             if isfield(header,'uFileStartDate')
     			dt = ndr.format.axon.abfTimeToDatetime(header.uFileStartDate,header.uFileStartTimeMS);
 	    		t0t1{2} = [datenum(dt) datenum(dt+seconds(t1))];
-            end;
+            end
 		end
 
 		function sr = get_samplerate_from_header(header, channel)
