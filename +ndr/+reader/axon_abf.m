@@ -173,6 +173,9 @@ classdef axon_abf < ndr.reader.base
 				data = ndr.format.axon.read_abf(filename,header,channeltype{1},channel,T(1),T(2));
 
 				if strcmpi(channeltype{1},'time')
+                    if s1_ == numel(data) + 1 % sometimes this is a sample short
+                        data(s1_) = data(s1_-1)+mean(diff(data));
+                    end;
 					data = data(s0_:s1_);
 				end
 
