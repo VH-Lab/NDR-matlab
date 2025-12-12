@@ -103,6 +103,16 @@ end
 			
 				remove = {'startbyte','bit','number'};
 				channels = rmfield(channels, remove);
+
+				% Add time channel
+				time_channel = struct('name','t1','type','time');
+				if isempty(channels),
+					channels = time_channel;
+				else,
+					channels = [time_channel; channels(:)];
+				end;
+
+				[channels.time_channel] = deal(1);
 		end
 
 	

@@ -176,8 +176,10 @@ classdef intan_rhd < ndr.reader.base
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
 			
-				channels = vlt.data.emptystruct('name','type');
-		    
+				channels = vlt.data.emptystruct('name','type','time_channel');
+
+				channels(1) = struct('name','t1','type','time','time_channel',1);
+
 				intan_channel_types = {
 					'amplifier_channels'
 					'aux_input_channels'
@@ -205,6 +207,7 @@ classdef intan_rhd < ndr.reader.base
 							intan_rhd_obj,...
 							channel_type_entry,...
 							channel(p));
+						newchannel.time_channel = 1;
 						channels(end+1) = newchannel;
 					end
 				end
