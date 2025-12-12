@@ -21,6 +21,7 @@ classdef axon_abf < ndr.reader.base
 			%  Creates a Neuroscience Data Reader object of the Axon Instruments
 			%  ABF file format.
 			%
+            axon_abf_obj.MightHaveTimeGaps = true;
 		end % ndr.reader.axon_abf.axon_abf
 
         function ec = epochclock(axon_abf_obj, epochstreams, epoch_select)

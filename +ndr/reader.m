@@ -476,6 +476,18 @@ classdef reader
             s = ndr_reader_obj.ndr_reader_base.times2samples(channeltype, channel, epochstreams, epoch_select, t);
         end % times2samples()
 
+        function b = MightHaveTimeGaps(ndr_reader_obj)
+            %MIGHTHAVETIMEGAPS - does the reader potentially have time gaps?
+            %
+            %   B = MIGHTHAVETIMEGAPS(NDR_READER_OBJ)
+            %
+            %   Returns true if the underlying reader might have time gaps, false otherwise.
+            %
+            %   See also: ndr.reader.base/MightHaveTimeGaps
+            %
+            b = ndr_reader_obj.ndr_reader_base.MightHaveTimeGaps;
+        end % MightHaveTimeGaps()
+
     end % methods
 end % classdef
 

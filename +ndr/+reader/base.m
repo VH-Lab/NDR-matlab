@@ -1,5 +1,9 @@
 classdef base
 
+	properties (SetAccess=protected)
+		MightHaveTimeGaps = false; % Boolean: true if the reader might have time gaps, false otherwise
+	end
+
 	methods
 		function ndr_reader_base_obj = base(ndr_reader_type)
 			% READER - create a new Neuroscience Data Reader Base object
