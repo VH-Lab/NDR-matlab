@@ -179,7 +179,7 @@ switch fFileSignature
     % ************************
     %     abf version >= 2.0
     % ************************
-  otherwise
+    otherwise
     error(['unknown or incompatible file signature: ' fFileSignature]);
 end
 
@@ -428,7 +428,7 @@ end
 % -------------------------------------------------------------------------
 if h.lActualAcqLength<h.nADCNumChannels
   fclose(fid);
-  error('less data points than sampled channels in file');
+  error(['less data points than sampled channels in file: ' fn]);
 end
 % the numerical value of all recorded channels (numbers 0..15)
 recChIdx=h.nADCSamplingSeq(1:h.nADCNumChannels);

@@ -82,5 +82,63 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             header = ndr.format.intan.read_Intan_RHD2000_header(rhd_file);
             testCase.verifyNotEmpty(header);
         end
+
+        function testChannelNameParsing(testCase)
+            % Test parsing of Intan channel names to MFDAQ names
+
+            % Valid cases
+            names = {'A-000', 'B-005', 'AUX1', 'AUX2', 'DIN-00'};
+            types = {'analog_in', 'analog_in', 'auxiliary_in', 'auxiliary_in', 'digital_in'};
+            expected = {'ai1', 'ai6', 'ax1', 'ax2', 'di1'};
+
+            for i = 1:length(names)
+                result = ndr.reader.intan_rhd.intanname2mfdaqname([], types{i}, names{i});
+                testCase.verifyEqual(result, expected{i}, ...
+                    ['Failed to convert ' names{i} ' (' types{i} ') to ' expected{i}]);
+            end
+        end
+
+        function testChannelStructParsing(testCase)
+            % Test parsing using channel struct and chip_channel fallback
+
+            % Case 1: Name parsing fails, use chip_channel
+            % Assume 'AUX' name but chip_channel 0 -> 'ax1'
+            channel_struct.native_channel_name = 'AUX';
+            channel_struct.chip_channel = 0;
+            type = 'auxiliary_in';
+
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], type, channel_struct);
+            testCase.verifyEqual(result, 'ax1', 'Failed fallback to chip_channel for AUX');
+
+            % Case 2: Name parsing works, ignore chip_channel (or ensure consistency)
+            channel_struct.native_channel_name = 'AUX2';
+            channel_struct.chip_channel = 99; % Should be ignored if name parses?
+            % My logic uses name first.
+
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], type, channel_struct);
+            testCase.verifyEqual(result, 'ax2', 'Should use name if parseable');
+
+            % Case 3: Struct without chip_channel
+            channel_struct2.native_channel_name = 'A-000';
+            % no chip_channel field
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], 'analog_in', channel_struct2);
+            testCase.verifyEqual(result, 'ai1', 'Should work without chip_channel field');
+        end
+
+        function testAuxSampleRate(testCase)
+            % Test that samplerate works for auxiliary_in
+            reader = ndr.reader.intan_rhd();
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+            epochstreams = {rhd_file};
+            epoch_select = 1;
+
+            % This should not error now
+            sr = reader.samplerate(epochstreams, epoch_select, 'auxiliary_in', 1);
+
+            % Check if it returns a valid number (header frequency_parameters are usually populated)
+            testCase.verifyNotEmpty(sr);
+            testCase.verifyTrue(isnumeric(sr));
+        end
     end
 end
