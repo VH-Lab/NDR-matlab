@@ -97,5 +97,32 @@ classdef TestIntanRhd < matlab.unittest.TestCase
                     ['Failed to convert ' names{i} ' (' types{i} ') to ' expected{i}]);
             end
         end
+
+        function testChannelStructParsing(testCase)
+            % Test parsing using channel struct and chip_channel fallback
+
+            % Case 1: Name parsing fails, use chip_channel
+            % Assume 'AUX' name but chip_channel 0 -> 'ax1'
+            channel_struct.native_channel_name = 'AUX';
+            channel_struct.chip_channel = 0;
+            type = 'auxiliary_in';
+
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], type, channel_struct);
+            testCase.verifyEqual(result, 'ax1', 'Failed fallback to chip_channel for AUX');
+
+            % Case 2: Name parsing works, ignore chip_channel (or ensure consistency)
+            channel_struct.native_channel_name = 'AUX2';
+            channel_struct.chip_channel = 99; % Should be ignored if name parses?
+            % My logic uses name first.
+
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], type, channel_struct);
+            testCase.verifyEqual(result, 'ax2', 'Should use name if parseable');
+
+            % Case 3: Struct without chip_channel
+            channel_struct2.native_channel_name = 'A-000';
+            % no chip_channel field
+            result = ndr.reader.intan_rhd.intanname2mfdaqname([], 'analog_in', channel_struct2);
+            testCase.verifyEqual(result, 'ai1', 'Should work without chip_channel field');
+        end
     end
 end

@@ -204,7 +204,7 @@ classdef intan_rhd < ndr.reader.base
 						newchannel.name = intan_rhd_obj.intanname2mfdaqname(...
 							intan_rhd_obj,...
 							channel_type_entry,...
-							channel(p).native_channel_name);
+							channel(p));
 						channels(end+1) = newchannel;
 					end
 				end
@@ -453,15 +453,30 @@ classdef intan_rhd < ndr.reader.base
 				end;
 		end; % ndr.reader.intan_rhd.intanchanneltype2mfdaqchanneltype()
 	
-		function [channame] = intanname2mfdaqname(intan_rhd_obj, type, name)
+		function [channame] = intanname2mfdaqname(intan_rhd_obj, type, name_or_struct)
 			% INTANNAME2MFDAQNAME - Converts a channel name from Intan native format to ndr.ndr.reader.mfdaq format
 			%
-			%  [CHANNAME] = INTANNAME2MFDAQNAME(NDR_NDRREADER_INTANREADER_OBJ, TYPE, NAME)
+			%  [CHANNAME] = INTANNAME2MFDAQNAME(NDR_NDRREADER_INTANREADER_OBJ, TYPE, NAME_OR_STRUCT)
 			%
 			%  Given an Intan native channel name (e.g., 'A-000') in NAME and an
 			%  ndr.ndr.reader.mfdaq channel type string (see NDI_DEVICE_MFDAQ), this function
 			%  produces an ndr.ndr.reader.mfdaq channel name (e.g., 'ai1').
 			%
+			%  NAME_OR_STRUCT can also be the Intan channel structure (with fields 'native_channel_name', 'chip_channel', etc).
+			%
+
+				if isstruct(name_or_struct),
+					name = name_or_struct.native_channel_name;
+					if isfield(name_or_struct, 'chip_channel'),
+						chip_channel = name_or_struct.chip_channel;
+					else
+						chip_channel = [];
+					end
+				else,
+					name = name_or_struct;
+					chip_channel = [];
+				end;
+
 				sep = find(name=='-');
 				if ~isempty(sep),
 					chan_intan = str2num(name(sep(end)+1:end));
@@ -479,6 +494,13 @@ classdef intan_rhd < ndr.reader.base
 						end;
 					else,
 						chan = [];
+					end;
+				end;
+
+				if isempty(chan),
+					% if we couldn't parse the name, try to use the chip_channel if available
+					if ~isempty(chip_channel),
+						chan = chip_channel + 1; % assume 0-based chip channel
 					end;
 				end;
 
