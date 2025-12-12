@@ -463,9 +463,30 @@ classdef intan_rhd < ndr.reader.base
 			%  produces an ndr.ndr.reader.mfdaq channel name (e.g., 'ai1').
 			%
 				sep = find(name=='-');
-				chan_intan = str2num(name(sep+1:end));
-				chan = chan_intan + 1; % Intan numbers from 0
-				channame = [ndr.reader.base.mfdaq_prefix(type) int2str(chan)];
+				if ~isempty(sep),
+					chan_intan = str2num(name(sep(end)+1:end));
+					chan = chan_intan + 1; % Intan numbers from 0
+				else,
+					% try to find a number at the end
+					[s,e] = regexp(name,'\d+$');
+					if ~isempty(s),
+						chan_intan = str2num(name(s:e));
+						if strncmpi(type,'aux',3) | strncmpi(type,'ax',2),
+							% Intan aux channels are named AUX1, AUX2, etc, so they are 1-based
+							chan = chan_intan;
+						else,
+							chan = chan_intan + 1; % assume 0-based
+						end;
+					else,
+						chan = [];
+					end;
+				end;
+
+				if isempty(chan),
+					channame = [ndr.reader.base.mfdaq_prefix(type)]; % fallback
+				else,
+					channame = [ndr.reader.base.mfdaq_prefix(type) int2str(chan)];
+				end;
 		end; % ndr.reader.intan_rhd.intanname2mfdaqname
 		
 		function headername = mfdaqchanneltype2intanfreqheader(channeltype)

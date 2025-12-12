@@ -82,5 +82,20 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             header = ndr.format.intan.read_Intan_RHD2000_header(rhd_file);
             testCase.verifyNotEmpty(header);
         end
+
+        function testChannelNameParsing(testCase)
+            % Test parsing of Intan channel names to MFDAQ names
+
+            % Valid cases
+            names = {'A-000', 'B-005', 'AUX1', 'AUX2', 'DIN-00'};
+            types = {'analog_in', 'analog_in', 'auxiliary_in', 'auxiliary_in', 'digital_in'};
+            expected = {'ai1', 'ai6', 'ax1', 'ax2', 'di1'};
+
+            for i = 1:length(names)
+                result = ndr.reader.intan_rhd.intanname2mfdaqname([], types{i}, names{i});
+                testCase.verifyEqual(result, expected{i}, ...
+                    ['Failed to convert ' names{i} ' (' types{i} ') to ' expected{i}]);
+            end
+        end
     end
 end
