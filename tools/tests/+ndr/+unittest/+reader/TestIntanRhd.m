@@ -124,5 +124,21 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             result = ndr.reader.intan_rhd.intanname2mfdaqname([], 'analog_in', channel_struct2);
             testCase.verifyEqual(result, 'ai1', 'Should work without chip_channel field');
         end
+
+        function testAuxSampleRate(testCase)
+            % Test that samplerate works for auxiliary_in
+            reader = ndr.reader.intan_rhd();
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+            epochstreams = {rhd_file};
+            epoch_select = 1;
+
+            % This should not error now
+            sr = reader.samplerate(epochstreams, epoch_select, 'auxiliary_in', 1);
+
+            % Check if it returns a valid number (header frequency_parameters are usually populated)
+            testCase.verifyNotEmpty(sr);
+            testCase.verifyTrue(isnumeric(sr));
+        end
     end
 end

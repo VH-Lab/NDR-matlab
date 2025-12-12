@@ -525,7 +525,7 @@ classdef intan_rhd < ndr.reader.base
 					    headername = 'board_dig_in_sample_rate';
 					case {'time','timestamp'},
 					    headername = 'amplifier_sample_rate';
-					case{'auxiliary','aux'},
+					case{'auxiliary','aux','auxiliary_in'},
 					    headername = 'aux_input_sample_rate';
 					otherwise,
 					    error(['Do not know frequency header for channel type ' channeltype '.']);
