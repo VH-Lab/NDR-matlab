@@ -51,13 +51,15 @@ classdef ced_smr < ndr.reader.base
 
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
-				channels(1) = struct('name','t1','type','time','time_channel',1);
+				if isempty(header.channelinfo),
+					channels = struct('name','t1','type','time','time_channel',1);
+				end;
 
 				for k=1:length(header.channelinfo),
 					%header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
-					newchannel.time_channel = 1;
+					newchannel.time_channel = header.channelinfo(k).number;
 					channels(end+1) = newchannel;
 				end
 		end % getchannels()

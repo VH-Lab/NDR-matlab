@@ -105,14 +105,13 @@ end
 				channels = rmfield(channels, remove);
 
 				% Add time channel
-				time_channel = struct('name','t1','type','time');
 				if isempty(channels),
-					channels = time_channel;
+					channels = struct('name','t1','type','time','time_channel',1);
 				else,
+					[channels.time_channel] = deal(1);
+					time_channel = struct('name','t1','type','time','time_channel',1);
 					channels = [time_channel; channels(:)];
 				end;
-
-				[channels.time_channel] = deal(1);
 		end
 
 	
