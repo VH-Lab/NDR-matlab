@@ -42,7 +42,7 @@ classdef ced_smr < ndr.reader.base
 				if epochselect~=1, 
 				    error(['For CED SOM/SMR files, epochselect should be 1.']);
 				end;
-				channels = vlt.data.emptystruct('name','type');
+				channels = vlt.data.emptystruct('name','type','time_channel');
 
 				% open SMR files, and examine the headers for all channels present
 				%   for any new channel that hasn't been identified before,
@@ -52,13 +52,14 @@ classdef ced_smr < ndr.reader.base
 				header = ndr.format.ced.read_SOMSMR_header(filename);
 
 				if isempty(header.channelinfo),
-					channels = struct('name','t1','type','time');
+					channels = struct('name','t1','type','time','time_channel',1);
 				end;
 
 				for k=1:length(header.channelinfo),
 					%header.channelinfo(k).kind
 					newchannel.type = ndr.reader.ced_smr.cedsmrheader2readerchanneltype(header.channelinfo(k).kind);
 					newchannel.name = [ ndr.reader.base.mfdaq_prefix(newchannel.type) int2str(header.channelinfo(k).number) ];
+					newchannel.time_channel = header.channelinfo(k).number;
 					channels(end+1) = newchannel;
 				end
 		end % getchannels()

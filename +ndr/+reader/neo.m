@@ -12,10 +12,14 @@ classdef neo < ndr.reader.base
       py_channels = py.neo_python.getchannelsepoch(epochfiles, epochselect);
 
       % Formatting objects from python to matlab
-      channels = vlt.data.emptystruct('name', 'type');
+      channels = vlt.data.emptystruct('name', 'type', 'time_channel');
+
+      channels(1) = struct('name','t1','type','time','time_channel',1);
+
       for k = 1:length(py_channels)
         new_channel.type = char(py_channels{k}{'type'});
         new_channel.name = char(py_channels{k}{'name'});
+        new_channel.time_channel = 1;
         channels(end + 1) = new_channel;
       end
     end

@@ -131,11 +131,10 @@ classdef base
 			% 'name'             | The name of the channel (e.g., 'ai1')
 			% 'type'             | The type of data stored in the channel
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
+			% 'time_channel'     | The index of the time channel that describes the time of this channel
 			%
 			%
-			%
-				channels = struct('name',[],'type',[]);
-				channels = channels([]);
+				channels = vlt.data.emptystruct('name','type','time_channel');
 		end; % getchannelsepoch()
 
         function [datatype,p,datasize] = underlying_datatype(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)

@@ -176,8 +176,6 @@ classdef intan_rhd < ndr.reader.base
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
 			
-				channels = vlt.data.emptystruct('name','type');
-		    
 				intan_channel_types = {
 					'amplifier_channels'
 					'aux_input_channels'
@@ -192,6 +190,14 @@ classdef intan_rhd < ndr.reader.base
 
 				filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
 				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+
+				channels = vlt.data.emptystruct('name','type','time_channel');
+
+				channels(1) = struct('name','t1','type','time','time_channel',1);
+
+				if isfield(header,'aux_input_channels') & ~isempty(header.aux_input_channels),
+					channels(2) = struct('name','t2','type','time','time_channel',2);
+				end;
 		    
 				for k=1:length(intan_channel_types)
 					if isfield(header,intan_channel_types{k}),
@@ -205,6 +211,11 @@ classdef intan_rhd < ndr.reader.base
 							intan_rhd_obj,...
 							channel_type_entry,...
 							channel(p));
+						if strcmpi(newchannel.type,'auxiliary_in'),
+							newchannel.time_channel = 2;
+						else,
+							newchannel.time_channel = 1;
+						end;
 						channels(end+1) = newchannel;
 					end
 				end
