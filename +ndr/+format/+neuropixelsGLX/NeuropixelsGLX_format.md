@@ -93,16 +93,18 @@ between file-order channel indices and original probe channel numbers.
 
 ## Voltage Conversion
 
-Raw int16 values are converted to volts using:
+Raw int16 values are converted to volts using the official SpikeGLX formula:
 
 ```
-volts = int16_value * Vrange / (2 * maxInt * gain)
+volts = int16_value * imAiRangeMax / imMaxInt / gain
 ```
 
 where:
-- `Vrange = imAiRangeMax - imAiRangeMin` (typically 1.2 V)
-- `maxInt = imMaxInt` (typically 512 for NP1.0, 8192 for NP2.0)
-- `gain` = per-channel gain from `imroTbl` (typically 500 for AP, 250 for LF)
+- `imAiRangeMax` = maximum ADC voltage (typically 0.6 V)
+- `imMaxInt` = maximum ADC integer (512 for NP1.0, 8192 for NP2.0)
+- `gain` = per-channel gain from `imroTbl` (typically 500 for NP1.0 AP, 250 for LF; 80 for NP2.0)
+
+This yields ~2.34 uV/bit for NP1.0 AP and ~0.915 uV/bit for NP2.0 AP.
 
 ## NDR Design Decisions
 

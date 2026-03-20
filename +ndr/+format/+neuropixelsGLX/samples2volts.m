@@ -7,13 +7,14 @@ function volts = samples2volts(data, info)
 %   parameters from the meta file header.
 %
 %   The conversion formula for Neuropixels imec channels is:
-%       volts = double(data) * Vrange / (2 * maxInt * totalGain)
+%       volts = double(data) * imAiRangeMax / imMaxInt / gain
 %
-%   where Vrange = imAiRangeMax - imAiRangeMin, maxInt = imMaxInt, and
-%   totalGain is parsed from the imroTbl (per-channel gains).
+%   where imAiRangeMax and imMaxInt come from the meta file and gain is
+%   the per-channel gain from the imroTbl. This matches the official
+%   SpikeGLX MATLAB tools (SGLX_readMeta.m).
 %
-%   For simplicity, this function applies a uniform gain. If per-channel
-%   gains are needed, use the imroTbl field from the meta structure.
+%   Per-channel gains are automatically parsed from the imroTbl field.
+%   If imroTbl is absent, default gains are used (500 for AP, 250 for LF).
 %
 %   Inputs:
 %       DATA - N x C int16 matrix of raw samples.
@@ -34,7 +35,7 @@ function volts = samples2volts(data, info)
         info (1,1) struct
     end
 
-    vrange = info.voltage_range(2) - info.voltage_range(1);
+    vmax = info.voltage_range(2); % imAiRangeMax
 
     % Parse per-channel gains from imroTbl if available
     if isfield(info.meta, 'imroTbl')
@@ -43,11 +44,10 @@ function volts = samples2volts(data, info)
         if numel(gains) >= n_chans
             gains = gains(1:n_chans);
         else
-            % Pad with the last gain value if data has fewer channels
             gains = [gains, repmat(gains(end), 1, n_chans - numel(gains))];
         end
-        % Apply per-channel conversion
-        volts = double(data) .* (vrange ./ (2 * info.max_int .* gains));
+        % Official formula: V = int16 * imAiRangeMax / imMaxInt / gain
+        volts = double(data) .* (vmax ./ (info.max_int .* gains));
     else
         % Default gain for Neuropixels 1.0 AP band
         if strcmpi(info.stream_type, 'ap')
@@ -55,7 +55,7 @@ function volts = samples2volts(data, info)
         else
             default_gain = 250;
         end
-        volts = double(data) * vrange / (2 * info.max_int * default_gain);
+        volts = double(data) * vmax / (info.max_int * default_gain);
     end
 
 end

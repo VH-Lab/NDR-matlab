@@ -315,8 +315,8 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
             raw = int16([512; -512; 0; 256]);
             volts = ndr.format.neuropixelsGLX.samples2volts(raw, info);
 
-            % Expected: raw * 1.2 / (2 * 512 * 500)
-            scale = 1.2 / (2 * 512 * 500);
+            % Official formula: raw * imAiRangeMax / imMaxInt / gain
+            scale = 0.6 / (512 * 500);
             expected = double(raw) * scale;
 
             testCase.verifyEqual(volts, expected, 'AbsTol', 1e-12, 'Wrong voltage conversion.');
