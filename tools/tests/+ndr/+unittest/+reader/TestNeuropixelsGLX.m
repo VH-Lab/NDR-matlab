@@ -49,13 +49,14 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
             testCase.BinFilename = fullfile(subdir, 'test_g0_t0.imec0.ap.bin');
 
             % Generate test data: each neural channel i has values
-            % (i-1)*100 + (1:NumSamples), sync channel is all zeros
+            % (i-1)*50 + (1:NumSamples), sync channel is all zeros.
+            % Step of 50 keeps max value (383*50+1000=20150) within int16 range.
             nSamples = testCase.NumSamples;
             nTotal = testCase.NumTotalChans;
             data = zeros(nSamples, nTotal, 'int16');
 
             for c = 1:NumNeuralChans
-                start_val = (c-1) * 100 + 1;
+                start_val = (c-1) * 50 + 1;
                 end_val = start_val + nSamples - 1;
                 data(:, c) = int16(start_val:end_val)';
             end
@@ -242,8 +243,8 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
 
             % Verify data content
             for c = 1:nChans
-                expected_start = int16((c-1) * 100 + s0);
-                expected_end = int16((c-1) * 100 + s1);
+                expected_start = int16((c-1) * 50 + s0);
+                expected_end = int16((c-1) * 50 + s1);
                 testCase.verifyEqual(data(1, c), expected_start, ...
                     ['Wrong first sample for channel ' int2str(c)]);
                 testCase.verifyEqual(data(end, c), expected_end, ...
@@ -269,8 +270,8 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
 
             for k = 1:numel(channelsToRead)
                 c = channelsToRead(k);
-                expected_start = int16((c-1) * 100 + s0);
-                expected_end = int16((c-1) * 100 + s1);
+                expected_start = int16((c-1) * 50 + s0);
+                expected_end = int16((c-1) * 50 + s1);
                 testCase.verifyEqual(data(:, k), int16(expected_start:expected_end)', ...
                     ['Wrong data for channel ' int2str(c)]);
             end
