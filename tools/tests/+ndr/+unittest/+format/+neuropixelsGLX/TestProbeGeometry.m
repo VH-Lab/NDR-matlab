@@ -43,7 +43,7 @@ classdef TestProbeGeometry < matlab.unittest.TestCase
         function metafile = writeNP10Meta(testCase, n_chans, bank_values)
         %WRITENP10META Write a NP 1.0 .meta file with imroTbl (no snsGeomMap).
         %   bank_values is [n_chans x 1] array of bank indices (0,1,2).
-            if nargin < 4
+            if nargin < 3
                 bank_values = zeros(n_chans, 1);
             end
             imro = sprintf('(0,%d)', n_chans);
