@@ -210,32 +210,52 @@ classdef neuropixelsGLX < ndr.reader.base
         end
 
         function metafile = filenamefromepochfiles(obj, filename_array)
-            %FILENAMEFROMEPOCHFILES Identify the .ap.meta file from epoch file list.
+            %FILENAMEFROMEPOCHFILES Identify the companion .meta file from epoch file list.
             %
             %   METAFILE = FILENAMEFROMEPOCHFILES(OBJ, FILENAME_ARRAY)
             %
-            %   Searches the cell array FILENAME_ARRAY for a file matching
-            %   the pattern *.meta (e.g., .ap.meta, .lf.meta, .nidq.meta).
-            %   Returns the full path. Errors if zero or more than one match
-            %   is found.
+            %   Finds the .meta file that is the companion to the .bin file
+            %   in the epoch file list. The .meta file must have the same
+            %   base name as the .bin file (e.g., run.nidq.bin -> run.nidq.meta).
+            %   This allows other .meta files to be present in the epoch for
+            %   synchronization purposes.
             %
             % See also: ndr.reader.base
 
-            metafile = '';
-            count = 0;
+            % First, find the .bin file
+            binfile = '';
             for i = 1:numel(filename_array)
-                if endsWith(filename_array{i}, '.meta', 'IgnoreCase', true)
-                    metafile = filename_array{i};
-                    count = count + 1;
+                if endsWith(filename_array{i}, '.bin', 'IgnoreCase', true)
+                    binfile = filename_array{i};
+                    break;
                 end
             end
 
-            if count == 0
-                error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
-                    'No .meta file found in the epoch file list.');
-            elseif count > 1
-                error('ndr:reader:neuropixelsGLX:MultipleMetaFiles', ...
-                    'Multiple .meta files found. Each epoch should have exactly one.');
+            if ~isempty(binfile)
+                % Derive the expected .meta filename from the .bin filename
+                metafile = [binfile(1:end-3) 'meta'];
+                % Verify it exists in the file list or on disk
+                if ~any(strcmp(filename_array, metafile)) && ~isfile(metafile)
+                    error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
+                        'No companion .meta file found for %s.', binfile);
+                end
+            else
+                % No .bin file; fall back to finding a single .meta file
+                metafile = '';
+                count = 0;
+                for i = 1:numel(filename_array)
+                    if endsWith(filename_array{i}, '.meta', 'IgnoreCase', true)
+                        metafile = filename_array{i};
+                        count = count + 1;
+                    end
+                end
+                if count == 0
+                    error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
+                        'No .meta file found in the epoch file list.');
+                elseif count > 1
+                    error('ndr:reader:neuropixelsGLX:MultipleMetaFiles', ...
+                        'Multiple .meta files found and no .bin file to disambiguate.');
+                end
             end
         end
 
