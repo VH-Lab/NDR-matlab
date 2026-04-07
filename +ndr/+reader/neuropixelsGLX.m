@@ -122,12 +122,18 @@ classdef neuropixelsGLX < ndr.reader.base
             %   [DATATYPE, P, DATASIZE] = UNDERLYING_DATATYPE(OBJ, EPOCHSTREAMS,
             %       EPOCH_SELECT, CHANNELTYPE, CHANNEL)
             %
+            %   CHANNELTYPE may be a char vector or a cell array of char
+            %   vectors. If a cell array, all entries must be the same type.
+            %
             %   For analog_in channels: int16, [0 1], 16 bits.
             %   For time channels: double (computed), [0 1], 64 bits.
             %   For digital_in channels: int16 (sync word), [0 1], 16 bits.
             %
             % See also: ndr.reader.base/underlying_datatype
 
+            if iscell(channeltype)
+                channeltype = channeltype{1};
+            end
             switch lower(channeltype)
                 case {'analog_in', 'ai'}
                     datatype = 'int16';
@@ -156,11 +162,18 @@ classdef neuropixelsGLX < ndr.reader.base
             %   Reads data between sample S0 and S1 (inclusive, 1-based).
             %   Returns an (S1-S0+1) x numel(CHANNEL) matrix.
             %
+            %   CHANNELTYPE may be a char vector or a cell array of char
+            %   vectors. If a cell array, all entries must be the same type.
+            %
             %   For 'analog_in': returns int16 neural data.
             %   For 'time': returns double time stamps in seconds.
             %   For 'digital_in': returns int16 sync word values.
             %
             % See also: ndr.format.neuropixelsGLX.read
+
+            if iscell(channeltype)
+                channeltype = channeltype{1};
+            end
 
             metafile = obj.filenamefromepochfiles(epochstreams);
             info = ndr.format.neuropixelsGLX.header(metafile);
