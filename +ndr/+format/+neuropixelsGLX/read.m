@@ -44,8 +44,8 @@ function [data, t, t0_t1] = read(binfilename, t0, t1, options)
         binfilename (1,:) char {mustBeFile}
         t0 (1,1) double
         t1 (1,1) double
-        options.numChans (1,1) {mustBeInteger, mustBePositive} = 0
-        options.SR (1,1) {mustBeNumeric, mustBePositive} = 0
+        options.numChans (1,1) {mustBeInteger, mustBeNonnegative} = 0
+        options.SR (1,1) {mustBeNumeric, mustBeNonnegative} = 0
         options.channels (1,:) {mustBeNumeric, mustBeInteger, mustBePositive} = []
     end
 
