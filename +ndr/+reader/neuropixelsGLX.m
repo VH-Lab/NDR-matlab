@@ -1,9 +1,9 @@
 classdef neuropixelsGLX < ndr.reader.base
-%NDR.READER.NEUROPIXELSGLX - Reader class for Neuropixels SpikeGLX AP-band data.
+%NDR.READER.NEUROPIXELSGLX - Reader class for SpikeGLX data (AP, LF, NIDQ).
 %
-%   This class reads action-potential band data from Neuropixels probes
-%   acquired with the SpikeGLX software. Each instance handles one probe's
-%   AP stream (one .ap.bin / .ap.meta file pair per epoch).
+%   This class reads data from Neuropixels probes and NI-DAQ devices
+%   acquired with the SpikeGLX software. Each instance handles one stream
+%   (one .bin / .meta file pair per epoch).
 %
 %   SpikeGLX saves Neuropixels data as flat interleaved int16 binary files
 %   with companion .meta text files. The binary files have no header.
@@ -215,15 +215,16 @@ classdef neuropixelsGLX < ndr.reader.base
             %   METAFILE = FILENAMEFROMEPOCHFILES(OBJ, FILENAME_ARRAY)
             %
             %   Searches the cell array FILENAME_ARRAY for a file matching
-            %   the pattern *.ap.meta. Returns the full path. Errors if
-            %   zero or more than one match is found.
+            %   the pattern *.meta (e.g., .ap.meta, .lf.meta, .nidq.meta).
+            %   Returns the full path. Errors if zero or more than one match
+            %   is found.
             %
             % See also: ndr.reader.base
 
             metafile = '';
             count = 0;
             for i = 1:numel(filename_array)
-                if endsWith(filename_array{i}, '.ap.meta', 'IgnoreCase', true)
+                if endsWith(filename_array{i}, '.meta', 'IgnoreCase', true)
                     metafile = filename_array{i};
                     count = count + 1;
                 end
@@ -231,10 +232,10 @@ classdef neuropixelsGLX < ndr.reader.base
 
             if count == 0
                 error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
-                    'No .ap.meta file found in the epoch file list.');
+                    'No .meta file found in the epoch file list.');
             elseif count > 1
                 error('ndr:reader:neuropixelsGLX:MultipleMetaFiles', ...
-                    'Multiple .ap.meta files found. Each epoch should have exactly one.');
+                    'Multiple .meta files found. Each epoch should have exactly one.');
             end
         end
 
