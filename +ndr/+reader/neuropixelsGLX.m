@@ -186,14 +186,6 @@ classdef neuropixelsGLX < ndr.reader.base
                     data = ndr.time.fun.samples2times((s0:s1)', t0t1{1}, info.sample_rate);
 
                 case {'analog_in', 'ai'}
-                    % Read neural channels (1-based channel numbers map to
-                    % file columns 1:n_neural_chans)
-                    [data, ~] = ndr.format.neuropixelsGLX.read(binfile, -Inf, Inf, ...
-                        'numChans', info.n_saved_chans, ...
-                        'SR', info.sample_rate, ...
-                        'channels', channel);
-                    % The read function returns the full file; we need to
-                    % subset by sample range. Instead, use binarymatrix directly.
                     data = read_samples(binfile, info, uint32(channel), s0, s1);
 
                 case {'digital_in', 'di'}
