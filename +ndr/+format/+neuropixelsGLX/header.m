@@ -83,11 +83,15 @@ function info = header(metafilename)
             info.n_neural_chans = counts(1);
         end
     elseif isfield(meta, 'snsMnMaXaDw')
-        % NI-DAQ stream
+        % NI-DAQ stream: MN,MA,XA,DW
         info.stream_type = 'nidq';
         counts = sscanf(meta.snsMnMaXaDw, '%d,%d,%d,%d');
-        info.n_neural_chans = counts(1); % MN channels
-        info.n_sync_chans = 0;
+        info.n_mn_chans = counts(1);  % multiplexed neural
+        info.n_ma_chans = counts(2);  % multiplexed analog
+        info.n_xa_chans = counts(3);  % non-multiplexed analog
+        info.n_dw_chans = counts(4);  % digital words
+        info.n_neural_chans = counts(1) + counts(2) + counts(3);
+        info.n_sync_chans = counts(4);
     else
         % Fallback
         info.stream_type = 'unknown';
@@ -107,6 +111,10 @@ function info = header(metafilename)
         vmax = str2double(meta.imAiRangeMax);
         vmin = str2double(meta.imAiRangeMin);
         info.voltage_range = [vmin vmax];
+    elseif isfield(meta, 'niAiRangeMax')
+        vmax = str2double(meta.niAiRangeMax);
+        vmin = str2double(meta.niAiRangeMin);
+        info.voltage_range = [vmin vmax];
     else
         info.voltage_range = [-0.6 0.6]; % Neuropixels 1.0 default
     end
@@ -114,8 +122,18 @@ function info = header(metafilename)
     % Max integer value
     if isfield(meta, 'imMaxInt')
         info.max_int = str2double(meta.imMaxInt);
+    elseif isfield(meta, 'niMaxInt')
+        info.max_int = str2double(meta.niMaxInt);
     else
         info.max_int = 512; % Neuropixels 1.0 default
+    end
+
+    % NI-DAQ gains
+    if isfield(meta, 'niMNGain')
+        info.ni_mn_gain = str2double(meta.niMNGain);
+    end
+    if isfield(meta, 'niMAGain')
+        info.ni_ma_gain = str2double(meta.niMAGain);
     end
 
     % Bits per sample

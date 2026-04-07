@@ -23,10 +23,13 @@ function [data, t, t0_t1] = read(binfilename, t0, t1, options)
 %       SR          - Sampling rate in Hz (positive double, default: from .meta).
 %       channels    - 1-based vector of channel indices to read (default: []
 %                     meaning all channels). Must be within [1, numChans].
+%       scale       - If true (default), convert raw int16 data to volts
+%                     using ndr.format.neuropixelsGLX.samples2volts. Requires
+%                     a companion .meta file. If false, return raw int16.
 %
 %   Outputs:
-%       DATA   - N x C int16 matrix, where N is the number of time samples
-%                and C is the number of channels read.
+%       DATA   - N x C matrix of samples. Double volts if scale is true,
+%                int16 raw values if scale is false.
 %       T      - N x 1 double vector of time points in seconds.
 %       T0_T1  - 1x2 double vector [startTime endTime] for the full file.
 %
@@ -47,21 +50,27 @@ function [data, t, t0_t1] = read(binfilename, t0, t1, options)
         options.numChans (1,1) {mustBeInteger, mustBeNonnegative} = 0
         options.SR (1,1) {mustBeNumeric, mustBeNonnegative} = 0
         options.channels (1,:) {mustBeNumeric, mustBeInteger, mustBePositive} = []
+        options.scale (1,1) logical = true
     end
 
-    % If numChans or SR not provided, read from companion .meta file
-    if options.numChans == 0 || options.SR == 0
-        metafilename = [binfilename(1:end-3) 'meta'];
+    % Read companion .meta file if needed for numChans/SR or scaling
+    metafilename = [binfilename(1:end-3) 'meta'];
+    info = [];
+    if options.numChans == 0 || options.SR == 0 || options.scale
         if ~isfile(metafilename)
-            error('ndr:format:neuropixelsGLX:read:NoMetaFile', ...
-                'No .meta file found at %s and numChans/SR not specified.', metafilename);
-        end
-        info = ndr.format.neuropixelsGLX.header(metafilename);
-        if options.numChans == 0
-            options.numChans = info.n_saved_chans;
-        end
-        if options.SR == 0
-            options.SR = info.sample_rate;
+            if options.numChans == 0 || options.SR == 0
+                error('ndr:format:neuropixelsGLX:read:NoMetaFile', ...
+                    'No .meta file found at %s and numChans/SR not specified.', metafilename);
+            end
+            % scale requested but no meta file; will skip scaling below
+        else
+            info = ndr.format.neuropixelsGLX.header(metafilename);
+            if options.numChans == 0
+                options.numChans = info.n_saved_chans;
+            end
+            if options.SR == 0
+                options.SR = info.sample_rate;
+            end
         end
     end
 
@@ -124,12 +133,21 @@ function [data, t, t0_t1] = read(binfilename, t0, t1, options)
         'byteOrder', 'ieee-le', ...
         'headerSkip', uint64(0));
 
+    % Scale to volts if requested and header info is available
+    if options.scale && ~isempty(info) && ~isempty(data)
+        data = ndr.format.neuropixelsGLX.samples2volts(data, info, double(channelsToRead));
+    end
+
     % Generate time vector
     if ~isempty(data)
         t = ndr.time.fun.samples2times((s0_actual:s1_actual)', t0_t1, SR);
     else
         t = [];
-        data = int16([]);
+        if ~options.scale
+            data = int16([]);
+        else
+            data = double([]);
+        end
     end
 
 end
