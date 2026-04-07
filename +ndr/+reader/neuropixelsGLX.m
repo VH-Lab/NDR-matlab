@@ -179,6 +179,13 @@ classdef neuropixelsGLX < ndr.reader.base
             info = ndr.format.neuropixelsGLX.header(metafile);
             binfile = [metafile(1:end-4) 'bin'];
 
+            % Clamp s0/s1 to valid sample range
+            totalSamples = info.file_size_bytes / (info.n_saved_chans * 2);
+            s0 = max(1, s0);
+            if isinf(s0), s0 = totalSamples; end
+            s1 = min(totalSamples, s1);
+            if isinf(s1), s1 = 1; end
+
             switch lower(channeltype)
                 case {'time', 'timestamp', 't'}
                     % Compute time from sample numbers
