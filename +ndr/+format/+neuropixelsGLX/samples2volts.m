@@ -47,31 +47,48 @@ function volts = samples2volts(data, info, channels)
     n_chans = size(data, 2);
 
     if strcmpi(info.stream_type, 'nidq')
-        % NI-DAQ stream: build gain vector for all channels, then select
-        all_gains = build_nidq_gains(info, info.n_saved_chans);
+        % NI-DAQ stream: build gain and digital mask for all channels
+        [all_gains, all_is_digital] = build_nidq_gains(info, info.n_saved_chans);
         if ~isempty(channels)
             gains = all_gains(channels);
+            is_digital = all_is_digital(channels);
         else
             gains = all_gains(1:n_chans);
+            is_digital = all_is_digital(1:n_chans);
         end
-        volts = double(data) .* (vmax ./ (info.max_int .* gains));
+        volts = double(data);
+        analog_cols = ~is_digital;
+        if any(analog_cols)
+            volts(:, analog_cols) = volts(:, analog_cols) .* ...
+                (vmax ./ (info.max_int .* gains(analog_cols)));
+        end
+        % Digital columns remain as raw double(data) — no voltage scaling
     elseif isfield(info.meta, 'imroTbl')
         % Imec stream with per-channel gains from imroTbl
         all_gains = parse_imro_gains(info.meta.imroTbl, info.stream_type);
+        n_neural = numel(all_gains);
+        % Build digital mask: sync channel(s) follow neural channels
+        n_total = info.n_saved_chans;
+        all_is_digital = [false(1, n_neural), true(1, n_total - n_neural)];
+        % Pad gains to cover all channels (sync gets gain=1, unused)
+        all_gains = [all_gains, ones(1, n_total - n_neural)];
         if ~isempty(channels)
-            % Pad if needed, then index
             if numel(all_gains) < max(channels)
-                all_gains = [all_gains, repmat(all_gains(end), 1, max(channels) - numel(all_gains))];
+                all_gains = [all_gains, ones(1, max(channels) - numel(all_gains))];
+                all_is_digital = [all_is_digital, true(1, max(channels) - numel(all_is_digital))];
             end
             gains = all_gains(channels);
+            is_digital = all_is_digital(channels);
         else
-            if numel(all_gains) >= n_chans
-                gains = all_gains(1:n_chans);
-            else
-                gains = [all_gains, repmat(all_gains(end), 1, n_chans - numel(all_gains))];
-            end
+            gains = all_gains(1:n_chans);
+            is_digital = all_is_digital(1:n_chans);
         end
-        volts = double(data) .* (vmax ./ (info.max_int .* gains));
+        volts = double(data);
+        analog_cols = ~is_digital;
+        if any(analog_cols)
+            volts(:, analog_cols) = volts(:, analog_cols) .* ...
+                (vmax ./ (info.max_int .* gains(analog_cols)));
+        end
     else
         % Default gain for Neuropixels 1.0
         if strcmpi(info.stream_type, 'ap')
@@ -85,13 +102,18 @@ function volts = samples2volts(data, info, channels)
 end
 
 
-function gains = build_nidq_gains(info, n_chans)
-%BUILD_NIDQ_GAINS Build per-channel gain vector for NI-DAQ streams.
+function [gains, is_digital] = build_nidq_gains(info, n_chans)
+%BUILD_NIDQ_GAINS Build per-channel gain and digital mask for NI-DAQ streams.
 %
 %   NI-DAQ channels are ordered: MN (neural), MA (auxiliary analog),
 %   XA (non-multiplexed analog), DW (digital words).
 %   MN channels use niMNGain, MA channels use niMAGain, XA channels
-%   have gain=1 (already in volts), DW channels have gain=1.
+%   have gain=1 (already in volts). DW channels are digital and are not
+%   voltage-scaled.
+%
+%   Returns:
+%       gains      - 1 x n_chans gain vector (analog channels only; DW = 1).
+%       is_digital - 1 x n_chans logical, true for DW channels.
 
     mn_gain = 1;
     ma_gain = 1;
@@ -102,20 +124,26 @@ function gains = build_nidq_gains(info, n_chans)
         ma_gain = info.ni_ma_gain;
     end
 
-    n_mn = 0; n_ma = 0; n_xa = 0;
+    n_mn = 0; n_ma = 0; n_xa = 0; n_dw = 0;
     if isfield(info, 'n_mn_chans'), n_mn = info.n_mn_chans; end
     if isfield(info, 'n_ma_chans'), n_ma = info.n_ma_chans; end
     if isfield(info, 'n_xa_chans'), n_xa = info.n_xa_chans; end
+    if isfield(info, 'n_dw_chans'), n_dw = info.n_dw_chans; end
 
     gains = [repmat(mn_gain, 1, n_mn), ...
              repmat(ma_gain, 1, n_ma), ...
-             ones(1, n_xa)];
+             ones(1, n_xa), ...
+             ones(1, n_dw)];
 
-    % Pad or trim to match the number of data columns
+    is_digital = [false(1, n_mn + n_ma + n_xa), true(1, n_dw)];
+
+    % Pad or trim to match the number of channels
     if numel(gains) >= n_chans
         gains = gains(1:n_chans);
+        is_digital = is_digital(1:n_chans);
     else
         gains = [gains, ones(1, n_chans - numel(gains))];
+        is_digital = [is_digital, true(1, n_chans - numel(is_digital))];
     end
 end
 

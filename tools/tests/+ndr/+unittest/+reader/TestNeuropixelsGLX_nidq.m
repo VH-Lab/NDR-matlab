@@ -176,6 +176,40 @@ classdef TestNeuropixelsGLX_nidq < matlab.unittest.TestCase
                 'Scaled read should match manual samples2volts for NIDQ.');
         end
 
+        function testDigitalChannelNotVoltageScaled(testCase)
+            %TESTDIGITALCHANNELNOTVOLTAGESSCALED Verify DW channels are not voltage-scaled.
+            info = ndr.format.neuropixelsGLX.header(testCase.MetaFilename);
+
+            % DW channel is the last channel
+            dw_chan = testCase.NumTotalChans;
+            raw = int16([1; 0; 255; -1]);
+            volts = ndr.format.neuropixelsGLX.samples2volts(raw, info, dw_chan);
+
+            % Digital channels should pass through as double(raw), no scaling
+            testCase.verifyEqual(volts, double(raw), ...
+                'DW channel should not be voltage-scaled.');
+        end
+
+        function testMixedAnalogDigitalScaling(testCase)
+            %TESTMIXEDANALOGDIGITALSCALING Verify analog+digital mix scales correctly.
+            info = ndr.format.neuropixelsGLX.header(testCase.MetaFilename);
+
+            % Read first MN channel and last DW channel together
+            mn_chan = 1;
+            dw_chan = testCase.NumTotalChans;
+            raw = int16([1000 1; -1000 0]);
+            volts = ndr.format.neuropixelsGLX.samples2volts(raw, info, [mn_chan dw_chan]);
+
+            scale_mn = testCase.VMax / (testCase.MaxInt * testCase.MNGain);
+            expected_mn = double(raw(:,1)) * scale_mn;
+            expected_dw = double(raw(:,2)); % no scaling
+
+            testCase.verifyEqual(volts(:,1), expected_mn, 'AbsTol', 1e-15, ...
+                'MN column should be voltage-scaled.');
+            testCase.verifyEqual(volts(:,2), expected_dw, ...
+                'DW column should not be voltage-scaled.');
+        end
+
     end
 
 end
