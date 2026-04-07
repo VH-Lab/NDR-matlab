@@ -1,9 +1,9 @@
 classdef neuropixelsGLX < ndr.reader.base
-%NDR.READER.NEUROPIXELSGLX - Reader class for Neuropixels SpikeGLX AP-band data.
+%NDR.READER.NEUROPIXELSGLX - Reader class for SpikeGLX data (AP, LF, NIDQ).
 %
-%   This class reads action-potential band data from Neuropixels probes
-%   acquired with the SpikeGLX software. Each instance handles one probe's
-%   AP stream (one .ap.bin / .ap.meta file pair per epoch).
+%   This class reads data from Neuropixels probes and NI-DAQ devices
+%   acquired with the SpikeGLX software. Each instance handles one stream
+%   (one .bin / .meta file pair per epoch).
 %
 %   SpikeGLX saves Neuropixels data as flat interleaved int16 binary files
 %   with companion .meta text files. The binary files have no header.
@@ -122,12 +122,18 @@ classdef neuropixelsGLX < ndr.reader.base
             %   [DATATYPE, P, DATASIZE] = UNDERLYING_DATATYPE(OBJ, EPOCHSTREAMS,
             %       EPOCH_SELECT, CHANNELTYPE, CHANNEL)
             %
+            %   CHANNELTYPE may be a char vector or a cell array of char
+            %   vectors. If a cell array, all entries must be the same type.
+            %
             %   For analog_in channels: int16, [0 1], 16 bits.
             %   For time channels: double (computed), [0 1], 64 bits.
             %   For digital_in channels: int16 (sync word), [0 1], 16 bits.
             %
             % See also: ndr.reader.base/underlying_datatype
 
+            if iscell(channeltype)
+                channeltype = channeltype{1};
+            end
             switch lower(channeltype)
                 case {'analog_in', 'ai'}
                     datatype = 'int16';
@@ -156,11 +162,18 @@ classdef neuropixelsGLX < ndr.reader.base
             %   Reads data between sample S0 and S1 (inclusive, 1-based).
             %   Returns an (S1-S0+1) x numel(CHANNEL) matrix.
             %
+            %   CHANNELTYPE may be a char vector or a cell array of char
+            %   vectors. If a cell array, all entries must be the same type.
+            %
             %   For 'analog_in': returns int16 neural data.
             %   For 'time': returns double time stamps in seconds.
             %   For 'digital_in': returns int16 sync word values.
             %
             % See also: ndr.format.neuropixelsGLX.read
+
+            if iscell(channeltype)
+                channeltype = channeltype{1};
+            end
 
             metafile = obj.filenamefromepochfiles(epochstreams);
             info = ndr.format.neuropixelsGLX.header(metafile);
@@ -173,14 +186,6 @@ classdef neuropixelsGLX < ndr.reader.base
                     data = ndr.time.fun.samples2times((s0:s1)', t0t1{1}, info.sample_rate);
 
                 case {'analog_in', 'ai'}
-                    % Read neural channels (1-based channel numbers map to
-                    % file columns 1:n_neural_chans)
-                    [data, ~] = ndr.format.neuropixelsGLX.read(binfile, -Inf, Inf, ...
-                        'numChans', info.n_saved_chans, ...
-                        'SR', info.sample_rate, ...
-                        'channels', channel);
-                    % The read function returns the full file; we need to
-                    % subset by sample range. Instead, use binarymatrix directly.
                     data = read_samples(binfile, info, uint32(channel), s0, s1);
 
                 case {'digital_in', 'di'}
@@ -210,31 +215,52 @@ classdef neuropixelsGLX < ndr.reader.base
         end
 
         function metafile = filenamefromepochfiles(obj, filename_array)
-            %FILENAMEFROMEPOCHFILES Identify the .ap.meta file from epoch file list.
+            %FILENAMEFROMEPOCHFILES Identify the companion .meta file from epoch file list.
             %
             %   METAFILE = FILENAMEFROMEPOCHFILES(OBJ, FILENAME_ARRAY)
             %
-            %   Searches the cell array FILENAME_ARRAY for a file matching
-            %   the pattern *.ap.meta. Returns the full path. Errors if
-            %   zero or more than one match is found.
+            %   Finds the .meta file that is the companion to the .bin file
+            %   in the epoch file list. The .meta file must have the same
+            %   base name as the .bin file (e.g., run.nidq.bin -> run.nidq.meta).
+            %   This allows other .meta files to be present in the epoch for
+            %   synchronization purposes.
             %
             % See also: ndr.reader.base
 
-            metafile = '';
-            count = 0;
+            % First, find the .bin file
+            binfile = '';
             for i = 1:numel(filename_array)
-                if endsWith(filename_array{i}, '.ap.meta', 'IgnoreCase', true)
-                    metafile = filename_array{i};
-                    count = count + 1;
+                if endsWith(filename_array{i}, '.bin', 'IgnoreCase', true)
+                    binfile = filename_array{i};
+                    break;
                 end
             end
 
-            if count == 0
-                error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
-                    'No .ap.meta file found in the epoch file list.');
-            elseif count > 1
-                error('ndr:reader:neuropixelsGLX:MultipleMetaFiles', ...
-                    'Multiple .ap.meta files found. Each epoch should have exactly one.');
+            if ~isempty(binfile)
+                % Derive the expected .meta filename from the .bin filename
+                metafile = [binfile(1:end-3) 'meta'];
+                % Verify it exists in the file list or on disk
+                if ~any(strcmp(filename_array, metafile)) && ~isfile(metafile)
+                    error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
+                        'No companion .meta file found for %s.', binfile);
+                end
+            else
+                % No .bin file; fall back to finding a single .meta file
+                metafile = '';
+                count = 0;
+                for i = 1:numel(filename_array)
+                    if endsWith(filename_array{i}, '.meta', 'IgnoreCase', true)
+                        metafile = filename_array{i};
+                        count = count + 1;
+                    end
+                end
+                if count == 0
+                    error('ndr:reader:neuropixelsGLX:NoMetaFile', ...
+                        'No .meta file found in the epoch file list.');
+                elseif count > 1
+                    error('ndr:reader:neuropixelsGLX:MultipleMetaFiles', ...
+                        'Multiple .meta files found and no .bin file to disambiguate.');
+                end
             end
         end
 
