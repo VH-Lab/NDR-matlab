@@ -92,13 +92,13 @@ switch options.dataType,
 		bytes_per_value = bits / 8;
 end;
 
-total_samples = (d.bytes-double(options.headerSkip)) / (num_channels * bytes_per_value);
+total_samples = (d.bytes-double(options.headerSkip)) / (double(num_channels) * bytes_per_value);
 
 if isinf(s1) & (s1>0),
 	s1 = total_samples;
 end;
 
-bytes_per_sample = bytes_per_value * num_channels;
+bytes_per_sample = bytes_per_value * double(num_channels);
 
 channel_indexes = channel_indexes(:); % force column
 
@@ -109,8 +109,8 @@ consecutive_channels_requested = numel(channel_indexes)==1|isequal(diff(double(c
 fid = fopen(filename_or_fileobj,'r',options.byteOrder);
 
 if ~options.force_single_channel_read & consecutive_channels_requested,
-	channels_to_skip_before_reading = chan_sort(1) - 1;
-	channels_to_skip_after_reading = num_channels - chan_sort(end);
+	channels_to_skip_before_reading = double(chan_sort(1) - 1);
+	channels_to_skip_after_reading = double(num_channels - chan_sort(end));
 
 	skip_point = double(options.headerSkip) + ...
 		(s0-1)*bytes_per_sample + ... % skip to the sample ...
@@ -130,8 +130,8 @@ if ~options.force_single_channel_read & consecutive_channels_requested,
 else,
 	data = zeros(s1-s0+1,numel(channel_indexes));
 	for c=1:numel(channel_indexes),
-		channels_to_skip_before_reading = channel_indexes(c) - 1;
-		channels_to_skip_after_reading = num_channels - channel_indexes(c);
+		channels_to_skip_before_reading = double(channel_indexes(c) - 1);
+		channels_to_skip_after_reading = double(num_channels - channel_indexes(c));
 
 		skip_point = double(options.headerSkip) + ...
 			(s0-1)*bytes_per_sample + ... % skip to the sample ...
