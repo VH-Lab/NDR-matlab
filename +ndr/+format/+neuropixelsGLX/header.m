@@ -68,12 +68,26 @@ function info = header(metafilename)
     info.n_saved_chans = str2double(meta.nSavedChans);
 
     % Parse snsApLfSy or snsMnMaXaDw to determine neural vs sync channels.
-    % Also compute:
+    % Also compute, for digital lines:
     %   n_digital_word_cols : number of int16 columns in the .bin file
-    %                        that hold digital word data (stored last).
+    %                         that hold digital word data (stored last).
     %   n_digital_lines     : number of single-bit digital lines exposed.
-    %                        SpikeGLX packs digital data into int16 columns;
-    %                        each bit is an independent digital line.
+    %   digital_line_col    : (n_digital_lines x 1) 0-based DW column
+    %                         offset (0 = first DW column).
+    %   digital_line_bit    : (n_digital_lines x 1) 0-based bit position
+    %                         within that column (0..15).
+    %   digital_line_label  : (n_digital_lines x 1) cellstr describing
+    %                         the underlying SpikeGLX line, e.g. 'XD0'
+    %                         for port-0 line 0, 'XD1.3' for port-1 line
+    %                         3, or 'SY0.6' for sync col 0 bit 6.
+    %
+    % For NIDQ streams the count of active lines comes from niXDBytes1
+    % and niXDBytes2 (bytes captured per port). NI-DAQ hardware only
+    % enables digital input in whole-byte chunks, so every bit within a
+    % captured byte is electrically active even if the user only wired
+    % some of them; niXDChans1/2 is just informational and is not used
+    % to gate which lines are exposed. For IMEC streams there is no
+    % per-bit configuration; all 16 bits of each sync int16 are exposed.
     if isfield(meta, 'snsApLfSy')
         % imec stream: AP,LF,SY counts
         counts = sscanf(meta.snsApLfSy, '%d,%d,%d');
@@ -93,7 +107,20 @@ function info = header(metafilename)
         % are exposed as independent digital lines so callers can pick
         % whichever they need.
         info.n_digital_word_cols = info.n_sync_chans;
-        info.n_digital_lines = 16 * info.n_sync_chans;
+        n_lines = 16 * info.n_sync_chans;
+        info.n_digital_lines    = n_lines;
+        info.digital_line_col   = zeros(n_lines, 1);
+        info.digital_line_bit   = zeros(n_lines, 1);
+        info.digital_line_label = cell(n_lines, 1);
+        idx = 0;
+        for c = 0:(info.n_sync_chans - 1)
+            for b = 0:15
+                idx = idx + 1;
+                info.digital_line_col(idx)   = c;
+                info.digital_line_bit(idx)   = b;
+                info.digital_line_label{idx} = sprintf('SY%d.%d', c, b);
+            end
+        end
     elseif isfield(meta, 'snsMnMaXaDw')
         % NI-DAQ stream: MN,MA,XA,DW
         info.stream_type = 'nidq';
@@ -105,22 +132,54 @@ function info = header(metafilename)
         info.n_neural_chans = counts(1) + counts(2) + counts(3);
         info.n_sync_chans = counts(4);
         info.n_digital_word_cols = counts(4);
-        % SpikeGLX packs niXDBytes1 bytes from port0 plus niXDBytes2 bytes
-        % from port1 into the DW int16 columns. The number of meaningful
-        % digital lines is 8 * (niXDBytes1 + niXDBytes2). When those
-        % fields are absent fall back to assuming every bit of every DW
-        % column is in use.
-        n_xd_bytes = 0;
+
+        % Bytes saved per port. NI hardware only enables digital input
+        % in whole-byte chunks, so each saved byte = 8 active lines
+        % regardless of how many of them the user actually wired up.
+        n_bytes_p0 = 0;
         if isfield(meta, 'niXDBytes1')
-            n_xd_bytes = n_xd_bytes + str2double(meta.niXDBytes1);
+            n_bytes_p0 = str2double(meta.niXDBytes1);
         end
+        n_bytes_p1 = 0;
         if isfield(meta, 'niXDBytes2')
-            n_xd_bytes = n_xd_bytes + str2double(meta.niXDBytes2);
+            n_bytes_p1 = str2double(meta.niXDBytes2);
         end
-        if n_xd_bytes > 0
-            info.n_digital_lines = 8 * n_xd_bytes;
+
+        % If neither byte field is present, fall back to assuming every
+        % bit of every DW int16 column is in use (16 lines per column).
+        if n_bytes_p0 == 0 && n_bytes_p1 == 0
+            n_lines_p0 = 16 * info.n_dw_chans;
+            n_lines_p1 = 0;
         else
-            info.n_digital_lines = 16 * info.n_dw_chans;
+            n_lines_p0 = 8 * n_bytes_p0;
+            n_lines_p1 = 8 * n_bytes_p1;
+        end
+
+        % Compute the (col, bit) position of each active line.
+        % SpikeGLX storage layout: port0 lines occupy the first
+        % n_bytes_p0*8 bits of the concatenated digital bit stream,
+        % then port1 lines occupy the next n_bytes_p1*8 bits. The bit
+        % stream is laid out across n_dw_chans int16 columns (16 bits
+        % per column).
+        n_lines = n_lines_p0 + n_lines_p1;
+        info.n_digital_lines    = n_lines;
+        info.digital_line_col   = zeros(n_lines, 1);
+        info.digital_line_bit   = zeros(n_lines, 1);
+        info.digital_line_label = cell(n_lines, 1);
+        idx = 0;
+        for k = 0:(n_lines_p0 - 1)
+            abs_bit = k;
+            idx = idx + 1;
+            info.digital_line_col(idx)   = floor(abs_bit / 16);
+            info.digital_line_bit(idx)   = mod(abs_bit, 16);
+            info.digital_line_label{idx} = sprintf('XD%d', k);
+        end
+        for k = 0:(n_lines_p1 - 1)
+            abs_bit = n_bytes_p0 * 8 + k;
+            idx = idx + 1;
+            info.digital_line_col(idx)   = floor(abs_bit / 16);
+            info.digital_line_bit(idx)   = mod(abs_bit, 16);
+            info.digital_line_label{idx} = sprintf('XD1.%d', k);
         end
     else
         % Fallback
@@ -129,6 +188,12 @@ function info = header(metafilename)
         info.n_sync_chans = 1;
         info.n_digital_word_cols = 1;
         info.n_digital_lines = 16;
+        info.digital_line_col   = zeros(16, 1);
+        info.digital_line_bit   = (0:15)';
+        info.digital_line_label = cell(16, 1);
+        for b = 0:15
+            info.digital_line_label{b+1} = sprintf('bit%d', b);
+        end
     end
 
     % Parse saved channel subset

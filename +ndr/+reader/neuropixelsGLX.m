@@ -198,29 +198,30 @@ classdef neuropixelsGLX < ndr.reader.base
                     data = read_samples(binfile, info, uint32(channel), s0, s1);
 
                 case {'digital_in', 'di'}
-                    % Digital words occupy the last n_digital_word_cols
-                    % columns of the file. Each int16 column holds up to
-                    % 16 single-bit lines. CHANNEL is a vector of 1-based
-                    % digital line indices; map each to (column, bit) and
-                    % extract the bit with bitget.
-                    line_0based = double(channel(:)) - 1;
-                    if any(line_0based < 0) || ...
-                       any(line_0based >= info.n_digital_lines)
+                    % CHANNEL is a vector of 1-based digital line indices
+                    % (di1..di_n_digital_lines). The header pre-computes
+                    % the (DW column, bit position) for each active line
+                    % from niXDBytes1/niXDBytes2 (NIDQ) or n_sync_chans
+                    % (IMEC), so the reader just looks up the mapping
+                    % and extracts the requested bits with bitget.
+                    line_idx = double(channel(:));
+                    if any(line_idx < 1) || ...
+                       any(line_idx > info.n_digital_lines)
                         error('ndr:reader:neuropixelsGLX:DigitalLineOutOfRange', ...
                             'Digital line out of range; valid lines are 1..%d.', ...
                             info.n_digital_lines);
                     end
                     first_dw_col = info.n_saved_chans - info.n_digital_word_cols + 1;
-                    dw_col_offset = floor(line_0based / 16);  % 0-based DW column offset
-                    bit_pos       = mod(line_0based, 16);     % 0-based bit within column
+                    col_offsets = info.digital_line_col(line_idx);
+                    bit_pos     = info.digital_line_bit(line_idx);
 
                     n_samples = double(s1) - double(s0) + 1;
                     data = zeros(n_samples, numel(channel), 'int16');
-                    unique_cols = unique(dw_col_offset);
+                    unique_cols = unique(col_offsets);
                     for u = 1:numel(unique_cols)
                         file_col = first_dw_col + unique_cols(u);
                         raw = read_samples(binfile, info, uint32(file_col), s0, s1);
-                        idx = find(dw_col_offset == unique_cols(u));
+                        idx = find(col_offsets == unique_cols(u));
                         for k = 1:numel(idx)
                             data(:, idx(k)) = int16(bitget(raw, bit_pos(idx(k)) + 1));
                         end
