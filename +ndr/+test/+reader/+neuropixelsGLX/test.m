@@ -42,6 +42,11 @@ function test(varargin)
     for c = 1:nNeuralChans
         data(:, c) = int16(round(500 * sin(2 * pi * c * t_vec)));
     end
+    % Sync channel is a 16-bit digital word (packed digital lines), not 0/1.
+    % Use a ramping pattern that exercises multiple bits to confirm the full
+    % 16-bit value is preserved end-to-end.
+    sync_data = int16(mod((0:nSamples-1), 2^15));
+    data(:, nTotalChans) = sync_data(:);
 
     % Write binary
     fid = fopen(binfile, 'w', 'ieee-le');
@@ -101,6 +106,24 @@ function test(varargin)
     max_error = max(abs(double(d) - double(expected)));
     disp(['Max error vs expected: ' num2str(max_error)]);
     assert(max_error == 0, 'Data mismatch detected!');
+
+    % Read the digital (sync) channel through the high-level read() API.
+    % This is the code path that previously returned [] because
+    % ndr.reader.read() routed 'digital_in' to readevents_epochsamples
+    % (which is abstract for this format).
+    t0 = 0;
+    t1 = (nSamples-1) / SR;
+    [d_di, t_di] = r.read({metafile}, 'di1', 't0', t0, 't1', t1);
+    disp(['Read ' int2str(size(d_di, 1)) ' samples from channel di1 via r.read().']);
+    assert(~isempty(d_di), 'Digital read returned empty data.');
+    assert(~isempty(t_di), 'Digital read returned empty time.');
+    assert(size(d_di, 1) == nSamples, ...
+        sprintf('Digital sample count mismatch: got %d, expected %d.', ...
+        size(d_di, 1), nSamples));
+    % The full 16-bit word must be preserved (not collapsed to 0/1).
+    di_error = max(abs(double(d_di) - double(sync_data(:))));
+    disp(['Max digital error vs expected: ' num2str(di_error)]);
+    assert(di_error == 0, 'Digital (16-bit) word mismatch detected!');
 
     disp('All checks passed.');
 
