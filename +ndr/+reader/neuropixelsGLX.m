@@ -12,7 +12,11 @@ classdef neuropixelsGLX < ndr.reader.base
 %
 %   Channel mapping:
 %     - Neural channels are exposed as 'analog_in' (ai1..aiN)
-%     - The sync word is exposed as 'digital_in' (di1)
+%     - Digital lines are exposed as 'digital_in' (di1..diM), where each
+%       di channel is a single bit of the packed digital word(s). The
+%       number of lines is determined from metadata: for NIDQ streams
+%       it is 8 * (niXDBytes1 + niXDBytes2); for IMEC streams it is
+%       16 * n_sync_chans (bit 6 is the SMA sync input in practice).
 %     - A single time channel 't1' is always present
 %
 %   Data is returned as int16 to preserve native precision. Use
@@ -90,8 +94,9 @@ classdef neuropixelsGLX < ndr.reader.base
             %
             %   Returns a structure array with fields 'name', 'type', and
             %   'time_channel'. Neural channels are 'analog_in' (ai1..aiN),
-            %   the sync channel is 'digital_in' (di1), and a time channel
-            %   't1' is always present.
+            %   digital lines are 'digital_in' (di1..diM) with one entry
+            %   per single-bit line in the packed digital word(s), and a
+            %   time channel 't1' is always present.
             %
             % See also: ndr.format.neuropixelsGLX.header
 
@@ -109,10 +114,12 @@ classdef neuropixelsGLX < ndr.reader.base
                     'type', 'analog_in', 'time_channel', 1); %#ok<AGROW>
             end
 
-            % Sync channel (digital_in)
-            if info.n_sync_chans > 0
-                channels(end+1) = struct('name', 'di1', ...
-                    'type', 'digital_in', 'time_channel', 1);
+            % Digital lines (digital_in) — one per bit of the packed
+            % digital word(s). n_digital_lines comes from metadata
+            % (niXDBytes1/niXDBytes2 for NIDQ, 16*n_sync_chans for IMEC).
+            for i = 1:info.n_digital_lines
+                channels(end+1) = struct('name', ['di' int2str(i)], ...
+                    'type', 'digital_in', 'time_channel', 1); %#ok<AGROW>
             end
         end
 
@@ -167,7 +174,9 @@ classdef neuropixelsGLX < ndr.reader.base
             %
             %   For 'analog_in': returns int16 neural data.
             %   For 'time': returns double time stamps in seconds.
-            %   For 'digital_in': returns int16 sync word values.
+            %   For 'digital_in': returns int16 single-bit values (0 or 1)
+            %                     extracted from the packed digital word(s).
+            %                     CHANNEL gives the 1-based digital line(s).
             %
             % See also: ndr.format.neuropixelsGLX.read
 
@@ -189,9 +198,33 @@ classdef neuropixelsGLX < ndr.reader.base
                     data = read_samples(binfile, info, uint32(channel), s0, s1);
 
                 case {'digital_in', 'di'}
-                    % Sync channel is the last channel in the file
-                    sync_chan = info.n_saved_chans;
-                    data = read_samples(binfile, info, uint32(sync_chan), s0, s1);
+                    % Digital words occupy the last n_digital_word_cols
+                    % columns of the file. Each int16 column holds up to
+                    % 16 single-bit lines. CHANNEL is a vector of 1-based
+                    % digital line indices; map each to (column, bit) and
+                    % extract the bit with bitget.
+                    line_0based = double(channel(:)) - 1;
+                    if any(line_0based < 0) || ...
+                       any(line_0based >= info.n_digital_lines)
+                        error('ndr:reader:neuropixelsGLX:DigitalLineOutOfRange', ...
+                            'Digital line out of range; valid lines are 1..%d.', ...
+                            info.n_digital_lines);
+                    end
+                    first_dw_col = info.n_saved_chans - info.n_digital_word_cols + 1;
+                    dw_col_offset = floor(line_0based / 16);  % 0-based DW column offset
+                    bit_pos       = mod(line_0based, 16);     % 0-based bit within column
+
+                    n_samples = double(s1) - double(s0) + 1;
+                    data = zeros(n_samples, numel(channel), 'int16');
+                    unique_cols = unique(dw_col_offset);
+                    for u = 1:numel(unique_cols)
+                        file_col = first_dw_col + unique_cols(u);
+                        raw = read_samples(binfile, info, uint32(file_col), s0, s1);
+                        idx = find(dw_col_offset == unique_cols(u));
+                        for k = 1:numel(idx)
+                            data(:, idx(k)) = int16(bitget(raw, bit_pos(idx(k)) + 1));
+                        end
+                    end
 
                 otherwise
                     error('ndr:reader:neuropixelsGLX:UnknownChannelType', ...

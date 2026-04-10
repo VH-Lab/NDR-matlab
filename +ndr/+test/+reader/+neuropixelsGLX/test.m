@@ -42,11 +42,12 @@ function test(varargin)
     for c = 1:nNeuralChans
         data(:, c) = int16(round(500 * sin(2 * pi * c * t_vec)));
     end
-    % Sync channel is a 16-bit digital word (packed digital lines), not 0/1.
-    % Use a ramping pattern that exercises multiple bits to confirm the full
-    % 16-bit value is preserved end-to-end.
-    sync_data = int16(mod((0:nSamples-1), 2^15));
-    data(:, nTotalChans) = sync_data(:);
+    % Sync channel is a 16-bit packed digital word. Each bit is exposed as
+    % a separate digital line (di1..di16). Use a counter pattern that
+    % exercises bits 0..14 (mod 2^15 keeps values non-negative so the int16
+    % representation is unambiguous).
+    sync_pattern = int16(mod((0:nSamples-1), 2^15));
+    data(:, nTotalChans) = sync_pattern(:);
 
     % Write binary
     fid = fopen(binfile, 'w', 'ieee-le');
@@ -107,23 +108,127 @@ function test(varargin)
     disp(['Max error vs expected: ' num2str(max_error)]);
     assert(max_error == 0, 'Data mismatch detected!');
 
-    % Read the digital (sync) channel through the high-level read() API.
+    % Verify that the IMEC sync word is exposed as 16 single-bit digital
+    % lines (di1..di16), one per bit of the int16 sync column.
+    di_idx = find(strcmp({channels.type}, 'digital_in'));
+    assert(numel(di_idx) == 16, ...
+        sprintf('Expected 16 IMEC digital lines, got %d.', numel(di_idx)));
+
+    % Read individual digital lines through the high-level read() API.
     % This is the code path that previously returned [] because
     % ndr.reader.read() routed 'digital_in' to readevents_epochsamples
     % (which is abstract for this format).
-    t0 = 0;
-    t1 = (nSamples-1) / SR;
-    [d_di, t_di] = r.read({metafile}, 'di1', 't0', t0, 't1', t1);
-    disp(['Read ' int2str(size(d_di, 1)) ' samples from channel di1 via r.read().']);
-    assert(~isempty(d_di), 'Digital read returned empty data.');
-    assert(~isempty(t_di), 'Digital read returned empty time.');
-    assert(size(d_di, 1) == nSamples, ...
+    t1_end = (nSamples-1) / SR;
+    [d_di1, t_di] = r.read({metafile}, 'di1', 't0', 0, 't1', t1_end);
+    disp(['Read ' int2str(size(d_di1, 1)) ' samples from channel di1 via r.read().']);
+    assert(~isempty(d_di1), 'Digital di1 read returned empty data.');
+    assert(~isempty(t_di), 'Digital di1 read returned empty time.');
+    assert(size(d_di1, 1) == nSamples, ...
         sprintf('Digital sample count mismatch: got %d, expected %d.', ...
-        size(d_di, 1), nSamples));
-    % The full 16-bit word must be preserved (not collapsed to 0/1).
-    di_error = max(abs(double(d_di) - double(sync_data(:))));
-    disp(['Max digital error vs expected: ' num2str(di_error)]);
-    assert(di_error == 0, 'Digital (16-bit) word mismatch detected!');
+        size(d_di1, 1), nSamples));
+    % di1 is bit 0 of the sync word (alternates 0,1,0,1,...).
+    expected_di1 = int16(bitget(sync_pattern(:), 1));
+    assert(isequal(d_di1, expected_di1), 'di1 (bit 0) extraction mismatch.');
+
+    % di8 is bit 7 of the sync word.
+    [d_di8, ~] = r.read({metafile}, 'di8', 't0', 0, 't1', t1_end);
+    expected_di8 = int16(bitget(sync_pattern(:), 8));
+    assert(isequal(d_di8, expected_di8), 'di8 (bit 7) extraction mismatch.');
+
+    % di12 is bit 11 of the sync word (2^11 = 2048; the pattern reaches
+    % 2999 so this bit is non-trivially exercised).
+    [d_di12, ~] = r.read({metafile}, 'di12', 't0', 0, 't1', t1_end);
+    expected_di12 = int16(bitget(sync_pattern(:), 12));
+    assert(any(expected_di12 ~= 0), ...
+        'Test pattern should exercise bit 11; check sync_pattern.');
+    assert(isequal(d_di12, expected_di12), 'di12 (bit 11) extraction mismatch.');
+
+    % === NIDQ format test ===
+    % Mirrors the user-reported configuration: snsMnMaXaDw=0,0,8,1 with
+    % niXDBytes1=1, so 8 analog inputs plus 8 digital lines packed into
+    % the low byte of a single int16 DW column.
+    disp('--- NIDQ format test ---');
+
+    nXA = 8;
+    nDW = 1;
+    nNidqChans = nXA + nDW;
+    nNidqSamples = 500;
+    SR_ni = 10593.220339;
+
+    nidq_subdir = fullfile(tempdir_path, 'nidq_g0');
+    mkdir(nidq_subdir);
+    nidq_metafile = fullfile(nidq_subdir, 'nidq_g0_t0.nidq.meta');
+    nidq_binfile  = fullfile(nidq_subdir, 'nidq_g0_t0.nidq.bin');
+
+    % Build data: XA0..XA7 sine waves + DW column with an 8-bit pattern.
+    ni_data = zeros(nNidqSamples, nNidqChans, 'int16');
+    t_vec_ni = (0:nNidqSamples-1)' / SR_ni;
+    for c = 1:nXA
+        ni_data(:, c) = int16(round(1000 * sin(2 * pi * c * t_vec_ni)));
+    end
+    ni_sync = int16(mod((0:nNidqSamples-1), 2^8));  % low byte: 0..255
+    ni_data(:, end) = ni_sync(:);
+
+    fid = fopen(nidq_binfile, 'w', 'ieee-le');
+    fwrite(fid, reshape(ni_data', 1, []), 'int16');
+    fclose(fid);
+
+    fid = fopen(nidq_metafile, 'w');
+    fprintf(fid, 'niSampRate=%.6f\n', SR_ni);
+    fprintf(fid, 'nSavedChans=%d\n', nNidqChans);
+    fprintf(fid, 'snsMnMaXaDw=0,0,%d,%d\n', nXA, nDW);
+    fprintf(fid, 'snsSaveChanSubset=all\n');
+    fprintf(fid, 'fileSizeBytes=%d\n', nNidqSamples * nNidqChans * 2);
+    fprintf(fid, 'fileTimeSecs=%.6f\n', nNidqSamples / SR_ni);
+    fprintf(fid, 'niAiRangeMax=5\n');
+    fprintf(fid, 'niAiRangeMin=-5\n');
+    fprintf(fid, 'niMaxInt=32768\n');
+    fprintf(fid, 'niXDBytes1=1\n');
+    fprintf(fid, 'niXDChans1=0:7\n');
+    fprintf(fid, 'niXAChans1=0:7\n');
+    fprintf(fid, 'typeThis=nidq\n');
+    fclose(fid);
+
+    r_ni = ndr.reader('neuropixelsGLX');
+    ni_channels = r_ni.getchannelsepoch({nidq_metafile}, 1);
+    ni_di_count = sum(strcmp({ni_channels.type}, 'digital_in'));
+    assert(ni_di_count == 8, ...
+        sprintf('Expected 8 NIDQ digital lines (niXDBytes1=1), got %d.', ...
+        ni_di_count));
+    ni_ai_count = sum(strcmp({ni_channels.type}, 'analog_in'));
+    assert(ni_ai_count == nXA, ...
+        sprintf('Expected %d NIDQ analog lines, got %d.', nXA, ni_ai_count));
+
+    % Read di1 via r.read() — the exact call the user reported failing.
+    t1_ni = (nNidqSamples-1) / SR_ni;
+    [d_ni_di1, t_ni_di1] = r_ni.read({nidq_metafile}, 'di1', 't0', 0, 't1', t1_ni);
+    assert(~isempty(d_ni_di1), 'NIDQ di1 returned empty data (user-reported bug).');
+    assert(~isempty(t_ni_di1), 'NIDQ di1 returned empty time.');
+    assert(size(d_ni_di1, 1) == nNidqSamples, ...
+        sprintf('NIDQ di1 sample count mismatch: got %d, expected %d.', ...
+        size(d_ni_di1, 1), nNidqSamples));
+    expected_ni_di1 = int16(bitget(ni_sync(:), 1));
+    assert(isequal(d_ni_di1, expected_ni_di1), 'NIDQ di1 (bit 0) mismatch.');
+
+    % Read di8 (bit 7, the high bit of the byte).
+    [d_ni_di8, ~] = r_ni.read({nidq_metafile}, 'di8', 't0', 0, 't1', t1_ni);
+    expected_ni_di8 = int16(bitget(ni_sync(:), 8));
+    assert(isequal(d_ni_di8, expected_ni_di8), 'NIDQ di8 (bit 7) mismatch.');
+
+    % di9 must be out of range for an 8-line NIDQ configuration. Call
+    % readchannels_epochsamples directly because the high-level read()
+    % would fail earlier at channel-name lookup (di9 isn't listed).
+    threw = false;
+    try
+        r_ni.readchannels_epochsamples('digital_in', 9, ...
+            {nidq_metafile}, 1, 1, 10);
+    catch ME
+        threw = strcmp(ME.identifier, ...
+            'ndr:reader:neuropixelsGLX:DigitalLineOutOfRange');
+    end
+    assert(threw, 'Expected DigitalLineOutOfRange error for line 9 in 8-line NIDQ.');
+
+    disp('NIDQ digital line read: OK.');
 
     disp('All checks passed.');
 

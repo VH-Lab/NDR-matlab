@@ -67,7 +67,13 @@ function info = header(metafilename)
     % Number of saved channels
     info.n_saved_chans = str2double(meta.nSavedChans);
 
-    % Parse snsApLfSy or snsMnMaXaDw to determine neural vs sync channels
+    % Parse snsApLfSy or snsMnMaXaDw to determine neural vs sync channels.
+    % Also compute:
+    %   n_digital_word_cols : number of int16 columns in the .bin file
+    %                        that hold digital word data (stored last).
+    %   n_digital_lines     : number of single-bit digital lines exposed.
+    %                        SpikeGLX packs digital data into int16 columns;
+    %                        each bit is an independent digital line.
     if isfield(meta, 'snsApLfSy')
         % imec stream: AP,LF,SY counts
         counts = sscanf(meta.snsApLfSy, '%d,%d,%d');
@@ -82,6 +88,12 @@ function info = header(metafilename)
             info.stream_type = 'ap';
             info.n_neural_chans = counts(1);
         end
+        % IMEC sync word is an int16; each sync column provides 16 bits.
+        % In practice only bit 6 is the SMA sync input, but all 16 bits
+        % are exposed as independent digital lines so callers can pick
+        % whichever they need.
+        info.n_digital_word_cols = info.n_sync_chans;
+        info.n_digital_lines = 16 * info.n_sync_chans;
     elseif isfield(meta, 'snsMnMaXaDw')
         % NI-DAQ stream: MN,MA,XA,DW
         info.stream_type = 'nidq';
@@ -89,14 +101,34 @@ function info = header(metafilename)
         info.n_mn_chans = counts(1);  % multiplexed neural
         info.n_ma_chans = counts(2);  % multiplexed analog
         info.n_xa_chans = counts(3);  % non-multiplexed analog
-        info.n_dw_chans = counts(4);  % digital words
+        info.n_dw_chans = counts(4);  % digital word int16 columns
         info.n_neural_chans = counts(1) + counts(2) + counts(3);
         info.n_sync_chans = counts(4);
+        info.n_digital_word_cols = counts(4);
+        % SpikeGLX packs niXDBytes1 bytes from port0 plus niXDBytes2 bytes
+        % from port1 into the DW int16 columns. The number of meaningful
+        % digital lines is 8 * (niXDBytes1 + niXDBytes2). When those
+        % fields are absent fall back to assuming every bit of every DW
+        % column is in use.
+        n_xd_bytes = 0;
+        if isfield(meta, 'niXDBytes1')
+            n_xd_bytes = n_xd_bytes + str2double(meta.niXDBytes1);
+        end
+        if isfield(meta, 'niXDBytes2')
+            n_xd_bytes = n_xd_bytes + str2double(meta.niXDBytes2);
+        end
+        if n_xd_bytes > 0
+            info.n_digital_lines = 8 * n_xd_bytes;
+        else
+            info.n_digital_lines = 16 * info.n_dw_chans;
+        end
     else
         % Fallback
         info.stream_type = 'unknown';
         info.n_neural_chans = info.n_saved_chans - 1;
         info.n_sync_chans = 1;
+        info.n_digital_word_cols = 1;
+        info.n_digital_lines = 16;
     end
 
     % Parse saved channel subset
