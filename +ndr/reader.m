@@ -131,7 +131,8 @@ classdef reader
                 if b,
                     switch (channelstruct(1).ndr_type),
                         % readchannels_epochsamples
-                        case {'analog_input','analog_output','analog_in','analog_out','ai','ao'},
+                        case {'analog_input','analog_output','analog_in','analog_out','ai','ao', ...
+                              'digital_input','digital_output','digital_in','digital_out','di','do'},
                             if ~useSamples, % must compute the samples to be read
                                 s0 = round(1+t0*channelstruct(1).samplerate);
                                 s1 = round(1+t1*channelstruct(1).samplerate);

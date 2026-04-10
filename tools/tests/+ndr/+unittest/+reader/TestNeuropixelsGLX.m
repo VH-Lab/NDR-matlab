@@ -160,8 +160,10 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
             %TESTGETCHANNELSEPOCH Verify channel listing.
             channels = testCase.Reader.getchannelsepoch({testCase.MetaFilename}, 1);
 
-            % Should have: 1 time + N neural + 1 sync = N+2
-            expectedTotal = testCase.NumNeuralChansActual + 2;
+            % IMEC sync word is a single int16 column = 16 single-bit
+            % digital lines (di1..di16). Total: 1 time + N neural + 16 di.
+            nDigitalLines = 16;
+            expectedTotal = testCase.NumNeuralChansActual + 1 + nDigitalLines;
             testCase.verifyNumElements(channels, expectedTotal, 'Wrong number of channels.');
 
             % First channel should be time
@@ -176,9 +178,15 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
                     ['Wrong type for neural channel ' int2str(i)]);
             end
 
-            % Sync channel (last)
-            testCase.verifyEqual(channels(end).name, 'di1', 'Last channel should be di1.');
-            testCase.verifyEqual(channels(end).type, 'digital_in', 'Last channel type should be digital_in.');
+            % Digital lines: di1..di16 follow the neural channels.
+            di_start = 1 + testCase.NumNeuralChansActual + 1;  % after time + neural
+            for i = 1:nDigitalLines
+                idx = di_start + i - 1;
+                testCase.verifyEqual(channels(idx).name, ['di' int2str(i)], ...
+                    ['Wrong name for digital line ' int2str(i)]);
+                testCase.verifyEqual(channels(idx).type, 'digital_in', ...
+                    ['Wrong type for digital line ' int2str(i)]);
+            end
         end
 
         function testSampleRate(testCase)
