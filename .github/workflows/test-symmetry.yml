@@ -42,9 +42,16 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            addpath(genpath("+ndr"));
-            addpath(genpath("tools"));
-            ndr_Init;
+            % Add the repo root so MATLAB sees the top-level +ndr namespace,
+            % and add tools/tests so MATLAB sees the +ndr/+symmetry namespace.
+            % Note: MATLAB namespace (+foo) directories must NOT appear on the
+            % path themselves; only their parent directories should.
+            addpath(pwd);
+            addpath(fullfile(pwd, "tools", "tests"));
+
+            % Skip ndr_Init -- it tries to mkdir filecache paths under
+            % userpath which are not writable on the CI runner, and the
+            % symmetry tests only use ndr.fun.ndrpath() which is self-contained.
 
             import matlab.unittest.TestSuite
             import matlab.unittest.TestRunner
