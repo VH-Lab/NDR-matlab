@@ -49,6 +49,10 @@ jobs:
             addpath(pwd);
             addpath(fullfile(pwd, "tools", "tests"));
 
+            % Install MATLAB dependencies declared in tools/requirements.txt
+            % (e.g. vhlab-toolbox-matlab, which provides vlt.string.*).
+            matbox.installRequirements(fullfile(pwd, "tools"));
+
             % Skip ndr_Init -- it tries to mkdir filecache paths under
             % userpath which are not writable on the CI runner, and the
             % symmetry tests only use ndr.fun.ndrpath() which is self-contained.
