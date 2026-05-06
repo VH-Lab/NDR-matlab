@@ -1,15 +1,29 @@
-function [header] = read_Intan_RHD2000_header(filename);
+function [header] = read_Intan_RHD2000_header(filename, varargin);
 % READ_INTAN_RHD2000_HEADER - Read header information from an Intan data file
 %
 %   HEADER = READ_INTAN_RHD2000_HEADER(FILENAME)
+%   HEADER = READ_INTAN_RHD2000_HEADER(FILENAME, 'fileMode', FILEMODE)
 %
 % Returns a structure HEADER with all of the information fields that
 % are stored in the Intan RHD2000 file FILENAME.
 %
+% Optional name/value pairs:
+%   'fileMode'   -  'detect' (default) checks whether FILENAME has Intan
+%                   sibling files in the same directory matching
+%                   '<prefix>_<YYMMDD>_<HHMMSS>.rhd' and resolves to either
+%                   'multiFile' or 'singleFile' (see DETECTRHD2000FILEMODE).
+%                   Pass 'singleFile' to force reading the header from a
+%                   single .rhd file, or 'multiFile' to force treating
+%                   FILENAME as one member of a set that together represents
+%                   a continuous recording. The header is parsed from the
+%                   first (chronologically earliest) file and the resulting
+%                   HEADER exposes the recording as if it were one large
+%                   file.
+%
 % HEADER contains several substructures:
 % --------------------------------------------------------------------
 % fileinfo                |  Information about the file and its version
-% frequency_parameters    |  Information about sampling frequency 
+% frequency_parameters    |  Information about sampling frequency
 % spike_triggers          |  Information about spike triggers for each amplifier channel
 % amplifier_channels      |  Information about amplifier channels
 % aux_input_channels      |  Information about auxillary input channels
@@ -19,18 +33,36 @@ function [header] = read_Intan_RHD2000_header(filename);
 % board_dig_out_channels  |  Digital output channels
 % num_temp_sensor_channels|  Number of temperature sensor channels
 %
-% See also: READ_INTAN_RDH2000_DATAFILE
+% In multi-file mode, HEADER.fileinfo.multifile contains the list of files,
+% their sizes, and the (assumed identical) header size. In single-file mode
+% it contains the single file equivalents.
+%
+% See also: READ_INTAN_RHD2000_DATAFILE, GETRHD2000FILELIST
 %
 
-fid = fopen(filename,'r');
-if fileid_value(fid)<0,
-	error(['Could not open filename ' filename_value(filename) ' for reading (check path, spelling, permissions).']);
+fileMode = 'detect';
+assign(varargin{:});
+
+if strcmp(fileMode, 'detect'),
+	fileMode = ndr.format.intan.detectRHD2000FileMode(filename);
 end;
 
-[dirname,fname,ext]=fileparts(filename);
+files = ndr.format.intan.getRHD2000FileList(filename, fileMode);
+
+% Parse the header from the first file. Acquisition parameters are
+% identical across files in a multi-file recording, so a single parse is
+% sufficient to characterize the layout.
+primary_filename = files{1};
+
+fid = fopen(primary_filename,'r');
+if fileid_value(fid)<0,
+	error(['Could not open filename ' filename_value(primary_filename) ' for reading (check path, spelling, permissions).']);
+end;
+
+[dirname,fname,ext]=fileparts(primary_filename);
 s = dir(fullfile(dirname,[fname ext]));
 if isempty(s),
-    error(['Could not find a file ' filename_value(filename) '; check spelling, permissions, extension']);
+    error(['Could not find a file ' filename_value(primary_filename) '; check spelling, permissions, extension']);
 end;
 filesize = s.bytes;
 % Check 'magic number' at beginning of file to make sure this is an Intan
@@ -235,3 +267,22 @@ end
 header.fileinfo.headersize = ftell(fid); % get the location of the next byte to be read
 
 fclose(fid);
+
+% Attach multi-file information so downstream block/data readers can treat
+% the recording as one continuous file. Per-file headersize is assumed
+% identical across files because the acquisition parameters match; only
+% the file sizes need to be measured for each constituent file.
+file_sizes = zeros(1, numel(files));
+for i = 1:numel(files),
+    s_i = dir(files{i});
+    if isempty(s_i),
+        error(['Could not stat file ' files{i} '.']);
+    end;
+    file_sizes(i) = s_i.bytes;
+end;
+
+header.fileinfo.multifile = struct(...
+    'fileMode', fileMode, ...
+    'files', {files}, ...
+    'file_sizes', file_sizes, ...
+    'headersize', header.fileinfo.headersize);

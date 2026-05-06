@@ -4,6 +4,23 @@ function [data,total_samples,total_time,blockinfo] = read_Intan_RHD2000_datafile
 %  [DATA,TOTAL_SAMPLES,TOTAL_TIME,BLOCKINFO] = READ_INTAN_RHD2000_DATAFILE(FILENAME,
 %     HEADER, CHANNEL_TYPE, CHANNEL_NUMBERS, T0, T1);
 %
+%  Optional name/value pairs:
+%    'fileMode'                  - 'detect' (default), 'singleFile', or
+%                                  'multiFile'. In 'detect' mode the reader
+%                                  checks for Intan-style sibling files in
+%                                  the same directory and automatically
+%                                  resolves to 'multiFile' or 'singleFile'.
+%                                  In 'multiFile' mode, FILENAME is treated
+%                                  as one member of a contiguous set of
+%                                  Intan-saved files sharing a common
+%                                  prefix; the reader transparently spans
+%                                  the entire set, so T0 and T1 refer to
+%                                  the time axis of the concatenated
+%                                  recording.
+%    'force_single_channel_read' - Force the per-channel read path even
+%                                  when multiple consecutive channels are
+%                                  requested.
+%
 %  Inputs:
 %  Reads data from the Intan Technologies .rhd 2000 file FILENAME.
 %  The file HEADER information can be provided in HEADER.  If HEADER
@@ -52,13 +69,18 @@ function [data,total_samples,total_time,blockinfo] = read_Intan_RHD2000_datafile
 %
 
 force_single_channel_read = 0;
+fileMode = 'detect';
 assign(varargin{:});
 
-if isempty(header),
-	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+if strcmp(fileMode, 'detect'),
+	fileMode = ndr.format.intan.detectRHD2000FileMode(filename);
 end;
 
-[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
+if isempty(header),
+	header = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
+end;
+
+[blockinfo, bytes_per_block, bytes_present, num_data_blocks, file_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 
 total_samples = header.fileinfo.num_samples_per_data_block * num_data_blocks;
 total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
@@ -88,6 +110,37 @@ if ischar(channel_type),
 end;
 ch(channel_type) = 1;
 c = find(ch);
+
+% Multi-file mode: dispatch the request to the constituent files and
+% concatenate the results, treating the recording as one continuous file.
+if isfield(header.fileinfo,'multifile') && strcmp(header.fileinfo.multifile.fileMode,'multiFile'),
+	files = header.fileinfo.multifile.files;
+	spb = blockinfo(c).samples_per_block;
+	sr = blockinfo(c).sample_rate;
+	file_samples = file_blocks * spb;
+	cum_end = cumsum(file_samples);
+	cum_start = [0, cum_end(1:end-1)] + 1;
+
+	g_s0 = 1 + round(t0 * sr);
+	g_s1 = 1 + round(t1 * sr);
+
+	data = [];
+	for i = 1:numel(files),
+		f_lo = cum_start(i);
+		f_hi = cum_end(i);
+		if f_hi < g_s0 || f_lo > g_s1,
+			continue;
+		end;
+		local_lo = max(f_lo, g_s0) - f_lo + 1;
+		local_hi = min(f_hi, g_s1) - f_lo + 1;
+		local_t0 = (local_lo - 1) / sr;
+		local_t1 = (local_hi - 1) / sr;
+		d_i = ndr.format.intan.read_Intan_RHD2000_datafile(files{i}, [], channel_type, channel_numbers, local_t0, local_t1, ...
+			'fileMode', 'singleFile', 'force_single_channel_read', force_single_channel_read);
+		data = [data; d_i];
+	end;
+	return;
+end;
 
  % now compute starting and ending samples to read
 s0 = 1+round(t0 * blockinfo(c).sample_rate);

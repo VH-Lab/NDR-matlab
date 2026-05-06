@@ -1,7 +1,7 @@
-function [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = Intan_RHD2000_blockinfo(filename, header)
+function [blockinfo, bytes_per_block, bytes_present, num_data_blocks, file_blocks] = Intan_RHD2000_blockinfo(filename, header)
 % INTAN_RHD2000_BLOCKINFO - Block information for an Intan RHD2000 file
 %
-%  [BLOCK_INFO, BYTES_PER_BLOCK, BYTES_PRESENT, NUMDATABLOCKS]  = ...
+%  [BLOCK_INFO, BYTES_PER_BLOCK, BYTES_PRESENT, NUMDATABLOCKS, FILE_BLOCKS]  = ...
 %         INTAN_RHD2000_BLOCKINFO(FILENAME [, HEADER])
 %
 % Computes the parameters of each data block of an Intan_RHD_2000 file.
@@ -14,14 +14,19 @@ function [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = Intan_RH
 % FILENAME should be the name of an RHD2000 file (normally with extension
 % '.rhd').  HEADER should be the header information structure that is returned
 % by READ_INTAN_RHD2000_HEADER; if it is left blank, it will be read from the
-% file.
-% 
+% file using the default 'detect' fileMode, which automatically aggregates
+% across an Intan multi-file recording when sibling files are present.
+%
 % BLOCK_INFO is a structure describing the parameters of each block.
 % BYTES_PER_BLOCK is the number of bytes per data block
-% BYTES_PRESENT is the number of non-header bytes in the file.
-% NUMDATABLOCKS is the number of data blocks in the file.
+% BYTES_PRESENT is the number of non-header bytes in the file (or the sum
+%   across all files when HEADER describes a multi-file recording).
+% NUMDATABLOCKS is the number of data blocks in the file (or the sum across
+%   all files when HEADER describes a multi-file recording).
+% FILE_BLOCKS is a vector with the per-file data block counts (length 1 in
+%   single-file mode, length N in multi-file mode).
 %
-% See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, CAT_INTAN_RHD2000_FILES
+% See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, CAT_INTAN_RHD2000_FILES, GETRHD2000FILELIST
 
 if nargin<2,
 	header = ndr.format.intan.read_Intan_RHD2000_header(filename);
@@ -97,10 +102,28 @@ for i=1:length(blockinfo),
 end;
 bytes_per_block = block_offset;
 
-% How many data blocks are in this file?
-bytes_present = header.fileinfo.filesize - header.fileinfo.headersize;
-num_data_blocks_float = bytes_present / bytes_per_block;
-num_data_blocks = floor(num_data_blocks_float);
-if num_data_blocks~=num_data_blocks_float,
-	warning(['File ' filename ' may be truncated or corrupted. Proceeding with ' int2str(num_data_blocks) ' of ' num2str(num_data_blocks_float) ' data blocks.']);
+% How many data blocks are in this file (or across all files in multi-file mode)?
+if isfield(header.fileinfo,'multifile') && strcmp(header.fileinfo.multifile.fileMode,'multiFile'),
+	mf = header.fileinfo.multifile;
+	file_blocks = zeros(1, numel(mf.files));
+	bytes_present = 0;
+	for i = 1:numel(mf.files),
+		bytes_present_i = mf.file_sizes(i) - mf.headersize;
+		num_blocks_float_i = bytes_present_i / bytes_per_block;
+		num_blocks_i = floor(num_blocks_float_i);
+		if num_blocks_i ~= num_blocks_float_i,
+			warning(['File ' mf.files{i} ' may be truncated or corrupted. Proceeding with ' int2str(num_blocks_i) ' of ' num2str(num_blocks_float_i) ' data blocks.']);
+		end;
+		file_blocks(i) = num_blocks_i;
+		bytes_present = bytes_present + bytes_present_i;
+	end;
+	num_data_blocks = sum(file_blocks);
+else,
+	bytes_present = header.fileinfo.filesize - header.fileinfo.headersize;
+	num_data_blocks_float = bytes_present / bytes_per_block;
+	num_data_blocks = floor(num_data_blocks_float);
+	if num_data_blocks~=num_data_blocks_float,
+		warning(['File ' filename ' may be truncated or corrupted. Proceeding with ' int2str(num_data_blocks) ' of ' num2str(num_data_blocks_float) ' data blocks.']);
+	end;
+	file_blocks = num_data_blocks;
 end;
