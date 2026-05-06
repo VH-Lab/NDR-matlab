@@ -5,11 +5,15 @@ function [data,total_samples,total_time,blockinfo] = read_Intan_RHD2000_datafile
 %     HEADER, CHANNEL_TYPE, CHANNEL_NUMBERS, T0, T1);
 %
 %  Optional name/value pairs:
-%    'fileMode'                  - 'singleFile' (default) or 'multiFile'.
+%    'fileMode'                  - 'detect' (default), 'singleFile', or
+%                                  'multiFile'. In 'detect' mode the reader
+%                                  checks for Intan-style sibling files in
+%                                  the same directory and automatically
+%                                  resolves to 'multiFile' or 'singleFile'.
 %                                  In 'multiFile' mode, FILENAME is treated
 %                                  as one member of a contiguous set of
 %                                  Intan-saved files sharing a common
-%                                  prefix. The reader transparently spans
+%                                  prefix; the reader transparently spans
 %                                  the entire set, so T0 and T1 refer to
 %                                  the time axis of the concatenated
 %                                  recording.
@@ -65,8 +69,12 @@ function [data,total_samples,total_time,blockinfo] = read_Intan_RHD2000_datafile
 %
 
 force_single_channel_read = 0;
-fileMode = 'singleFile';
+fileMode = 'detect';
 assign(varargin{:});
+
+if strcmp(fileMode, 'detect'),
+	fileMode = ndr.format.intan.detectRHD2000FileMode(filename);
+end;
 
 if isempty(header),
 	header = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);

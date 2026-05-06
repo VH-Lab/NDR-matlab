@@ -125,10 +125,9 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             testCase.verifyEqual(result, 'ai1', 'Should work without chip_channel field');
         end
 
-        function testMultiFileMode(testCase)
-            % Verify that two copies of the example file, named per the
-            % Intan multi-file convention, are exposed as a single
-            % continuous recording.
+        function testDetectFileMode(testCase)
+            % Verify detectRHD2000FileMode returns 'multiFile' iff there
+            % are >=2 sibling files matching the Intan timestamp pattern.
             ndr_path = ndr.fun.ndrpath();
             rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
 
@@ -136,20 +135,71 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             mkdir(tmpdir);
             cleanup = onCleanup(@() rmdir(tmpdir, 's'));
 
+            % File without timestamp suffix -> singleFile
+            plain = fullfile(tmpdir, 'plain.rhd');
+            copyfile(rhd_file, plain);
+            testCase.verifyEqual(ndr.format.intan.detectRHD2000FileMode(plain), 'singleFile');
+
+            % Single timestamped file (no siblings) -> singleFile
             f1 = fullfile(tmpdir, 'recording_240101_120000.rhd');
+            copyfile(rhd_file, f1);
+            testCase.verifyEqual(ndr.format.intan.detectRHD2000FileMode(f1), 'singleFile');
+
+            % Add a sibling -> multiFile
             f2 = fullfile(tmpdir, 'recording_240101_120100.rhd');
+            copyfile(rhd_file, f2);
+            testCase.verifyEqual(ndr.format.intan.detectRHD2000FileMode(f1), 'multiFile');
+            testCase.verifyEqual(ndr.format.intan.detectRHD2000FileMode(f2), 'multiFile');
+
+            % Default fileMode in the format layer is 'detect': calling
+            % the header reader with no fileMode should aggregate when
+            % siblings exist.
+            header_default = ndr.format.intan.read_Intan_RHD2000_header(f1);
+            testCase.verifyEqual(header_default.fileinfo.multifile.fileMode, 'multiFile');
+            testCase.verifyEqual(numel(header_default.fileinfo.multifile.files), 2);
+
+            % And a single-file directory yields singleFile by default.
+            header_plain = ndr.format.intan.read_Intan_RHD2000_header(plain);
+            testCase.verifyEqual(header_plain.fileinfo.multifile.fileMode, 'singleFile');
+        end
+
+        function testMultiFileMode(testCase)
+            % Verify that two copies of the example file, named per the
+            % Intan multi-file convention, are exposed as a single
+            % continuous recording.
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+
+            % Multi-file directory: two timestamped siblings
+            multi_dir = tempname();
+            mkdir(multi_dir);
+            cleanup_multi = onCleanup(@() rmdir(multi_dir, 's'));
+            f1 = fullfile(multi_dir, 'recording_240101_120000.rhd');
+            f2 = fullfile(multi_dir, 'recording_240101_120100.rhd');
             copyfile(rhd_file, f1);
             copyfile(rhd_file, f2);
 
-            % helper: file list discovery and ordering
+            % Single-file directory: a separate copy on its own so the
+            % default 'detect' fileMode resolves to 'singleFile'
+            single_dir = tempname();
+            mkdir(single_dir);
+            cleanup_single = onCleanup(@() rmdir(single_dir, 's'));
+            solo = fullfile(single_dir, 'recording_240101_120000.rhd');
+            copyfile(rhd_file, solo);
+
+            % helper: file list discovery and ordering in explicit multiFile
             files = ndr.format.intan.getRHD2000FileList(f2, 'multiFile');
             testCase.verifyEqual(numel(files), 2);
             testCase.verifyEqual(files{1}, f1);
             testCase.verifyEqual(files{2}, f2);
 
-            % singleFile default returns just the requested file
-            files_single = ndr.format.intan.getRHD2000FileList(f1);
+            % singleFile mode returns just the requested file even when siblings exist
+            files_single = ndr.format.intan.getRHD2000FileList(f1, 'singleFile');
             testCase.verifyEqual(files_single, {f1});
+
+            % default 'detect' mode resolves correctly in each directory
+            testCase.verifyEqual(numel(ndr.format.intan.getRHD2000FileList(f1)), 2);
+            testCase.verifyEqual(ndr.format.intan.getRHD2000FileList(solo), {solo});
 
             % header in multi-file mode reports both files
             header_multi = ndr.format.intan.read_Intan_RHD2000_header(f1, 'fileMode', 'multiFile');
@@ -157,25 +207,25 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             testCase.verifyEqual(numel(header_multi.fileinfo.multifile.files), 2);
 
             % blockinfo aggregates blocks across files
-            header_single = ndr.format.intan.read_Intan_RHD2000_header(f1);
-            [~, ~, ~, num_blocks_single] = ndr.format.intan.Intan_RHD2000_blockinfo(f1, header_single);
+            header_single = ndr.format.intan.read_Intan_RHD2000_header(solo);
+            [~, ~, ~, num_blocks_single] = ndr.format.intan.Intan_RHD2000_blockinfo(solo, header_single);
             [~, ~, ~, num_blocks_multi, file_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(f1, header_multi);
             testCase.verifyEqual(num_blocks_multi, 2 * num_blocks_single);
             testCase.verifyEqual(file_blocks, [num_blocks_single num_blocks_single]);
 
-            % reader autodetects multi-file when more than one .rhd is in the epochstreams
+            % reader autodetects multi-file when sibling files exist on disk
             reader = ndr.reader.intan_rhd();
-            t0t1_single = reader.t0_t1({f1}, 1);
+            t0t1_single = reader.t0_t1({solo}, 1);
             t0t1_multi = reader.t0_t1({f1, f2}, 1);
-            sr = reader.samplerate({f1}, 1, 'ai', 1);
+            sr = reader.samplerate({solo}, 1, 'ai', 1);
             duration_single = t0t1_single{1}(2) - t0t1_single{1}(1);
             duration_multi = t0t1_multi{1}(2) - t0t1_multi{1}(1);
             testCase.verifyEqual(duration_multi, duration_single + duration_single + 1/sr, 'AbsTol', 1e-9);
 
             % reading the first N samples in multi-file mode equals reading
-            % them in single-file mode
+            % them from the lone single file
             n = 50;
-            data_single = reader.readchannels_epochsamples('ai', 1, {f1}, 1, 1, n);
+            data_single = reader.readchannels_epochsamples('ai', 1, {solo}, 1, 1, n);
             data_multi = reader.readchannels_epochsamples('ai', 1, {f1, f2}, 1, 1, n);
             testCase.verifyEqual(data_multi, data_single);
 
@@ -183,10 +233,14 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             % the concatenation of (tail of file 1) + (head of file 2)
             single_total_samples = num_blocks_single * header_single.fileinfo.num_samples_per_data_block;
             span = 20;
-            tail = reader.readchannels_epochsamples('ai', 1, {f1}, 1, single_total_samples - span + 1, single_total_samples);
-            head = reader.readchannels_epochsamples('ai', 1, {f1}, 1, 1, span);
+            tail = reader.readchannels_epochsamples('ai', 1, {solo}, 1, single_total_samples - span + 1, single_total_samples);
+            head = reader.readchannels_epochsamples('ai', 1, {solo}, 1, 1, span);
             spanning = reader.readchannels_epochsamples('ai', 1, {f1, f2}, 1, single_total_samples - span + 1, single_total_samples + span);
             testCase.verifyEqual(spanning, [tail; head]);
+
+            % single-file epoch with no siblings on disk reads as singleFile
+            data_single_default = reader.readchannels_epochsamples('ai', 1, {solo}, 1, 1, n);
+            testCase.verifyEqual(data_single_default, data_single);
         end
 
         function testAuxSampleRate(testCase)

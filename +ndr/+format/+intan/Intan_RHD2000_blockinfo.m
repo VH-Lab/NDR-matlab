@@ -14,7 +14,8 @@ function [blockinfo, bytes_per_block, bytes_present, num_data_blocks, file_block
 % FILENAME should be the name of an RHD2000 file (normally with extension
 % '.rhd').  HEADER should be the header information structure that is returned
 % by READ_INTAN_RHD2000_HEADER; if it is left blank, it will be read from the
-% file.
+% file using the default 'detect' fileMode, which automatically aggregates
+% across an Intan multi-file recording when sibling files are present.
 %
 % BLOCK_INFO is a structure describing the parameters of each block.
 % BYTES_PER_BLOCK is the number of bytes per data block

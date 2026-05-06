@@ -7,8 +7,11 @@ function files = getRHD2000FileList(filename, fileMode)
 %  that together make up the recording.
 %
 %  FILEMODE may be:
-%    'singleFile' (default) - The recording is a single .rhd file. Returns a
-%       cell array containing just FILENAME.
+%    'detect' (default) - Auto-detect: resolves to 'multiFile' if more than
+%       one file matching the prefix+timestamp pattern is found in the same
+%       directory, otherwise 'singleFile'. See DETECTRHD2000FILEMODE.
+%    'singleFile' - The recording is a single .rhd file. Returns a cell
+%       array containing just FILENAME.
 %    'multiFile'  - The recording is spread across many .rhd files saved by
 %       the Intan acquisition software with the same base prefix and a
 %       <YYMMDD>_<HHMMSS> timestamp before the extension. Returns the sorted
@@ -16,10 +19,14 @@ function files = getRHD2000FileList(filename, fileMode)
 %       '<prefix>_<YYMMDD>_<HHMMSS>.rhd', where <prefix> is parsed from
 %       FILENAME.
 %
-%  See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE
+%  See also: READ_INTAN_RHD2000_HEADER, READ_INTAN_RHD2000_DATAFILE, DETECTRHD2000FILEMODE
 
 if nargin < 2 || isempty(fileMode),
-    fileMode = 'singleFile';
+    fileMode = 'detect';
+end;
+
+if strcmp(fileMode, 'detect'),
+    fileMode = ndr.format.intan.detectRHD2000FileMode(filename);
 end;
 
 switch fileMode,

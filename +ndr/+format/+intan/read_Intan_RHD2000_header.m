@@ -8,15 +8,17 @@ function [header] = read_Intan_RHD2000_header(filename, varargin);
 % are stored in the Intan RHD2000 file FILENAME.
 %
 % Optional name/value pairs:
-%   'fileMode'   -  'singleFile' (default) reads the header from a single
-%                   .rhd file. 'multiFile' indicates that FILENAME is one
-%                   member of a set of .rhd files saved by the Intan
-%                   acquisition software with a common prefix and a
-%                   <YYMMDD>_<HHMMSS> timestamp before the extension that
-%                   together represent a continuous recording. The header
-%                   is parsed from the first (chronologically earliest)
-%                   file and the resulting HEADER exposes the recording as
-%                   if it were one large file.
+%   'fileMode'   -  'detect' (default) checks whether FILENAME has Intan
+%                   sibling files in the same directory matching
+%                   '<prefix>_<YYMMDD>_<HHMMSS>.rhd' and resolves to either
+%                   'multiFile' or 'singleFile' (see DETECTRHD2000FILEMODE).
+%                   Pass 'singleFile' to force reading the header from a
+%                   single .rhd file, or 'multiFile' to force treating
+%                   FILENAME as one member of a set that together represents
+%                   a continuous recording. The header is parsed from the
+%                   first (chronologically earliest) file and the resulting
+%                   HEADER exposes the recording as if it were one large
+%                   file.
 %
 % HEADER contains several substructures:
 % --------------------------------------------------------------------
@@ -38,8 +40,12 @@ function [header] = read_Intan_RHD2000_header(filename, varargin);
 % See also: READ_INTAN_RHD2000_DATAFILE, GETRHD2000FILELIST
 %
 
-fileMode = 'singleFile';
+fileMode = 'detect';
 assign(varargin{:});
+
+if strcmp(fileMode, 'detect'),
+	fileMode = ndr.format.intan.detectRHD2000FileMode(filename);
+end;
 
 files = ndr.format.intan.getRHD2000FileList(filename, fileMode);
 

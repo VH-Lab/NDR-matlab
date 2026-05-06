@@ -350,13 +350,15 @@ classdef intan_rhd < ndr.reader.base
 			%  recording (Intan saves a new file each time its file-length
 			%  threshold is reached). In that case FILEMODE is 'multiFile'
 			%  and FILENAME is the chronologically earliest of the supplied
-			%  files. Otherwise FILEMODE is 'singleFile'.
+			%  files. Otherwise FILEMODE is 'detect', which lets the format
+			%  layer auto-detect multi-file recordings by looking for Intan
+			%  sibling files in the same directory.
 			%
 				s1 = ['.*\.rhd\>']; % equivalent of *.ext on the command line
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
 				parentdir = '';
 				isdirectory = 0;
-				fileMode = 'singleFile';
+				fileMode = 'detect';
 
 				index = find(tf);
 				if numel(index)==0,
