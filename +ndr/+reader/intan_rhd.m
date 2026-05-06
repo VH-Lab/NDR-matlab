@@ -89,9 +89,9 @@ classdef intan_rhd < ndr.reader.base
 			%
 				channelstruct = vlt.data.emptystruct('internal_type','internal_number',...
 					'internal_channelname','ndr_type','samplerate');
-			    
-				filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
-				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+
+				[filename, ~, ~, fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
+				header = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
 			    
 				% make sure that the fields are in the correct order
 				channelstruct_here.internal_type = [];
@@ -139,9 +139,9 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%  See also: ndr.time.clocktype, EPOCHCLOCK
 			%
-				[filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
-				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
-				
+				[filename,parentdir,isdirectory,fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
+				header = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
+
 				if ~isdirectory,
 					[blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo(filename, header);
 					total_samples = 60 * num_data_blocks;
@@ -188,8 +188,8 @@ classdef intan_rhd < ndr.reader.base
 				%   for any new channel that hasn't been identified before,
 				%   add it to the list
 
-				filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
-				header = ndr.format.intan.read_Intan_RHD2000_header(filename);
+				[filename, ~, ~, fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
+				header = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
 
 				channels = vlt.data.emptystruct('name','type','time_channel');
 
@@ -284,7 +284,7 @@ classdef intan_rhd < ndr.reader.base
 			%
 			%  DATA will have one column per channel.
 			%
-				[filename,parentdir,isdirectory] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
+				[filename,parentdir,isdirectory,fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
 
 				intanchanneltype = intan_rhd_obj.mfdaqchanneltype2intanchanneltype(channeltype);
 
@@ -304,7 +304,7 @@ classdef intan_rhd < ndr.reader.base
 				end;
 
 				if ~isdirectory,
-					data = ndr.format.intan.read_Intan_RHD2000_datafile(filename,'',intanchanneltype,channel,t0,t1);
+					data = ndr.format.intan.read_Intan_RHD2000_datafile(filename,[],intanchanneltype,channel,t0,t1,'fileMode',fileMode);
 				else,
 					data = ndr.format.intan.read_Intan_RHD2000_directory(parentdir,'',intanchanneltype,channel,t0,t1);
 				end;
@@ -326,9 +326,9 @@ classdef intan_rhd < ndr.reader.base
 					error(['Intan RHD files have 1 epoch per file.']);
 				end;
 				sr = [];
-				filename = intan_rhd_obj.filenamefromepochfiles(epochstreams);
-			    
-				head = ndr.format.intan.read_Intan_RHD2000_header(filename);
+				[filename, ~, ~, fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
+
+				head = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
 				for i=1:numel(channel),
 					channeltype_here = vlt.data.celloritem(channeltype,i);
 					freq_fieldname = intan_rhd_obj.mfdaqchanneltype2intanfreqheader(channeltype_here);
@@ -336,25 +336,38 @@ classdef intan_rhd < ndr.reader.base
 				end
 		end % ndr.reader.intan_rhd.samplerate
 		
-		function [filename, parentdir, isdirectory] = filenamefromepochfiles(intan_rhd_obj, filename_array)
+		function [filename, parentdir, isdirectory, fileMode] = filenamefromepochfiles(intan_rhd_obj, filename_array)
 			% FILENAMEFROMEPOCHFILES - Return the file name that corresponds to the .RHD file, or directory in case of directory
 			%
-			%  [FILENAME, PARENTDIR, ISDIRECTORY] = FILENAMEFROMEPOCHFILES(NDR_NDRREADER_INTANREADER_OBJ, FILENAME_ARRAY)
+			%  [FILENAME, PARENTDIR, ISDIRECTORY, FILEMODE] = FILENAMEFROMEPOCHFILES(NDR_NDRREADER_INTANREADER_OBJ, FILENAME_ARRAY)
 			%
 			%  Examines the list of filenames in FILENAME_ARRAY (cell array of full path file strings) and determines which
 			%  one is an .RHD data file. If the 1-file-per-channel mode is used, then PARENTDIR is the name of the directory
 			%  that holds the data files and ISDIRECTORY is 1.
 			%
+			%  If more than one .rhd file is provided in FILENAME_ARRAY, the
+			%  recording is treated as a single contiguous multi-file
+			%  recording (Intan saves a new file each time its file-length
+			%  threshold is reached). In that case FILEMODE is 'multiFile'
+			%  and FILENAME is the chronologically earliest of the supplied
+			%  files. Otherwise FILEMODE is 'singleFile'.
+			%
 				s1 = ['.*\.rhd\>']; % equivalent of *.ext on the command line
 				[tf, matchstring, substring] = vlt.string.strcmp_substitution(s1,filename_array,'UseSubstituteString',0);
 				parentdir = '';
 				isdirectory = 0;
-		    
+				fileMode = 'singleFile';
+
 				index = find(tf);
-				if numel(index)>1,
-					error(['Need only 1 .rhd file per epoch.']);
-				elseif numel(index)==0,
-					error(['Need 1 .rhd file per epoch.']);
+				if numel(index)==0,
+					error(['Need at least 1 .rhd file per epoch.']);
+				elseif numel(index)>1,
+					rhd_files = filename_array(index);
+					[~, order] = sort(rhd_files);
+					rhd_files = rhd_files(order);
+					filename = rhd_files{1};
+					[parentdir, ~, ~] = fileparts(filename);
+					fileMode = 'multiFile';
 				else,
 					filename = filename_array{index};
 					[parentdir, fname, ext] = fileparts(filename);
