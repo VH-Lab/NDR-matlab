@@ -286,6 +286,13 @@ classdef intan_rhd < ndr.reader.base
 			%
 				[filename,parentdir,isdirectory,fileMode] = intan_rhd_obj.filenamefromepochfiles(epochstreams);
 
+				if iscell(channeltype),
+					assert(all(strcmp(channeltype,channeltype{1})), ...
+						'ndr:reader:intan_rhd:readchannels_epochsamples:HeterogeneousChannelTypes', ...
+						'channeltype cell array must be uniform; intan_rhd reads one type per call.');
+					channeltype = channeltype{1};
+				end;
+
 				intanchanneltype = intan_rhd_obj.mfdaqchanneltype2intanchanneltype(channeltype);
 
 				sr = intan_rhd_obj.samplerate(epochstreams, epoch_select, channeltype, channel);
