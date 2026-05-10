@@ -133,9 +133,61 @@ classdef base
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			% 'time_channel'     | The index of the time channel that describes the time of this channel
 			%
+			% The way 'name' is constructed depends on the reader's labeling
+			% convention for that channel type. See CHANNELLABELINGCONVENTION
+			% for the contract.
 			%
 				channels = vlt.data.emptystruct('name','type','time_channel');
 		end; % getchannelsepoch()
+
+		function convention = channelLabelingConvention(ndr_reader_base_obj, channeltype)
+			% CHANNELLABELINGCONVENTION - Describe how this reader names channels of a given type
+			%
+			% CONVENTION = CHANNELLABELINGCONVENTION(NDR_READER_BASE_OBJ, CHANNELTYPE)
+			%
+			% Returns a string declaring the naming convention this reader uses
+			% for channels of type CHANNELTYPE in GETCHANNELSEPOCH and as input
+			% to DAQCHANNELS2INTERNALCHANNELS. CONVENTION is one of:
+			%
+			%   'indexed'  - Names use NDR-standard prefixes (e.g. 'ai', 'ao',
+			%                'ax', 'di', 'do', 't') followed by a 1-based count
+			%                of recorded channels of that type. The first
+			%                recorded analog input is 'ai1', the second 'ai2',
+			%                and so on, regardless of any hardware-channel gaps
+			%                in the underlying file. This is the convention NDI
+			%                users typically expect; it is the default and the
+			%                only one for which the trailing number is safe to
+			%                interpret as a position.
+			%
+			%   'physical' - Names use NDR-standard prefixes followed by the
+			%                manufacturer's hardware channel number, in the
+			%                manufacturer's own indexing base (which may be
+			%                0-based, 1-based, or per-type). The number is a
+			%                hardware identity, not a position, and may have
+			%                gaps. Example: an Intan amplifier channel
+			%                'A-007' under 'physical' would be 'ai7' (Intan
+			%                amp channels are 0-based), while an Intan aux
+			%                channel 'AUX1' would be 'ax1' (1-based).
+			%                Consumers must not assume a uniform indexing
+			%                base across types under this convention.
+			%
+			%   'native'   - The name is the device-native string verbatim,
+			%                without any NDR-standard prefix (e.g. 'A-007',
+			%                'AUX1', 'Vm', 'L_LFP'). The name is opaque: do
+			%                not attempt to parse a number or type out of it.
+			%                The type must be read from the channel struct's
+			%                'type' field, not inferred from the name.
+			%
+			% A reader may return different conventions for different
+			% channel types (e.g. 'indexed' for amplifier inputs and
+			% 'native' for user-labeled analog signals).
+			%
+			% The base implementation returns 'indexed' for every channel
+			% type. Subclasses should override this only if their
+			% GETCHANNELSEPOCH actually emits non-indexed names.
+			%
+				convention = 'indexed';
+		end % channelLabelingConvention()
 
         function [datatype,p,datasize] = underlying_datatype(ndr_reader_obj, epochstreams, epoch_select, channeltype, channel)
             % UNDERLYING_DATATYPE - get the underlying data type for a channel in an epoch

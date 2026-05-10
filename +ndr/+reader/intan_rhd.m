@@ -175,6 +175,12 @@ classdef intan_rhd < ndr.reader.base
 			% 'type'             | The type of data store in the channel
 			%                    |    (e.g., 'analogin', 'digitalin', 'image', 'timestamp')
 			%
+			% The Intan reader uses the 'indexed' labeling convention for
+			% every channel type: names are NDR-standard prefix + 1-based
+			% position in the recorded set (so 'ai1' is the first recorded
+			% amplifier channel regardless of its chip_channel). See
+			% ndr.reader.base/channelLabelingConvention.
+			%
 			
 				intan_channel_types = {
 					'amplifier_channels'

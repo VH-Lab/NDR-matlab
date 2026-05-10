@@ -276,6 +276,20 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             end
         end
 
+        function testChannelLabelingConvention(testCase)
+            % Intan should declare 'indexed' for every channel type so that
+            % names round-trip through daqchannels2internalchannels and NDI
+            % users can rely on 'aiN' meaning "Nth recorded amp channel".
+            reader = ndr.reader.intan_rhd();
+            types = {'analog_in','analog_out','auxiliary_in','digital_in', ...
+                     'digital_out','time'};
+            for i = 1:numel(types)
+                testCase.verifyEqual( ...
+                    reader.channelLabelingConvention(types{i}), 'indexed', ...
+                    sprintf('Convention for %s should be ''indexed''', types{i}));
+            end
+        end
+
         function testAuxSampleRate(testCase)
             % Test that samplerate works for auxiliary_in
             reader = ndr.reader.intan_rhd();
