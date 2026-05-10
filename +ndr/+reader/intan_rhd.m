@@ -205,12 +205,16 @@ classdef intan_rhd < ndr.reader.base
 					intan_channel_types{k});
 					channel = getfield(header, intan_channel_types{k});
 					num = numel(channel); % number of channels with specific type
+					prefix = ndr.reader.base.mfdaq_prefix(channel_type_entry);
 					for p=1:numel(channel),
 						newchannel.type = channel_type_entry;
-						newchannel.name = intan_rhd_obj.intanname2mfdaqname(...
-							intan_rhd_obj,...
-							channel_type_entry,...
-							channel(p));
+						% Name channels by their position in the header list
+						% (1-based) so 'ai1' = first recorded amp channel, etc.
+						% This matches how daqchannels2internalchannels resolves
+						% relative references and avoids confusing chip-channel
+						% gaps (e.g. only A-007 recorded would otherwise be
+						% advertised as 'ai8' but read back as position 8).
+						newchannel.name = [prefix int2str(p)];
 						if strcmpi(newchannel.type,'auxiliary_in'),
 							newchannel.time_channel = 2;
 						else,
