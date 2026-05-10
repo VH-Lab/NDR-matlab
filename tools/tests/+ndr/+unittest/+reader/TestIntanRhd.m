@@ -290,6 +290,33 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             end
         end
 
+        function testDigitalReadIsZeroOne(testCase)
+            % readchannels_epochsamples must return digital channels as 0/1
+            % values, not the raw 16-bit packed word with a single bit
+            % isolated (e.g. 0/16 for a channel on bit 4). The indexed
+            % channel number selects which recorded digital channel to
+            % extract; the bit position itself comes from that channel's
+            % native_order in the header.
+            reader = ndr.reader.intan_rhd();
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+            epochstreams = {rhd_file};
+            epoch_select = 1;
+            header = ndr.format.intan.read_Intan_RHD2000_header(rhd_file);
+            if isempty(header.board_dig_in_channels),
+                return; % nothing to check on this fixture
+            end;
+            n = min(2000, ...
+                round(reader.samplerate(epochstreams, epoch_select, 'digital_in', 1)));
+            data = reader.readchannels_epochsamples('digital_in', 1, ...
+                epochstreams, epoch_select, 1, n);
+            testCase.verifyEqual(size(data,2), 1);
+            u = unique(data(:));
+            testCase.verifyTrue(all(ismember(u, [0;1])), ...
+                sprintf('digital_in channel 1 returned non-0/1 values: %s', ...
+                mat2str(u(:).')));
+        end
+
         function testAuxSampleRate(testCase)
             % Test that samplerate works for auxiliary_in
             reader = ndr.reader.intan_rhd();
