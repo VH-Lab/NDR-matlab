@@ -142,6 +142,30 @@ if isfield(header.fileinfo,'multifile') && strcmp(header.fileinfo.multifile.file
 	return;
 end;
 
+% Digital channels (din/dout) are stored as a single packed 16-bit word
+% per sample. The user's CHANNEL_NUMBERS index into the recorded digital
+% channel list (1-based, matching header.board_dig_in_channels /
+% board_dig_out_channels), and each requested channel's bit position is
+% that channel's native_order. Save the requested list, override the
+% underlying read to pull the single packed word as channel 1, then
+% expand to per-channel 0/1 columns at the end of this function.
+is_digital = (channel_type == 7) || (channel_type == 8);
+if is_digital,
+	if channel_type == 7,
+		dig_hinfo = header.board_dig_in_channels;
+	else,
+		dig_hinfo = header.board_dig_out_channels;
+	end;
+	if isempty(dig_hinfo),
+		error(['No digital ' blockinfo(c).type ' channels are present in this recording.']);
+	end;
+	if any(channel_numbers < 1 | channel_numbers > numel(dig_hinfo)),
+		error(['Requested digital channel(s) ' mat2str(channel_numbers) ' out of range 1..' int2str(numel(dig_hinfo)) '.']);
+	end;
+	requested_dig_channels = channel_numbers;
+	channel_numbers = 1; % the single packed word lives in column 1
+end;
+
  % now compute starting and ending samples to read
 s0 = 1+round(t0 * blockinfo(c).sample_rate);
 s1 = 1+round(t1 * blockinfo(c).sample_rate);
@@ -250,10 +274,23 @@ if block0_s~=0 | block1_~=blockinfo(c).samples_per_block,
 	data = data(block0_s:end-(blockinfo(c).samples_per_block-block1_s),:);
 end;
 
-if blockinfo(c).shift ~=0, 
+if blockinfo(c).shift ~=0,
 	data = double(data) - blockinfo(c).shift;
 end;
 
-if blockinfo(c).scale ~= 1, 
+if blockinfo(c).scale ~= 1,
 	data = double(data) * blockinfo(c).scale;
+end;
+
+if is_digital,
+	% Expand the single packed 16-bit word into one 0/1 column per
+	% requested digital channel, using each channel's native_order as
+	% the bit position within the word.
+	raw = uint16(data(:,1));
+	expanded = zeros(numel(raw), numel(requested_dig_channels));
+	for i = 1:numel(requested_dig_channels),
+		bit_pos = double(dig_hinfo(requested_dig_channels(i)).native_order);
+		expanded(:,i) = double(bitand(raw, uint16(2^bit_pos)) ~= 0);
+	end;
+	data = expanded;
 end;

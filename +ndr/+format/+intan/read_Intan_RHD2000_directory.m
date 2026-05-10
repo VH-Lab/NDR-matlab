@@ -151,8 +151,15 @@ switch channel_type,
 			if conversion_shift(channel_type) ~=0,
 				data_here = data_here - conversion_shift(channel_type);
 			end;
-			data(:,end+1) = data_here(:) * conversion_scale(channel_type); 
-		end;	
+			if channel_type==7 | channel_type==8,
+				% Per-channel files store the 16-bit packed word with only the
+				% corresponding native_order bit potentially set; normalize to 0/1.
+				data_here = double(data_here ~= 0);
+			else,
+				data_here = data_here(:) * conversion_scale(channel_type);
+			end;
+			data(:,end+1) = data_here(:);
+		end;
 	case 5,
 		error(['Do not know how to read temperature in this mode yet.']);
 end;
