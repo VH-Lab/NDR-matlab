@@ -114,7 +114,20 @@ end
 				end;
 		end
 
-	
+		function convention = channelLabelingConvention(ndr_reader_base_spikegadgets_obj, channeltype)
+			% CHANNELLABELINGCONVENTION - SpikeGadgets uses 'physical' for all types
+			%
+			% Channel names are NDR-prefix + the integer parsed out of the
+			% native SpikeGadgets identifier (e.g. 'Ain%d', 'Din%d'), which
+			% is the hardware channel index, not a 1-based position into the
+			% recorded set. (Whether SpikeGadgets numbering can have gaps in
+			% practice has not been verified; if it is always dense and
+			% 1-based, this could be relaxed to 'indexed' in the future.)
+			% See ndr.reader.base/channelLabelingConvention.
+			%
+				convention = 'physical';
+		end % channelLabelingConvention()
+
 		function sr = samplerate(ndr_reader_base_spikegadgets_obj, epochfiles, epoch_select, channeltype, channel)
 			% SAMPLERATE - GET THE SAMPLE RATE FOR SPECIFIC EPOCH AND CHANNEL
 			%
