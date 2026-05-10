@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Start virtual display server
         if: runner.os == 'Linux'
@@ -27,7 +27,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           release: latest
           cache: true
@@ -39,7 +39,7 @@ jobs:
         uses: ehennestad/matbox-actions/install-matbox@v1
 
       - name: Run symmetry tests
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         with:
           command: |
             % Add the repo root so MATLAB sees the top-level +ndr namespace,
@@ -93,7 +93,7 @@ jobs:
             assert(all(~[results.Failed]), "Some symmetry tests failed")
 
       - name: Restore MATLAB Path
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         if: always()
         with:
           command: |
