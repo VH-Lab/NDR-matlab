@@ -418,6 +418,18 @@ classdef TestNeuropixelsGLX < matlab.unittest.TestCase
             end
         end
 
+        function testChannelLabelingConvention(testCase)
+            % neuropixelsGLX builds names with 1-based loop counters
+            % (neuropixelsGLX.m:113,121) and inherits the base default of
+            % 'indexed'. Lock the contract.
+            reader = ndr.reader.neuropixelsGLX();
+            for t = {'analog_in','digital_in','time'}
+                testCase.verifyEqual( ...
+                    reader.channelLabelingConvention(t{1}), 'indexed', ...
+                    sprintf('neuropixelsGLX %s convention should be ''indexed''', t{1}));
+            end
+        end
+
     end % methods (Test)
 
 end % classdef
