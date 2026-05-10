@@ -24,6 +24,18 @@ classdef neo < ndr.reader.base
       end
     end
 
+    function convention = channelLabelingConvention(self, channeltype)
+      % CHANNELLABELINGCONVENTION - Neo passes device-native names through verbatim
+      %
+      % The Neo backend returns whatever name the underlying format
+      % supplies (e.g. 'A-000', 'AUX1'), so names are 'native' rather
+      % than NDR-prefixed. The exact string format depends on the
+      % concrete Neo IO class for the file at hand. See
+      % ndr.reader.base/channelLabelingConvention.
+      %
+      convention = 'native';
+    end
+
     % Matlab       Python          Example
     % _________________________________________
     % channeltype  channel_type    either 'time' or it's not important

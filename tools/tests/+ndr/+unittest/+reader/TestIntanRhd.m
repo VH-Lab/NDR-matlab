@@ -243,6 +243,53 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             testCase.verifyEqual(data_single_default, data_single);
         end
 
+        function testGetChannelsEpochPositionalNaming(testCase)
+            % getchannelsepoch must name amp/aux/digital channels positionally
+            % (ai1 = first recorded amp channel, ai2 = second, ...) so that the
+            % advertised name round-trips through daqchannels2internalchannels'
+            % relative-reference path, regardless of any gaps in chip_channel
+            % numbering in the underlying RHD header.
+            reader = ndr.reader.intan_rhd();
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+            channels = reader.getchannelsepoch({rhd_file}, 1);
+
+            % First entry is always the t1 time channel
+            testCase.verifyEqual(channels(1).name, 't1');
+            testCase.verifyEqual(channels(1).type, 'time');
+
+            % Walk the rest and make sure each non-time channel is named
+            % <prefix><k> where k is its 1-based position among channels of
+            % that type.
+            counts = struct();
+            for i = 1:numel(channels)
+                t = channels(i).type;
+                if strcmpi(t,'time'), continue; end
+                prefix = ndr.reader.base.mfdaq_prefix(t);
+                key = matlab.lang.makeValidName(t);
+                if ~isfield(counts, key), counts.(key) = 0; end
+                counts.(key) = counts.(key) + 1;
+                expected = [prefix int2str(counts.(key))];
+                testCase.verifyEqual(channels(i).name, expected, ...
+                    sprintf('Channel %d (type %s) named %s, expected %s', ...
+                        i, t, channels(i).name, expected));
+            end
+        end
+
+        function testChannelLabelingConvention(testCase)
+            % Intan should declare 'indexed' for every channel type so that
+            % names round-trip through daqchannels2internalchannels and NDI
+            % users can rely on 'aiN' meaning "Nth recorded amp channel".
+            reader = ndr.reader.intan_rhd();
+            types = {'analog_in','analog_out','auxiliary_in','digital_in', ...
+                     'digital_out','time'};
+            for i = 1:numel(types)
+                testCase.verifyEqual( ...
+                    reader.channelLabelingConvention(types{i}), 'indexed', ...
+                    sprintf('Convention for %s should be ''indexed''', types{i}));
+            end
+        end
+
         function testAuxSampleRate(testCase)
             % Test that samplerate works for auxiliary_in
             reader = ndr.reader.intan_rhd();

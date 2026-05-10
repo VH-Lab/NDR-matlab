@@ -64,6 +64,17 @@ classdef ced_smr < ndr.reader.base
 				end
 		end % getchannels()
 
+		function convention = channelLabelingConvention(ndr_reader_cedsmr_obj, channeltype)
+			% CHANNELLABELINGCONVENTION - CED SMR uses 'physical' for all types
+			%
+			% Channel names are NDR-prefix + the Spike2 channel number from
+			% the file header (header.channelinfo(k).number), which is the
+			% manufacturer's hardware channel identity. See
+			% ndr.reader.base/channelLabelingConvention.
+			%
+				convention = 'physical';
+		end % channelLabelingConvention()
+
 		function data = readchannels_epochsamples(ndr_ndr_reader_cedsmr_obj, channeltype, channel, epochfiles, epochselect, s0, s1)
 			%  FUNCTION READ_CHANNELS - read the data based on specified channels
 			%

@@ -82,7 +82,18 @@ classdef tdt_sev < ndr.reader.base
 					end;
 				end;
 		end % ndr.reader.tdt_sev.getchannelsepoch
-		
+
+		function convention = channelLabelingConvention(tdt_sev_obj, channeltype)
+			% CHANNELLABELINGCONVENTION - TDT SEV uses 'physical' for all types
+			%
+			% Channel names are NDR-prefix + the TDT hardware channel number
+			% from header(i).chan, which is the manufacturer's channel
+			% identity rather than a 1-based position into the recorded set.
+			% See ndr.reader.base/channelLabelingConvention.
+			%
+				convention = 'physical';
+		end % channelLabelingConvention()
+
 		function data = readchannels_epochsamples(tdt_sev_obj, channeltype, channel, epochstreams, epoch_select, s0, s1)
 			% READCHANNELS_EPOCHSAMPLES - Read the data based on specified channels
 			%

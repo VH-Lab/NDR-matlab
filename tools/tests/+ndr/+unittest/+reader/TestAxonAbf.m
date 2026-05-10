@@ -59,5 +59,18 @@ classdef TestAxonAbf < matlab.unittest.TestCase
             s_gap = reader.times2samples('ai', 1, {}, 1, 0.3);
             testCase.verifyEqual(s_gap, 4);
         end
+
+        function testChannelLabelingConvention(testCase)
+            % axon_abf builds channel names with a 1-based loop counter
+            % (axon_abf.m:84) and inherits the base class default of
+            % 'indexed'. Pin the contract here so a future change has to
+            % be deliberate.
+            reader = ndr.reader.axon_abf();
+            for t = {'analog_in','analog_out','time'}
+                testCase.verifyEqual( ...
+                    reader.channelLabelingConvention(t{1}), 'indexed', ...
+                    sprintf('axon_abf %s convention should be ''indexed''', t{1}));
+            end
+        end
     end
 end
