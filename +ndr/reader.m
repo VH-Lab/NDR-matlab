@@ -477,6 +477,76 @@ classdef reader
             s = ndr_reader_obj.ndr_reader_base.times2samples(channeltype, channel, epochstreams, epoch_select, t);
         end % times2samples()
 
+        %% Image / frame reading API
+        % These methods delegate frame reads to the underlying
+        % ndr.reader.base object, mirroring the regularly-sampled channel
+        % API. The design is modeled on nansen.stack.ImageStack (VervaekeLab,
+        % https://github.com/VervaekeLab/NANSEN). See ndr.reader.base for the
+        % method-by-method documentation and ndr.reader.tiffstack for a
+        % concrete implementation.
+
+        function n = numframes(ndr_reader_obj, epochstreams, epoch_select)
+            %NUMFRAMES - number of frames in an image epoch
+            %
+            %   N = NUMFRAMES(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            % See also: ndr.reader.base/numframes
+                if nargin<3, epoch_select = 1; end
+                n = ndr_reader_obj.ndr_reader_base.numframes(epochstreams, epoch_select);
+        end % numframes()
+
+        function sz = framesize(ndr_reader_obj, epochstreams, epoch_select)
+            %FRAMESIZE - [Y X C Z T] extent of an image epoch, without reading pixels
+            %
+            %   SZ = FRAMESIZE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            % See also: ndr.reader.base/framesize
+                if nargin<3, epoch_select = 1; end
+                sz = ndr_reader_obj.ndr_reader_base.framesize(epochstreams, epoch_select);
+        end % framesize()
+
+        function order = dimensionorder(ndr_reader_obj, epochstreams, epoch_select)
+            %DIMENSIONORDER - dimension order of returned frames (default 'YXCZT')
+            %
+            %   ORDER = DIMENSIONORDER(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            % See also: ndr.reader.base/dimensionorder
+                if nargin<3, epoch_select = 1; end
+                order = ndr_reader_obj.ndr_reader_base.dimensionorder(epochstreams, epoch_select);
+        end % dimensionorder()
+
+        function dt = datatype(ndr_reader_obj, epochstreams, epoch_select)
+            %DATATYPE - underlying numeric class of the image data
+            %
+            %   DT = DATATYPE(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            % See also: ndr.reader.base/datatype
+                if nargin<3, epoch_select = 1; end
+                dt = ndr_reader_obj.ndr_reader_base.datatype(epochstreams, epoch_select);
+        end % datatype()
+
+        function t = frametimes(ndr_reader_obj, epochstreams, epoch_select, frameind)
+            %FRAMETIMES - the time of each requested frame, in EPOCHCLOCK units
+            %
+            %   T = FRAMETIMES(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+            %
+            % See also: ndr.reader.base/frametimes
+                if nargin<3, epoch_select = 1; end
+                if nargin<4, frameind = 1:ndr_reader_obj.numframes(epochstreams, epoch_select); end
+                t = ndr_reader_obj.ndr_reader_base.frametimes(epochstreams, epoch_select, frameind);
+        end % frametimes()
+
+        function frames = readframes(ndr_reader_obj, epochstreams, epoch_select, frameind)
+            %READFRAMES - read image frames from an epoch
+            %
+            %   FRAMES = READFRAMES(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+            %
+            % See also: ndr.reader.base/readframes
+                if nargin<3, epoch_select = 1; end
+                if nargin<4, frameind = 1:ndr_reader_obj.numframes(epochstreams, epoch_select); end
+                frames = ndr_reader_obj.ndr_reader_base.readframes(epochstreams, epoch_select, frameind);
+        end % readframes()
+
         function b = MightHaveTimeGaps(ndr_reader_obj)
             %MIGHTHAVETIMEGAPS - does the reader potentially have time gaps?
             %

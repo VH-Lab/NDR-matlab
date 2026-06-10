@@ -38,5 +38,13 @@
 	{
 		"type": ["neuropixelsGLX", "neuropixels", "spikeglx", "imec"],
 		"classname": "ndr.reader.neuropixelsGLX"
+	},
+	{
+		"type": ["tiffstack", "tiff", "tif", "multipagetiff"],
+		"classname": "ndr.reader.tiffstack"
+	},
+	{
+		"type": ["imagestack", "nansen", "nansenimagestack"],
+		"classname": "ndr.reader.imagestack"
 	}
 ]

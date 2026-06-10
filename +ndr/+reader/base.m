@@ -336,6 +336,106 @@ classdef base
 				t0t1 = ndr_reader_base_obj.t0_t1(epochstreams, epoch_select);
 				s = ndr.time.fun.times2samples(t, t0t1{1}, sr_unique);
 		end; % times2samples()
+
+		%% Image / frame reading API
+		% The methods below define the frame-based reading interface used by
+		% image-series readers (movies, z-stacks, slide scans). It is the
+		% imaging counterpart of the regularly-sampled channel API above; the
+		% two families are siblings, not subclasses. A reader that handles
+		% images implements ONLY the frame API (not readchannels_epochsamples
+		% and friends); readers that do not handle images inherit these no-op
+		% defaults.
+		%
+		% The frame API design is modeled on nansen.stack.ImageStack
+		% (VervaekeLab, https://github.com/VervaekeLab/NANSEN). See the
+		% ImageStack -> frame-reader method mapping in ndr.reader.tiffstack.
+		%
+		% Every method takes (EPOCHSTREAMS, EPOCH_SELECT, ...) like the rest
+		% of the reader API. A "frame" is one image plane along the ordering
+		% axes (T, and Z when present). FRAMEIND indexes those ordering axes.
+
+		function n = numframes(ndr_reader_base_obj, epochstreams, epoch_select)
+			% NUMFRAMES - number of frames in an image epoch
+			%
+			% N = NUMFRAMES(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the number of frames (planes along the ordering axes) in
+			% the epoch. The abstract class returns 0.
+			%
+			% Modeled on nansen.stack.ImageStack NumTimepoints/NumPlanes.
+				n = 0; % abstract class
+		end % numframes()
+
+		function sz = framesize(ndr_reader_base_obj, epochstreams, epoch_select)
+			% FRAMESIZE - the [Y X C Z T] extent of an image epoch, without reading pixels
+			%
+			% SZ = FRAMESIZE(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the full extent of the image data as a 1x5 vector
+			% [Y X C Z T] (height, width, channels, z-planes, timepoints)
+			% WITHOUT loading pixel data. The abstract class returns zeros.
+			%
+			% Modeled on nansen.stack.ImageStack/getFrameSetSize. Keeping the
+			% channel axis (C) separate from the spatial (Y,X) and ordering
+			% (Z,T) axes matches the V_delta axes+channels split.
+				sz = [0 0 0 0 0]; % abstract class
+		end % framesize()
+
+		function order = dimensionorder(ndr_reader_base_obj, epochstreams, epoch_select)
+			% DIMENSIONORDER - the dimension order of returned frames
+			%
+			% ORDER = DIMENSIONORDER(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the order of the dimensions of the arrays returned by
+			% READFRAMES and described by FRAMESIZE, as a character string
+			% over {Y,X,C,Z,T}. The default is 'YXCZT'.
+			%
+			% Modeled on nansen.stack.ImageStack DimensionOrder/DataDimensionOrder.
+				order = 'YXCZT';
+		end % dimensionorder()
+
+		function dt = datatype(ndr_reader_base_obj, epochstreams, epoch_select)
+			% DATATYPE - the underlying numeric class of the image data
+			%
+			% DT = DATATYPE(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the underlying numeric class of the image pixels (e.g.
+			% 'uint16'). The abstract class returns ''.
+			%
+			% Modeled on nansen.stack.ImageStack DataType.
+				dt = ''; % abstract class
+		end % datatype()
+
+		function t = frametimes(ndr_reader_base_obj, epochstreams, epoch_select, frameind)
+			% FRAMETIMES - the time of each requested frame, in EPOCHCLOCK units
+			%
+			% T = FRAMETIMES(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			%
+			% Returns an Nx1 vector of the time of each frame in FRAMEIND, in
+			% the units of the clock returned by EPOCHCLOCK. For a movie this
+			% is the device-local time (seconds from the start of the epoch);
+			% for a clockless slide scan / z-stack the epoch clock is
+			% 'no_time' and these are NaN. The abstract class returns [].
+			%
+			% Modeled on nansen.stack.ImageStack/getFrameTimes. The values
+			% returned here feed EPOCHCLOCK and T0_T1.
+				t = []; % abstract class
+		end % frametimes()
+
+		function frames = readframes(ndr_reader_base_obj, epochstreams, epoch_select, frameind)
+			% READFRAMES - read image frames from an epoch
+			%
+			% FRAMES = READFRAMES(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			%
+			% Lazily reads the frames indexed by FRAMEIND (indices along the
+			% ordering axes T, and Z when present) and returns them as an array
+			% laid out in DIMENSIONORDER (default 'YXCZT'). All channels are
+			% returned. The abstract class returns [].
+			%
+			% Modeled on nansen.stack.ImageStack/getFrameSet.
+				frames = []; % abstract class
+		end % readframes()
+
 	end; % methods
 
 	methods (Static), % functions that don't need the object
