@@ -28,11 +28,11 @@
 %
 % Timing vs NANSEN: NANSEN's PrairieViewTiffs reads the XML metadata but
 % derives frame times from a single uniform frame period (1/dt). This reader
-% instead reads the actual per-frame timestamps from the legacy config's
-% '[Image TimeStamp (us)]' section, preserving real (possibly irregular)
-% timing. Modern Prairie View 2.2+ XML is not parsed here yet; for modern XML
-% recordings use ndr.reader.imagestack (NANSEN) for pixels, noting its timing
-% is uniform.
+% instead reads the actual per-frame timestamps: from the legacy config's
+% '[Image TimeStamp (us)]' section for .pcf recordings, and from the per-frame
+% '<Frame absoluteTime>' (modern PVScan) or '<Time>' (legacy) entries for .xml
+% recordings (see ndr.format.prairieview.readxml). This preserves real
+% (possibly irregular) timing for both the .pcf and .xml formats.
 %
 % This reader is a revised port of the PrairieView platform from
 % VH-Lab/vhlab-TwoPhoton-matlab (readprairieconfig.m, tpconfigfilename.m).

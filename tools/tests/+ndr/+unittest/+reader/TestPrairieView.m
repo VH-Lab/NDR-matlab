@@ -26,6 +26,10 @@ classdef TestPrairieView < matlab.unittest.TestCase
         MultiTruth          % Y x X x 2 x 1 x T ground-truth (channels on C axis)
         MultiTimesUs double % per-timepoint timestamps for the multichannel recording
         MultiC double       % number of channels in the multichannel recording
+        XmlDir char         % a modern-PVScan-XML 2-channel recording directory
+        XmlTruth            % Y x X x 2 x 1 x T ground-truth for the XML recording
+        XmlTimesSec double  % per-timepoint absoluteTime values (seconds) in the XML
+        XmlC double         % number of channels in the XML recording
     end
 
     methods (TestClassSetup)
@@ -76,6 +80,26 @@ classdef TestPrairieView < matlab.unittest.TestCase
             testCase.MultiTimesUs = [0 100000 250000 270000 500000];
             ndr.unittest.reader.TestPrairieView.writePcf( ...
                 fullfile(testCase.MultiDir,'Rec_Main.pcf'), Yl, Xl, Tl, testCase.MultiTimesUs);
+
+            % ---- a modern-PVScan-XML 2-channel recording -----------------
+            % timestamps come from per-frame <Frame absoluteTime="..."> (seconds)
+            testCase.XmlC = 2;
+            Txml = 3;
+            testCase.XmlDir = fullfile(testCase.TempDir,'Recording-XML');
+            mkdir(testCase.XmlDir);
+            xtruth = zeros(Yl, Xl, testCase.XmlC, 1, Txml, 'uint16');
+            for c=1:testCase.XmlC
+                for i=1:Txml
+                    xtruth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*5000 );
+                    fn = fullfile(testCase.XmlDir, ...
+                        sprintf('Rec_Cycle00001_Ch%d_%06d.ome.tif', c, i));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, xtruth(:,:,c,1,i));
+                end
+            end
+            testCase.XmlTruth = xtruth;
+            testCase.XmlTimesSec = [100.0 100.1 100.2];
+            ndr.unittest.reader.TestPrairieView.writePVScanXml( ...
+                fullfile(testCase.XmlDir,'Recording.xml'), Yl, Xl, testCase.XmlTimesSec);
         end
     end
 
@@ -184,6 +208,37 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'Multi-channel epoch with config times should be dev_local_time.');
         end
 
+        function testXmlConfigParsing(testCase)
+            v = ndr.format.prairieview.readconfig(testCase.XmlDir);
+            testCase.verifyTrue(v.is_xml, 'XML config should set is_xml=true.');
+            testCase.verifyEqual(v.Main.Lines_per_frame, testCase.Y, 'XML Lines_per_frame mismatch.');
+            testCase.verifyEqual(v.Main.Pixels_per_line, testCase.X, 'XML Pixels_per_line mismatch.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.XmlTimesSec*1e6, ...
+                'AbsTol', 1e-3, 'XML per-frame timestamps (us) mismatch.');
+        end
+
+        function testXmlGeometryAndFrames(testCase)
+            ef = {testCase.XmlDir};
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), numel(testCase.XmlTimesSec), ...
+                'XML numframes should equal the number of timepoints.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X testCase.XmlC 1 numel(testCase.XmlTimesSec)], ...
+                'XML framesize should carry channels on the C axis.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.XmlTruth, ...
+                'XML multi-channel frames did not round-trip.');
+        end
+
+        function testXmlTimestamps(testCase)
+            ef = {testCase.XmlDir};
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', ...
+                'XML epoch with per-frame times should be dev_local_time.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.XmlTimesSec, 'AbsTol', 1e-9, ...
+                'XML frame times should be the absoluteTime values in seconds.');
+        end
+
     end % methods (Test)
 
     methods (Static)
@@ -200,6 +255,28 @@ classdef TestPrairieView < matlab.unittest.TestCase
             tags.Compression = Tiff.Compression.None;
             t.setTag(tags);
             t.write(img);
+        end
+
+        function writePVScanXml(filename, Y, X, timesSec)
+            % Write a minimal modern PVScan XML: dimension key/values plus one
+            % <Frame absoluteTime="..."> per timepoint (seconds).
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'<?xml version="1.0" encoding="utf-8"?>\n');
+            fprintf(fid,'<PVScan version="5.4.64.40" date="1/1/2020">\n');
+            fprintf(fid,'  <PVStateShard>\n');
+            fprintf(fid,'    <PVStateValue key="linesPerFrame" value="%d" />\n', Y);
+            fprintf(fid,'    <PVStateValue key="pixelsPerLine" value="%d" />\n', X);
+            fprintf(fid,'    <PVStateValue key="framePeriod" value="0.1" />\n');
+            fprintf(fid,'  </PVStateShard>\n');
+            fprintf(fid,'  <Sequence type="TSeries Brightness Over Time Element" cycle="1">\n');
+            for i=1:numel(timesSec)
+                fprintf(fid,'    <Frame relativeTime="%g" absoluteTime="%g" index="%d" >\n', ...
+                    timesSec(i)-timesSec(1), timesSec(i), i);
+                fprintf(fid,'    </Frame>\n');
+            end
+            fprintf(fid,'  </Sequence>\n');
+            fprintf(fid,'</PVScan>\n');
         end
 
         function writePcf(filename, Y, X, T, timesUs)
