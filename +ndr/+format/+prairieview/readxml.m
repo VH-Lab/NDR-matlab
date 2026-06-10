@@ -67,6 +67,16 @@ end
 
 function v = localReadLegacy(txt)
 	v = struct();
+
+	% Older Prairie XML (e.g. v2.2 '.NET DataSet' files) embeds an XSD schema
+	% before the data; element names appear there as '<xs:element name="..."/>'
+	% defining the fields. Strip the schema so values are read from the data
+	% rows, not from the schema definitions.
+	schemaend = strfind(txt,'</xs:schema>');
+	if ~isempty(schemaend)
+		txt = txt(schemaend(end)+numel('</xs:schema>'):end);
+	end
+
 	v.Main.Lines_per_frame = ndr.format.prairieview.elementvalue(txt,'Lines_Per_Frame');
 	v.Main.Pixels_per_line = ndr.format.prairieview.elementvalue(txt,'Pixels_Per_Line');
 	fr = ndr.format.prairieview.elementvalue(txt,'Framerate');
@@ -74,8 +84,8 @@ function v = localReadLegacy(txt)
 		v.Main.Frame_period__us_ = (1/fr) * 1e6;
 	end
 
-	% one '<...Time...>VALUE<...>' (milliseconds) per '<Dataset_x0020_N>' block,
-	% in file order
+	% one '<...Time...>VALUE<...>' (milliseconds) per '<Dataset_x0020_N>' frame
+	% row, in file order
 	starts = regexp(txt,'<Dataset_x0020_\d+>');
 	ts = [];
 	for i=1:numel(starts)

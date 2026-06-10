@@ -30,6 +30,10 @@ classdef TestPrairieView < matlab.unittest.TestCase
         XmlTruth            % Y x X x 2 x 1 x T ground-truth for the XML recording
         XmlTimesSec double  % per-timepoint absoluteTime values (seconds) in the XML
         XmlC double         % number of channels in the XML recording
+        V2Dir char          % a legacy v2.2 '.NET DataSet' XML recording directory
+        V2Truth             % Y x X x 2 x 1 x T ground-truth for the v2 recording
+        V2TimesMs double    % per-timepoint <Time> values (milliseconds) in the v2 XML
+        V2C double          % number of channels in the v2 recording
     end
 
     methods (TestClassSetup)
@@ -104,6 +108,27 @@ classdef TestPrairieView < matlab.unittest.TestCase
             testCase.XmlTimesSec = [0.329333 2.132962 3.976685];
             ndr.unittest.reader.TestPrairieView.writePVScanXml( ...
                 fullfile(testCase.XmlDir,'t00004-001.xml'), Yl, Xl, testCase.XmlTimesSec);
+
+            % ---- a legacy v2.2 '.NET DataSet' XML 2-channel recording -----
+            % per-frame <Time> (ms) inside <Dataset_x0020_N> rows, with an
+            % embedded <xs:schema> that must be skipped when reading dims
+            testCase.V2C = 2;
+            Tv2 = 3;
+            testCase.V2Dir = fullfile(testCase.TempDir,'Recording-v2');
+            mkdir(testCase.V2Dir);
+            v2truth = zeros(Yl, Xl, testCase.V2C, 1, Tv2, 'uint16');
+            for c=1:testCase.V2C
+                for i=1:Tv2
+                    v2truth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*3000 );
+                    fn = fullfile(testCase.V2Dir, ...
+                        sprintf('t00001-001_Cycle%03d_Ch%d_000001.tif', i, c));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, v2truth(:,:,c,1,i));
+                end
+            end
+            testCase.V2Truth = v2truth;
+            testCase.V2TimesMs = [0 1468.75 2875];
+            ndr.unittest.reader.TestPrairieView.writeV2Xml( ...
+                fullfile(testCase.V2Dir,'t00001-001.xml'), Yl, Xl, testCase.V2TimesMs);
         end
     end
 
@@ -243,6 +268,34 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'XML frame times should be the absoluteTime values in seconds.');
         end
 
+        function testV2ConfigParsing(testCase)
+            % the embedded XSD schema must be skipped: dims come from the data
+            v = ndr.format.prairieview.readconfig(testCase.V2Dir);
+            testCase.verifyTrue(v.is_xml, 'v2 XML config should set is_xml=true.');
+            testCase.verifyEqual(v.Main.Lines_per_frame, testCase.Y, ...
+                'v2 Lines_Per_Frame should be read from the data, not the schema.');
+            testCase.verifyEqual(v.Main.Pixels_per_line, testCase.X, ...
+                'v2 Pixels_Per_Line should be read from the data, not the schema.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.V2TimesMs*1e3, ...
+                'AbsTol', 1e-6, 'v2 per-frame <Time> (ms->us) mismatch.');
+        end
+
+        function testV2GeometryAndTimes(testCase)
+            ef = {testCase.V2Dir};
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), numel(testCase.V2TimesMs), ...
+                'v2 numframes should equal the number of timepoints.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X testCase.V2C 1 numel(testCase.V2TimesMs)], ...
+                'v2 framesize should carry channels on the C axis.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.V2Truth, 'v2 frames did not round-trip.');
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', 'v2 epoch should be dev_local_time.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.V2TimesMs/1e3, 'AbsTol', 1e-9, ...
+                'v2 frame times should be <Time> (ms) in seconds.');
+        end
+
     end % methods (Test)
 
     methods (Static)
@@ -287,6 +340,39 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 fprintf(fid,'  </Sequence>\n');
             end
             fprintf(fid,'</PVScan>\n');
+        end
+
+        function writeV2Xml(filename, Y, X, timesMs)
+            % Write a minimal legacy v2.2 '.NET DataSet' Prairie XML: an
+            % embedded <xs:schema> (defining field names, which must be
+            % skipped) followed by an <Acquisition_Header> with the real dim
+            % values and one <Dataset_x0020_2> frame row per timepoint, each
+            % carrying its per-channel filenames and a <Time> in milliseconds.
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'<?xml version="1.0" standalone="yes"?>\n');
+            fprintf(fid,'<Acquisition>\n');
+            fprintf(fid,'  <xs:schema id="Acquisition" xmlns:xs="http://www.w3.org/2001/XMLSchema">\n');
+            fprintf(fid,'    <xs:element name="Lines_Per_Frame" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Pixels_Per_Line" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Framerate" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Time" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'  </xs:schema>\n');
+            fprintf(fid,'  <Acquisition_Header>\n');
+            fprintf(fid,'    <Lines_Per_Frame>%d</Lines_Per_Frame>\n', Y);
+            fprintf(fid,'    <Pixels_Per_Line>%d</Pixels_Per_Line>\n', X);
+            fprintf(fid,'    <Framerate>0.9</Framerate>\n');
+            fprintf(fid,'    <Total_Frames>%d</Total_Frames>\n', numel(timesMs));
+            fprintf(fid,'  </Acquisition_Header>\n');
+            for i=1:numel(timesMs)
+                fprintf(fid,'  <Dataset_x0020_2>\n');
+                fprintf(fid,'    <Channel_1_Filename>t00001-001_Cycle%03d_Ch1_000001.tif</Channel_1_Filename>\n', i);
+                fprintf(fid,'    <Channel_2_Filename>t00001-001_Cycle%03d_Ch2_000001.tif</Channel_2_Filename>\n', i);
+                fprintf(fid,'    <Frame>1</Frame>\n');
+                fprintf(fid,'    <Time>%g</Time>\n', timesMs(i));
+                fprintf(fid,'  </Dataset_x0020_2>\n');
+            end
+            fprintf(fid,'</Acquisition>\n');
         end
 
         function writePcf(filename, Y, X, T, timesUs)
