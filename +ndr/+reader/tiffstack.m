@@ -219,20 +219,7 @@ classdef tiffstack < ndr.reader.base
 			%
 			% Adapted from nansen.stack.ImageStack DataType.
 				info = tiffstack_obj.resolveepoch(epochstreams);
-				fi = info.firstinfo;
-				bits = fi(1).BitsPerSample(1);
-				fmt = 'Unsigned';
-				if isfield(fi,'SampleFormat') && ~isempty(fi(1).SampleFormat)
-					fmt = fi(1).SampleFormat;
-				end
-				switch lower(fmt)
-					case {'ieeefloat','float'}
-						if bits<=32, dt = 'single'; else, dt = 'double'; end
-					case {'two''s complement signed integer','signed','signed integer'}
-						dt = ['int' int2str(bits)];
-					otherwise % unsigned integer
-						dt = ['uint' int2str(bits)];
-				end
+				dt = ndr.reader.tiffstack.tiffclass(info.firstinfo);
 		end % datatype()
 
 		function frametimesfile = frametimesfilename(tiffstack_obj, epochstreams)
@@ -350,5 +337,31 @@ classdef tiffstack < ndr.reader.base
 		end % getchannelsepoch()
 
 	end % methods
+
+	methods (Static)
+		function dt = tiffclass(fi)
+			% TIFFCLASS - map an imfinfo struct to a MATLAB numeric class
+			%
+			% DT = ndr.reader.tiffstack.tiffclass(FI)
+			%
+			% Given an imfinfo struct FI (or its first element), returns the
+			% underlying numeric class string (e.g. 'uint16', 'int16',
+			% 'single') implied by its BitsPerSample and SampleFormat.
+			%
+				bits = fi(1).BitsPerSample(1);
+				fmt = 'Unsigned';
+				if isfield(fi,'SampleFormat') && ~isempty(fi(1).SampleFormat)
+					fmt = fi(1).SampleFormat;
+				end
+				switch lower(fmt)
+					case {'ieeefloat','float'}
+						if bits<=32, dt = 'single'; else, dt = 'double'; end
+					case {'two''s complement signed integer','signed','signed integer'}
+						dt = ['int' int2str(bits)];
+					otherwise % unsigned integer
+						dt = ['uint' int2str(bits)];
+				end
+		end % tiffclass()
+	end % methods (Static)
 
 end % classdef

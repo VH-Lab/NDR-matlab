@@ -22,6 +22,10 @@ classdef TestPrairieView < matlab.unittest.TestCase
         ConfigFile char     % the *_Main.pcf path
         Truth               % Y x X x 1 x 1 x T ground-truth stack
         TimesUs double      % per-frame timestamps written into the .pcf (microseconds)
+        MultiDir char       % a 2-channel recording directory
+        MultiTruth          % Y x X x 2 x 1 x T ground-truth (channels on C axis)
+        MultiTimesUs double % per-timepoint timestamps for the multichannel recording
+        MultiC double       % number of channels in the multichannel recording
     end
 
     methods (TestClassSetup)
@@ -53,6 +57,25 @@ classdef TestPrairieView < matlab.unittest.TestCase
             testCase.ConfigFile = fullfile(testCase.DirEpoch,'Recording_Main.pcf');
             ndr.unittest.reader.TestPrairieView.writePcf(testCase.ConfigFile, ...
                 Yl, Xl, Tl, testCase.TimesUs);
+
+            % ---- a 2-channel recording -----------------------------------
+            testCase.MultiC = 2;
+            testCase.MultiDir = fullfile(testCase.TempDir,'Recording-002');
+            mkdir(testCase.MultiDir);
+            mtruth = zeros(Yl, Xl, testCase.MultiC, 1, Tl, 'uint16');
+            for c=1:testCase.MultiC
+                for i=1:Tl
+                    % distinct content per (channel,timepoint)
+                    mtruth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*10000 );
+                    fn = fullfile(testCase.MultiDir, ...
+                        sprintf('Rec_Cycle001_Ch%d_%06d.tif', c, i));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, mtruth(:,:,c,1,i));
+                end
+            end
+            testCase.MultiTruth = mtruth;
+            testCase.MultiTimesUs = [0 100000 250000 270000 500000];
+            ndr.unittest.reader.TestPrairieView.writePcf( ...
+                fullfile(testCase.MultiDir,'Rec_Main.pcf'), Yl, Xl, Tl, testCase.MultiTimesUs);
         end
     end
 
@@ -126,6 +149,39 @@ classdef TestPrairieView < matlab.unittest.TestCase
             ftCfg = testCase.Reader.frametimes({testCase.ConfigFile},1);
             testCase.verifyEqual(ftCfg(:)', testCase.TimesUs/1e6, 'AbsTol', 1e-12, ...
                 'Config-file epoch did not pick up timestamps.');
+        end
+
+        function testMultiChannelGeometry(testCase)
+            ef = {testCase.MultiDir};
+            % a frame is a timepoint; channels do not multiply the frame count
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), testCase.T, ...
+                'Multi-channel numframes should equal the number of timepoints.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X testCase.MultiC 1 testCase.T], ...
+                'Multi-channel framesize should carry C on the channel axis.');
+        end
+
+        function testMultiChannelFramesRoundTrip(testCase)
+            ef = {testCase.MultiDir};
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.MultiTruth, ...
+                'Multi-channel frames did not round-trip with channels on the C axis.');
+            % a single timepoint carries both channels
+            one = testCase.Reader.readframes(ef,1,3);
+            testCase.verifyEqual(one, testCase.MultiTruth(:,:,:,:,3), ...
+                'Single-timepoint multi-channel read mismatch.');
+        end
+
+        function testMultiChannelTimesPerTimepoint(testCase)
+            ef = {testCase.MultiDir};
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(numel(ft), testCase.T, ...
+                'There should be one timestamp per timepoint, not per channel.');
+            testCase.verifyEqual(ft(:)', testCase.MultiTimesUs/1e6, 'AbsTol', 1e-12, ...
+                'Multi-channel frame times should be the config timestamps in seconds.');
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', ...
+                'Multi-channel epoch with config times should be dev_local_time.');
         end
 
     end % methods (Test)
