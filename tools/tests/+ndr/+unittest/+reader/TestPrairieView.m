@@ -87,19 +87,23 @@ classdef TestPrairieView < matlab.unittest.TestCase
             Txml = 3;
             testCase.XmlDir = fullfile(testCase.TempDir,'Recording-XML');
             mkdir(testCase.XmlDir);
+            % Real Prairie layout: one frame per <Sequence cycle="N"> (the
+            % cycle is the timepoint), filename frame index fixed at 000001,
+            % 3-digit cycle, channels as separate Ch1/Ch2 TIFFs.
             xtruth = zeros(Yl, Xl, testCase.XmlC, 1, Txml, 'uint16');
             for c=1:testCase.XmlC
                 for i=1:Txml
                     xtruth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*5000 );
                     fn = fullfile(testCase.XmlDir, ...
-                        sprintf('Rec_Cycle00001_Ch%d_%06d.ome.tif', c, i));
+                        sprintf('t00004-001_Cycle%03d_CurrentSettings_Ch%d_000001.tif', i, c));
                     ndr.unittest.reader.TestPrairieView.writeTiff(fn, xtruth(:,:,c,1,i));
                 end
             end
             testCase.XmlTruth = xtruth;
-            testCase.XmlTimesSec = [100.0 100.1 100.2];
+            % use realistic, irregular absoluteTime values (seconds)
+            testCase.XmlTimesSec = [0.329333 2.132962 3.976685];
             ndr.unittest.reader.TestPrairieView.writePVScanXml( ...
-                fullfile(testCase.XmlDir,'Recording.xml'), Yl, Xl, testCase.XmlTimesSec);
+                fullfile(testCase.XmlDir,'t00004-001.xml'), Yl, Xl, testCase.XmlTimesSec);
         end
     end
 
@@ -258,24 +262,30 @@ classdef TestPrairieView < matlab.unittest.TestCase
         end
 
         function writePVScanXml(filename, Y, X, timesSec)
-            % Write a minimal modern PVScan XML: dimension key/values plus one
-            % <Frame absoluteTime="..."> per timepoint (seconds).
+            % Write a PVScan XML in the real Prairie v4 layout: one
+            % <Sequence cycle="N"> per timepoint, each with a single <Frame>
+            % carrying its absoluteTime, the per-channel <File> entries, and a
+            % per-frame <PVStateShard> with the dimension Keys (note the
+            % 'permissions' attribute sits between key and value, as in real
+            % files).
             fid = fopen(filename,'w');
             c = onCleanup(@() fclose(fid));
             fprintf(fid,'<?xml version="1.0" encoding="utf-8"?>\n');
-            fprintf(fid,'<PVScan version="5.4.64.40" date="1/1/2020">\n');
-            fprintf(fid,'  <PVStateShard>\n');
-            fprintf(fid,'    <PVStateValue key="linesPerFrame" value="%d" />\n', Y);
-            fprintf(fid,'    <PVStateValue key="pixelsPerLine" value="%d" />\n', X);
-            fprintf(fid,'    <PVStateValue key="framePeriod" value="0.1" />\n');
-            fprintf(fid,'  </PVStateShard>\n');
-            fprintf(fid,'  <Sequence type="TSeries Brightness Over Time Element" cycle="1">\n');
+            fprintf(fid,'<PVScan version="4.0.0.43" date="9/28/2018 5:40:34 PM" notes="">\n');
             for i=1:numel(timesSec)
-                fprintf(fid,'    <Frame relativeTime="%g" absoluteTime="%g" index="%d" >\n', ...
-                    timesSec(i)-timesSec(1), timesSec(i), i);
+                fprintf(fid,'  <Sequence type="TSeries Timed Element" cycle="%d">\n', i);
+                fprintf(fid,'    <Frame relativeTime="0" absoluteTime="%.12g" index="1" label="CurrentSettings">\n', timesSec(i));
+                fprintf(fid,'      <File channel="1" channelName="Ch1" filename="t00004-001_Cycle%03d_CurrentSettings_Ch1_000001.tif" />\n', i);
+                fprintf(fid,'      <File channel="2" channelName="Ch2" filename="t00004-001_Cycle%03d_CurrentSettings_Ch2_000001.tif" />\n', i);
+                fprintf(fid,'      <PVStateShard>\n');
+                fprintf(fid,'        <Key key="linesPerFrame" permissions="Read, Write, Save" value="%d" />\n', Y);
+                fprintf(fid,'        <Key key="pixelsPerLine" permissions="Read, Write, Save" value="%d" />\n', X);
+                fprintf(fid,'        <Key key="framePeriod" permissions="Read, Write, Save" value="1.4819328" />\n');
+                fprintf(fid,'        <Key key="dwellTime" permissions="Read, Write, Save" value="3.6" />\n');
+                fprintf(fid,'      </PVStateShard>\n');
                 fprintf(fid,'    </Frame>\n');
+                fprintf(fid,'  </Sequence>\n');
             end
-            fprintf(fid,'  </Sequence>\n');
             fprintf(fid,'</PVScan>\n');
         end
 
