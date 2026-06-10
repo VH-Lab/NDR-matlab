@@ -76,20 +76,27 @@ classdef tiffstack < ndr.reader.base
 			%   - an ANCHOR file that is not itself a TIFF (e.g. a Prairie
 			%     '.xml'/'.pcf' config, or another per-epoch marker the file
 			%     navigator matched on) -- the TIFFs are then taken from the
-			%     anchor's parent directory.
+			%     anchor's parent directory, but ONLY when no TIFFs are
+			%     supplied directly (see below).
 			% Returns a cell array of full-path TIFF file names ordered by name.
 			% Errors if no TIFF files are found.
 			%
-			% Resolving an anchor file to its directory is what lets the file
-			% navigator discover epochs by matching a marker file (a bare
-			% directory is not matchable) while the reader still reads the
-			% whole stack. Format-specific parsing of the anchor (e.g. reading
-			% frame times out of a Prairie config) layers on top of this.
+			% Directly-listed TIFFs (and directories) take precedence: when an
+			% epoch's files already include image files, any non-image
+			% companion files (e.g. an 'epochprobemap.ndi' that NDI's file
+			% navigator hands along with the .tif) are ignored rather than
+			% treated as directory anchors -- otherwise a flat directory of
+			% several epochs would have every epoch glob in every other
+			% epoch's TIFFs. Anchor-to-directory resolution applies only when
+			% NO TIFFs are listed directly (the marker-file-only case that lets
+			% the navigator discover epochs that are not themselves matchable
+			% as directories).
 			%
 				if ~iscell(epochstreams)
 					epochstreams = {epochstreams};
 				end
-				files = {};
+				files = {};      % TIFFs listed directly or expanded from directories
+				anchors = {};    % non-image files that could anchor a directory
 				for i=1:numel(epochstreams)
 					entry = epochstreams{i};
 					if isfolder(entry)
@@ -99,9 +106,15 @@ classdef tiffstack < ndr.reader.base
 						if any(strcmpi(ext,{'.tif','.tiff'}))
 							files{end+1} = entry; %#ok<AGROW>
 						else
-							% an anchor / marker file: take TIFFs from its folder
-							files = [files, tiffstack_obj.tiffsindir(fileparts(entry))]; %#ok<AGROW>
+							anchors{end+1} = entry; %#ok<AGROW>
 						end
+					end
+				end
+				if isempty(files)
+					% no TIFFs supplied directly: resolve any anchor files to
+					% the TIFFs in their parent directories
+					for i=1:numel(anchors)
+						files = [files, tiffstack_obj.tiffsindir(fileparts(anchors{i}))]; %#ok<AGROW>
 					end
 				end
 				files = unique(files); % unique also sorts lexically
