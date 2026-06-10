@@ -16,9 +16,12 @@ function val = keyvalue(txt, keyname)
 %
 %   See also: ndr.format.prairieview.readxml, ndr.format.prairieview.elementvalue
 
-	pat = ['<(?:Key|PVStateValue)\s+key="' regexptranslate('escape',keyname) ...
-		'"[^>]*?\bvalue="([^"]*)"'];
-	m = regexp(txt, pat, 'tokens', 'once', 'ignorecase');
+	% Match a 'key="<keyname>" ... value="..."' pair within a single tag
+	% (the [^>]* cannot cross a '>'), so key and value belong to the same
+	% <Key>/<PVStateValue> element. Uses only regex constructs that behave
+	% consistently in MATLAB regexp (avoids \b and \s).
+	pat = ['key="' regexptranslate('escape',keyname) '"[^>]*value="([^"]*)"'];
+	m = regexp(txt, pat, 'tokens', 'once');
 	if isempty(m)
 		val = [];
 		return;

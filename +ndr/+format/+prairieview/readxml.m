@@ -30,7 +30,7 @@ function v = readxml(filename)
 	filename = ndr.format.prairieview.configfilename(filename);
 	txt = fileread(filename);
 
-	versiontok = regexp(txt,'<PVScan\s+version="([^"]+)"','tokens','once');
+	versiontok = regexp(txt,'<PVScan[^>]*version="([^"]+)"','tokens','once');
 	if ~isempty(versiontok)
 		v = localReadModern(txt);
 	else
@@ -43,7 +43,7 @@ end
 function v = localReadModern(txt)
 	v = struct();
 	% per-frame absolute times (seconds) -> microseconds, in file order
-	at = regexp(txt,'<Frame\b[^>]*\babsoluteTime="([-+0-9.eE]+)"','tokens');
+	at = regexp(txt,'<Frame[^>]*absoluteTime="([-+0-9.eE]+)"','tokens');
 	times = zeros(1,numel(at));
 	for i=1:numel(at)
 		times(i) = str2double(at{i}{1});
