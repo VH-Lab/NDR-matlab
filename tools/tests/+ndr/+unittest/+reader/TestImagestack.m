@@ -134,6 +134,40 @@ classdef TestImagestack < matlab.unittest.TestCase
             end
         end
 
+        function testFrametimesLengthContractAndConsistency(testCase)
+            % frametimes must always return one value per requested frame,
+            % even when the format supplies no timing metadata (the NaN
+            % coercion path). It must also be self-consistent with epochclock:
+            % a no_time epoch yields all-NaN times, a dev_local_time epoch
+            % yields all-finite times.
+            ef = {testCase.TiffFile};
+
+            % length contract: one value per requested frame, for several
+            % index patterns and the default (all frames)
+            for fi = { [1], [1 3], [3 1 2], 1:testCase.T }
+                idx = fi{1};
+                t = testCase.Reader.frametimes(ef, 1, idx);
+                testCase.verifyEqual(numel(t), numel(idx), ...
+                    sprintf('frametimes returned %d values for %d requested frames.', ...
+                        numel(t), numel(idx)));
+                testCase.verifySize(t, [numel(idx) 1], ...
+                    'frametimes must return a column vector.');
+            end
+            tAll = testCase.Reader.frametimes(ef, 1);
+            testCase.verifyEqual(numel(tAll), testCase.T, ...
+                'frametimes() default must return one value per frame.');
+
+            % consistency with the reported clock
+            ec = testCase.Reader.epochclock(ef,1);
+            if strcmp(ec{1}.type,'no_time')
+                testCase.verifyTrue(all(isnan(tAll)), ...
+                    'A no_time epoch must report NaN for every frame time.');
+            else
+                testCase.verifyTrue(all(isfinite(tAll)), ...
+                    'A dev_local_time epoch must report a finite time for every frame.');
+            end
+        end
+
     end % methods (Test)
 
 end % classdef

@@ -120,17 +120,32 @@ classdef imagestack < ndr.reader.base
 		function t = frametimes(imagestack_obj, epochstreams, epoch_select, frameind)
 			% FRAMETIMES - the time of each requested frame, in EPOCHCLOCK units
 			%
-			% Adapted from nansen.stack.ImageStack/getFrameTimes. Returns NaN
-			% for each frame when NANSEN reports no timing information.
+			% Adapted from nansen.stack.ImageStack/getFrameTimes. Always
+			% returns a numel(FRAMEIND)x1 vector. When NANSEN reports no
+			% timing information for the format (getFrameTimes errors, or
+			% returns empty/short because TimeIncrement is unset), every
+			% requested frame is reported as NaN so the result length always
+			% matches FRAMEIND. The duration type is converted to seconds.
 				if nargin<4
 					frameind = 1:imagestack_obj.numframes(epochstreams, epoch_select);
 				end
-				s = imagestack_obj.imagestackobject(epochstreams);
+				n = numel(frameind);
 				try
+					s = imagestack_obj.imagestackobject(epochstreams);
 					t = s.getFrameTimes(frameind);
-					t = t(:);
+					if isduration(t)
+						t = seconds(t);
+					end
+					t = double(t(:));
 				catch
-					t = nan(numel(frameind),1);
+					t = [];
+				end
+				% Coerce anything that is not a full-length finite-or-NaN
+				% vector into a NaN vector of the correct length, so the
+				% (epochfiles, frameind) -> times contract always holds even
+				% for formats whose adapter supplies no timing metadata.
+				if numel(t) ~= n
+					t = nan(n,1);
 				end
 		end % frametimes()
 
