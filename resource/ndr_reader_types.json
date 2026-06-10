@@ -46,5 +46,9 @@
 	{
 		"type": ["imagestack", "nansen", "nansenimagestack"],
 		"classname": "ndr.reader.imagestack"
+	},
+	{
+		"type": ["prairieview", "prairie", "pv", "prairieview_pcf"],
+		"classname": "ndr.reader.prairieview"
 	}
 ]
