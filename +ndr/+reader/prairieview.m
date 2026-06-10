@@ -21,6 +21,18 @@
 % PrairieViewTiffs adapter, but leniently about digit widths and channel
 % count.
 %
+% Cycles and epochs: PrairieView organizes a recording (a "run") into one or
+% more CYCLES (e.g. a directory t00012-001 with files named ..._Cycle001...,
+% ..._Cycle002..., and an [Image TimeStamp (us)] list in the '*_Main.pcf' that
+% spans every frame of every cycle). NDR reads such a collection of cycles as
+% a SINGLE epoch: FRAMELAYOUT enumerates the frames across all cycles, ordered
+% cycle-then-frame (the per-cycle frame index resets each cycle), and the
+% per-frame timestamps come from the Main config's list covering all cycles.
+% So one Prairie run directory == one NDR/NDI epoch, regardless of how many
+% cycles it contains. (If a use case ever needs each cycle as its own epoch,
+% that is a file-navigator concern on the NDI side, and the per-cycle slice of
+% the Main timestamp list would need to be selected; not done here.)
+%
 % Epoch layout: the epoch may be given as the recording directory, the
 % '*_Main.pcf' config file, or any file in the directory; the config and the
 % frame TIFFs are resolved from that directory (see ndr.reader.tiffstack and

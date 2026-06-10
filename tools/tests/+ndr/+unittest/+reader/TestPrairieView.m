@@ -34,6 +34,10 @@ classdef TestPrairieView < matlab.unittest.TestCase
         V2Truth             % Y x X x 2 x 1 x T ground-truth for the v2 recording
         V2TimesMs double    % per-timepoint <Time> values (milliseconds) in the v2 XML
         V2C double          % number of channels in the v2 recording
+        CycDir char         % a multi-cycle .pcf recording directory (one epoch = several cycles)
+        CycTruth            % Y x X x 1 x 1 x T ground-truth across all cycles
+        CycTimesUs double   % per-frame timestamps (us) across all cycles
+        CycCounts double    % number of images in each cycle
     end
 
     methods (TestClassSetup)
@@ -129,6 +133,32 @@ classdef TestPrairieView < matlab.unittest.TestCase
             testCase.V2TimesMs = [0 1468.75 2875];
             ndr.unittest.reader.TestPrairieView.writeV2Xml( ...
                 fullfile(testCase.V2Dir,'t00001-001.xml'), Yl, Xl, testCase.V2TimesMs);
+
+            % ---- a multi-cycle .pcf recording (one epoch = 3 cycles) ------
+            % mirrors a real Prairie run: [Main] Total images, per-[Cycle N]
+            % image counts, and an [Image TimeStamp (us)] list spanning all
+            % cycles. Frames are named with the cycle and a per-cycle frame
+            % index that resets each cycle; the global order is cycle-then-frame.
+            testCase.CycCounts = [1 4 1];   % 6 frames total, single channel
+            Tcyc = sum(testCase.CycCounts);
+            testCase.CycDir = fullfile(testCase.TempDir,'t00012-001');
+            mkdir(testCase.CycDir);
+            cyctruth = zeros(Yl, Xl, 1, 1, Tcyc, 'uint16');
+            tp = 0;
+            for cyc=1:numel(testCase.CycCounts)
+                for fr=1:testCase.CycCounts(cyc)
+                    tp = tp + 1;
+                    cyctruth(:,:,1,1,tp) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (tp-1)*100 );
+                    fn = fullfile(testCase.CycDir, ...
+                        sprintf('t00012-001_Cycle%03d_CurrentSettings_Ch1_%06d.tif', cyc, fr));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, cyctruth(:,:,1,1,tp));
+                end
+            end
+            testCase.CycTruth = cyctruth;
+            testCase.CycTimesUs = (0:Tcyc-1) * 1486848;   % us, ~real frame period
+            ndr.unittest.reader.TestPrairieView.writeMultiCyclePcf( ...
+                fullfile(testCase.CycDir,'t00012-001_Main.pcf'), Yl, Xl, ...
+                testCase.CycCounts, testCase.CycTimesUs);
         end
     end
 
@@ -296,6 +326,34 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'v2 frame times should be <Time> (ms) in seconds.');
         end
 
+        function testMultiCyclePcfConfig(testCase)
+            v = ndr.format.prairieview.readconfig(testCase.CycDir);
+            testCase.verifyEqual(v.Main.Total_images, sum(testCase.CycCounts), ...
+                'Total_images should be the sum of the per-cycle image counts.');
+            testCase.verifyEqual(numel(v.Image_TimeStamp__us_), sum(testCase.CycCounts), ...
+                'There should be one timestamp per frame across all cycles.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.CycTimesUs, ...
+                'AbsTol', 1e-6, 'Multi-cycle [Image TimeStamp (us)] mismatch.');
+        end
+
+        function testMultiCycleEpochSpansCycles(testCase)
+            % one epoch (the directory) is the whole run, i.e. all cycles;
+            % frames are ordered cycle-then-frame and timestamped from the
+            % Main.pcf list spanning every cycle.
+            ef = {testCase.CycDir};
+            T = sum(testCase.CycCounts);
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), T, ...
+                'A multi-cycle epoch should expose all cycles'' frames.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X 1 1 T], 'Multi-cycle framesize mismatch.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.CycTruth, ...
+                'Multi-cycle frames did not round-trip in cycle-then-frame order.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.CycTimesUs/1e6, 'AbsTol', 1e-9, ...
+                'Multi-cycle frame times should span all cycles, in seconds.');
+        end
+
     end % methods (Test)
 
     methods (Static)
@@ -342,6 +400,38 @@ classdef TestPrairieView < matlab.unittest.TestCase
             fprintf(fid,'</PVScan>\n');
         end
 
+        function writeMultiCyclePcf(filename, Y, X, cycleCounts, timesUs)
+            % Write a real-style multi-cycle legacy .pcf: [Main] with the
+            % total image count, one [Cycle N] section per cycle (with its
+            % image count), and an [Image TimeStamp (us)] list spanning every
+            % cycle (one entry per frame, in cycle-then-frame order).
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'[Main]\n');
+            fprintf(fid,'Acquisition type=TSERIES_MAIN\n');
+            fprintf(fid,'Bit depth=12\n');
+            fprintf(fid,'Channel 1 active=True\n');
+            fprintf(fid,'Frame period (us)=1486848.0\n');
+            fprintf(fid,'Lines per frame=%d\n', Y);
+            fprintf(fid,'Pixels per line=%d\n', X);
+            fprintf(fid,'Total cycles=%d\n', numel(cycleCounts));
+            fprintf(fid,'Total images=%d\n', sum(cycleCounts));
+            fprintf(fid,'Version=2.1.0.2\n');
+            fprintf(fid,'\n');
+            for k=1:numel(cycleCounts)
+                fprintf(fid,'[Cycle %d]\n', k);
+                fprintf(fid,'Acquisition type=TSERIES_CYCLE\n');
+                fprintf(fid,'Number of frames to average=1\n');
+                fprintf(fid,'Number of images=%d\n', cycleCounts(k));
+                fprintf(fid,'Period (us)=0.0\n');
+                fprintf(fid,'\n');
+            end
+            fprintf(fid,'[Image TimeStamp (us)]\n');
+            for i=1:sum(cycleCounts)
+                fprintf(fid,'%d=%.15g\n', i, timesUs(i));
+            end
+        end
+
         function writeV2Xml(filename, Y, X, timesMs)
             % Write a minimal legacy v2.2 '.NET DataSet' Prairie XML: an
             % embedded <xs:schema> (defining field names, which must be
@@ -369,7 +459,7 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 fprintf(fid,'    <Channel_1_Filename>t00001-001_Cycle%03d_Ch1_000001.tif</Channel_1_Filename>\n', i);
                 fprintf(fid,'    <Channel_2_Filename>t00001-001_Cycle%03d_Ch2_000001.tif</Channel_2_Filename>\n', i);
                 fprintf(fid,'    <Frame>1</Frame>\n');
-                fprintf(fid,'    <Time>%g</Time>\n', timesMs(i));
+                fprintf(fid,'    <Time>%.15g</Time>\n', timesMs(i));
                 fprintf(fid,'  </Dataset_x0020_2>\n');
             end
             fprintf(fid,'</Acquisition>\n');
@@ -389,7 +479,7 @@ classdef TestPrairieView < matlab.unittest.TestCase
             fprintf(fid,'\n');
             fprintf(fid,'[Image TimeStamp (us)]\n');
             for i=1:T
-                fprintf(fid,'%d=%g\n', i, timesUs(i));
+                fprintf(fid,'%d=%.15g\n', i, timesUs(i));
             end
         end
     end % methods (Static)
