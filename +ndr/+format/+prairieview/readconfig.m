@@ -15,10 +15,10 @@ function v = readconfig(filename)
 %   recording directory; the config file is resolved with
 %   ndr.format.prairieview.configfilename.
 %
-%   For Prairie View 2.2+ recordings the config is a large '.xml' document.
-%   This function does NOT parse the XML (use ndr.reader.imagestack, which
-%   reads modern Prairie data through NANSEN); for an '.xml' config it returns
-%   V.is_xml = true and no timestamps.
+%   For Prairie View 2.2+ recordings the config is an '.xml' document; in that
+%   case this function delegates to ndr.format.prairieview.readxml (which reads
+%   the per-frame timestamps and dimensions from the XML) and sets
+%   V.is_xml = true.
 %
 %   This is a revised port of readprairieconfig.m from
 %   VH-Lab/vhlab-TwoPhoton-matlab (Platforms/PrairieView). The .pcf parsing
@@ -33,6 +33,7 @@ function v = readconfig(filename)
 	v = struct();
 	[~,~,ext] = fileparts(filename);
 	if strcmpi(ext,'.xml')
+		v = ndr.format.prairieview.readxml(filename);
 		v.is_xml = true;
 		return;
 	end

@@ -26,6 +26,18 @@ classdef TestPrairieView < matlab.unittest.TestCase
         MultiTruth          % Y x X x 2 x 1 x T ground-truth (channels on C axis)
         MultiTimesUs double % per-timepoint timestamps for the multichannel recording
         MultiC double       % number of channels in the multichannel recording
+        XmlDir char         % a modern-PVScan-XML 2-channel recording directory
+        XmlTruth            % Y x X x 2 x 1 x T ground-truth for the XML recording
+        XmlTimesSec double  % per-timepoint absoluteTime values (seconds) in the XML
+        XmlC double         % number of channels in the XML recording
+        V2Dir char          % a legacy v2.2 '.NET DataSet' XML recording directory
+        V2Truth             % Y x X x 2 x 1 x T ground-truth for the v2 recording
+        V2TimesMs double    % per-timepoint <Time> values (milliseconds) in the v2 XML
+        V2C double          % number of channels in the v2 recording
+        CycDir char         % a multi-cycle .pcf recording directory (one epoch = several cycles)
+        CycTruth            % Y x X x 1 x 1 x T ground-truth across all cycles
+        CycTimesUs double   % per-frame timestamps (us) across all cycles
+        CycCounts double    % number of images in each cycle
     end
 
     methods (TestClassSetup)
@@ -76,6 +88,77 @@ classdef TestPrairieView < matlab.unittest.TestCase
             testCase.MultiTimesUs = [0 100000 250000 270000 500000];
             ndr.unittest.reader.TestPrairieView.writePcf( ...
                 fullfile(testCase.MultiDir,'Rec_Main.pcf'), Yl, Xl, Tl, testCase.MultiTimesUs);
+
+            % ---- a modern-PVScan-XML 2-channel recording -----------------
+            % timestamps come from per-frame <Frame absoluteTime="..."> (seconds)
+            testCase.XmlC = 2;
+            Txml = 3;
+            testCase.XmlDir = fullfile(testCase.TempDir,'Recording-XML');
+            mkdir(testCase.XmlDir);
+            % Real Prairie layout: one frame per <Sequence cycle="N"> (the
+            % cycle is the timepoint), filename frame index fixed at 000001,
+            % 3-digit cycle, channels as separate Ch1/Ch2 TIFFs.
+            xtruth = zeros(Yl, Xl, testCase.XmlC, 1, Txml, 'uint16');
+            for c=1:testCase.XmlC
+                for i=1:Txml
+                    xtruth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*5000 );
+                    fn = fullfile(testCase.XmlDir, ...
+                        sprintf('t00004-001_Cycle%03d_CurrentSettings_Ch%d_000001.tif', i, c));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, xtruth(:,:,c,1,i));
+                end
+            end
+            testCase.XmlTruth = xtruth;
+            % use realistic, irregular absoluteTime values (seconds)
+            testCase.XmlTimesSec = [0.329333 2.132962 3.976685];
+            ndr.unittest.reader.TestPrairieView.writePVScanXml( ...
+                fullfile(testCase.XmlDir,'t00004-001.xml'), Yl, Xl, testCase.XmlTimesSec);
+
+            % ---- a legacy v2.2 '.NET DataSet' XML 2-channel recording -----
+            % per-frame <Time> (ms) inside <Dataset_x0020_N> rows, with an
+            % embedded <xs:schema> that must be skipped when reading dims
+            testCase.V2C = 2;
+            Tv2 = 3;
+            testCase.V2Dir = fullfile(testCase.TempDir,'Recording-v2');
+            mkdir(testCase.V2Dir);
+            v2truth = zeros(Yl, Xl, testCase.V2C, 1, Tv2, 'uint16');
+            for c=1:testCase.V2C
+                for i=1:Tv2
+                    v2truth(:,:,c,1,i) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (i-1)*100 + c*3000 );
+                    fn = fullfile(testCase.V2Dir, ...
+                        sprintf('t00001-001_Cycle%03d_Ch%d_000001.tif', i, c));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, v2truth(:,:,c,1,i));
+                end
+            end
+            testCase.V2Truth = v2truth;
+            testCase.V2TimesMs = [0 1468.75 2875];
+            ndr.unittest.reader.TestPrairieView.writeV2Xml( ...
+                fullfile(testCase.V2Dir,'t00001-001.xml'), Yl, Xl, testCase.V2TimesMs);
+
+            % ---- a multi-cycle .pcf recording (one epoch = 3 cycles) ------
+            % mirrors a real Prairie run: [Main] Total images, per-[Cycle N]
+            % image counts, and an [Image TimeStamp (us)] list spanning all
+            % cycles. Frames are named with the cycle and a per-cycle frame
+            % index that resets each cycle; the global order is cycle-then-frame.
+            testCase.CycCounts = [1 4 1];   % 6 frames total, single channel
+            Tcyc = sum(testCase.CycCounts);
+            testCase.CycDir = fullfile(testCase.TempDir,'t00012-001');
+            mkdir(testCase.CycDir);
+            cyctruth = zeros(Yl, Xl, 1, 1, Tcyc, 'uint16');
+            tp = 0;
+            for cyc=1:numel(testCase.CycCounts)
+                for fr=1:testCase.CycCounts(cyc)
+                    tp = tp + 1;
+                    cyctruth(:,:,1,1,tp) = uint16( reshape(1:(Yl*Xl), Yl, Xl) + (tp-1)*100 );
+                    fn = fullfile(testCase.CycDir, ...
+                        sprintf('t00012-001_Cycle%03d_CurrentSettings_Ch1_%06d.tif', cyc, fr));
+                    ndr.unittest.reader.TestPrairieView.writeTiff(fn, cyctruth(:,:,1,1,tp));
+                end
+            end
+            testCase.CycTruth = cyctruth;
+            testCase.CycTimesUs = (0:Tcyc-1) * 1486848;   % us, ~real frame period
+            ndr.unittest.reader.TestPrairieView.writeMultiCyclePcf( ...
+                fullfile(testCase.CycDir,'t00012-001_Main.pcf'), Yl, Xl, ...
+                testCase.CycCounts, testCase.CycTimesUs);
         end
     end
 
@@ -184,6 +267,93 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'Multi-channel epoch with config times should be dev_local_time.');
         end
 
+        function testXmlConfigParsing(testCase)
+            v = ndr.format.prairieview.readconfig(testCase.XmlDir);
+            testCase.verifyTrue(v.is_xml, 'XML config should set is_xml=true.');
+            testCase.verifyEqual(v.Main.Lines_per_frame, testCase.Y, 'XML Lines_per_frame mismatch.');
+            testCase.verifyEqual(v.Main.Pixels_per_line, testCase.X, 'XML Pixels_per_line mismatch.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.XmlTimesSec*1e6, ...
+                'AbsTol', 1e-3, 'XML per-frame timestamps (us) mismatch.');
+        end
+
+        function testXmlGeometryAndFrames(testCase)
+            ef = {testCase.XmlDir};
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), numel(testCase.XmlTimesSec), ...
+                'XML numframes should equal the number of timepoints.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X testCase.XmlC 1 numel(testCase.XmlTimesSec)], ...
+                'XML framesize should carry channels on the C axis.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.XmlTruth, ...
+                'XML multi-channel frames did not round-trip.');
+        end
+
+        function testXmlTimestamps(testCase)
+            ef = {testCase.XmlDir};
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', ...
+                'XML epoch with per-frame times should be dev_local_time.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.XmlTimesSec, 'AbsTol', 1e-9, ...
+                'XML frame times should be the absoluteTime values in seconds.');
+        end
+
+        function testV2ConfigParsing(testCase)
+            % the embedded XSD schema must be skipped: dims come from the data
+            v = ndr.format.prairieview.readconfig(testCase.V2Dir);
+            testCase.verifyTrue(v.is_xml, 'v2 XML config should set is_xml=true.');
+            testCase.verifyEqual(v.Main.Lines_per_frame, testCase.Y, ...
+                'v2 Lines_Per_Frame should be read from the data, not the schema.');
+            testCase.verifyEqual(v.Main.Pixels_per_line, testCase.X, ...
+                'v2 Pixels_Per_Line should be read from the data, not the schema.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.V2TimesMs*1e3, ...
+                'AbsTol', 1e-6, 'v2 per-frame <Time> (ms->us) mismatch.');
+        end
+
+        function testV2GeometryAndTimes(testCase)
+            ef = {testCase.V2Dir};
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), numel(testCase.V2TimesMs), ...
+                'v2 numframes should equal the number of timepoints.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X testCase.V2C 1 numel(testCase.V2TimesMs)], ...
+                'v2 framesize should carry channels on the C axis.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.V2Truth, 'v2 frames did not round-trip.');
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', 'v2 epoch should be dev_local_time.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.V2TimesMs/1e3, 'AbsTol', 1e-9, ...
+                'v2 frame times should be <Time> (ms) in seconds.');
+        end
+
+        function testMultiCyclePcfConfig(testCase)
+            v = ndr.format.prairieview.readconfig(testCase.CycDir);
+            testCase.verifyEqual(v.Main.Total_images, sum(testCase.CycCounts), ...
+                'Total_images should be the sum of the per-cycle image counts.');
+            testCase.verifyEqual(numel(v.Image_TimeStamp__us_), sum(testCase.CycCounts), ...
+                'There should be one timestamp per frame across all cycles.');
+            testCase.verifyEqual(v.Image_TimeStamp__us_(:)', testCase.CycTimesUs, ...
+                'AbsTol', 1e-6, 'Multi-cycle [Image TimeStamp (us)] mismatch.');
+        end
+
+        function testMultiCycleEpochSpansCycles(testCase)
+            % one epoch (the directory) is the whole run, i.e. all cycles;
+            % frames are ordered cycle-then-frame and timestamped from the
+            % Main.pcf list spanning every cycle.
+            ef = {testCase.CycDir};
+            T = sum(testCase.CycCounts);
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), T, ...
+                'A multi-cycle epoch should expose all cycles'' frames.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X 1 1 T], 'Multi-cycle framesize mismatch.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.CycTruth, ...
+                'Multi-cycle frames did not round-trip in cycle-then-frame order.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft(:)', testCase.CycTimesUs/1e6, 'AbsTol', 1e-9, ...
+                'Multi-cycle frame times should span all cycles, in seconds.');
+        end
+
     end % methods (Test)
 
     methods (Static)
@@ -202,6 +372,99 @@ classdef TestPrairieView < matlab.unittest.TestCase
             t.write(img);
         end
 
+        function writePVScanXml(filename, Y, X, timesSec)
+            % Write a PVScan XML in the real Prairie v4 layout: one
+            % <Sequence cycle="N"> per timepoint, each with a single <Frame>
+            % carrying its absoluteTime, the per-channel <File> entries, and a
+            % per-frame <PVStateShard> with the dimension Keys (note the
+            % 'permissions' attribute sits between key and value, as in real
+            % files).
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'<?xml version="1.0" encoding="utf-8"?>\n');
+            fprintf(fid,'<PVScan version="4.0.0.43" date="9/28/2018 5:40:34 PM" notes="">\n');
+            for i=1:numel(timesSec)
+                fprintf(fid,'  <Sequence type="TSeries Timed Element" cycle="%d">\n', i);
+                fprintf(fid,'    <Frame relativeTime="0" absoluteTime="%.12g" index="1" label="CurrentSettings">\n', timesSec(i));
+                fprintf(fid,'      <File channel="1" channelName="Ch1" filename="t00004-001_Cycle%03d_CurrentSettings_Ch1_000001.tif" />\n', i);
+                fprintf(fid,'      <File channel="2" channelName="Ch2" filename="t00004-001_Cycle%03d_CurrentSettings_Ch2_000001.tif" />\n', i);
+                fprintf(fid,'      <PVStateShard>\n');
+                fprintf(fid,'        <Key key="linesPerFrame" permissions="Read, Write, Save" value="%d" />\n', Y);
+                fprintf(fid,'        <Key key="pixelsPerLine" permissions="Read, Write, Save" value="%d" />\n', X);
+                fprintf(fid,'        <Key key="framePeriod" permissions="Read, Write, Save" value="1.4819328" />\n');
+                fprintf(fid,'        <Key key="dwellTime" permissions="Read, Write, Save" value="3.6" />\n');
+                fprintf(fid,'      </PVStateShard>\n');
+                fprintf(fid,'    </Frame>\n');
+                fprintf(fid,'  </Sequence>\n');
+            end
+            fprintf(fid,'</PVScan>\n');
+        end
+
+        function writeMultiCyclePcf(filename, Y, X, cycleCounts, timesUs)
+            % Write a real-style multi-cycle legacy .pcf: [Main] with the
+            % total image count, one [Cycle N] section per cycle (with its
+            % image count), and an [Image TimeStamp (us)] list spanning every
+            % cycle (one entry per frame, in cycle-then-frame order).
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'[Main]\n');
+            fprintf(fid,'Acquisition type=TSERIES_MAIN\n');
+            fprintf(fid,'Bit depth=12\n');
+            fprintf(fid,'Channel 1 active=True\n');
+            fprintf(fid,'Frame period (us)=1486848.0\n');
+            fprintf(fid,'Lines per frame=%d\n', Y);
+            fprintf(fid,'Pixels per line=%d\n', X);
+            fprintf(fid,'Total cycles=%d\n', numel(cycleCounts));
+            fprintf(fid,'Total images=%d\n', sum(cycleCounts));
+            fprintf(fid,'Version=2.1.0.2\n');
+            fprintf(fid,'\n');
+            for k=1:numel(cycleCounts)
+                fprintf(fid,'[Cycle %d]\n', k);
+                fprintf(fid,'Acquisition type=TSERIES_CYCLE\n');
+                fprintf(fid,'Number of frames to average=1\n');
+                fprintf(fid,'Number of images=%d\n', cycleCounts(k));
+                fprintf(fid,'Period (us)=0.0\n');
+                fprintf(fid,'\n');
+            end
+            fprintf(fid,'[Image TimeStamp (us)]\n');
+            for i=1:sum(cycleCounts)
+                fprintf(fid,'%d=%.15g\n', i, timesUs(i));
+            end
+        end
+
+        function writeV2Xml(filename, Y, X, timesMs)
+            % Write a minimal legacy v2.2 '.NET DataSet' Prairie XML: an
+            % embedded <xs:schema> (defining field names, which must be
+            % skipped) followed by an <Acquisition_Header> with the real dim
+            % values and one <Dataset_x0020_2> frame row per timepoint, each
+            % carrying its per-channel filenames and a <Time> in milliseconds.
+            fid = fopen(filename,'w');
+            c = onCleanup(@() fclose(fid));
+            fprintf(fid,'<?xml version="1.0" standalone="yes"?>\n');
+            fprintf(fid,'<Acquisition>\n');
+            fprintf(fid,'  <xs:schema id="Acquisition" xmlns:xs="http://www.w3.org/2001/XMLSchema">\n');
+            fprintf(fid,'    <xs:element name="Lines_Per_Frame" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Pixels_Per_Line" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Framerate" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'    <xs:element name="Time" type="xs:double" minOccurs="0" />\n');
+            fprintf(fid,'  </xs:schema>\n');
+            fprintf(fid,'  <Acquisition_Header>\n');
+            fprintf(fid,'    <Lines_Per_Frame>%d</Lines_Per_Frame>\n', Y);
+            fprintf(fid,'    <Pixels_Per_Line>%d</Pixels_Per_Line>\n', X);
+            fprintf(fid,'    <Framerate>0.9</Framerate>\n');
+            fprintf(fid,'    <Total_Frames>%d</Total_Frames>\n', numel(timesMs));
+            fprintf(fid,'  </Acquisition_Header>\n');
+            for i=1:numel(timesMs)
+                fprintf(fid,'  <Dataset_x0020_2>\n');
+                fprintf(fid,'    <Channel_1_Filename>t00001-001_Cycle%03d_Ch1_000001.tif</Channel_1_Filename>\n', i);
+                fprintf(fid,'    <Channel_2_Filename>t00001-001_Cycle%03d_Ch2_000001.tif</Channel_2_Filename>\n', i);
+                fprintf(fid,'    <Frame>1</Frame>\n');
+                fprintf(fid,'    <Time>%.15g</Time>\n', timesMs(i));
+                fprintf(fid,'  </Dataset_x0020_2>\n');
+            end
+            fprintf(fid,'</Acquisition>\n');
+        end
+
         function writePcf(filename, Y, X, T, timesUs)
             % Write a minimal legacy Prairie '.pcf': a [Main] section (read
             % first, so Total images is known) and an [Image TimeStamp (us)]
@@ -216,7 +479,7 @@ classdef TestPrairieView < matlab.unittest.TestCase
             fprintf(fid,'\n');
             fprintf(fid,'[Image TimeStamp (us)]\n');
             for i=1:T
-                fprintf(fid,'%d=%g\n', i, timesUs(i));
+                fprintf(fid,'%d=%.15g\n', i, timesUs(i));
             end
         end
     end % methods (Static)

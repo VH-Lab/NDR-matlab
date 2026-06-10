@@ -21,6 +21,18 @@
 % PrairieViewTiffs adapter, but leniently about digit widths and channel
 % count.
 %
+% Cycles and epochs: PrairieView organizes a recording (a "run") into one or
+% more CYCLES (e.g. a directory t00012-001 with files named ..._Cycle001...,
+% ..._Cycle002..., and an [Image TimeStamp (us)] list in the '*_Main.pcf' that
+% spans every frame of every cycle). NDR reads such a collection of cycles as
+% a SINGLE epoch: FRAMELAYOUT enumerates the frames across all cycles, ordered
+% cycle-then-frame (the per-cycle frame index resets each cycle), and the
+% per-frame timestamps come from the Main config's list covering all cycles.
+% So one Prairie run directory == one NDR/NDI epoch, regardless of how many
+% cycles it contains. (If a use case ever needs each cycle as its own epoch,
+% that is a file-navigator concern on the NDI side, and the per-cycle slice of
+% the Main timestamp list would need to be selected; not done here.)
+%
 % Epoch layout: the epoch may be given as the recording directory, the
 % '*_Main.pcf' config file, or any file in the directory; the config and the
 % frame TIFFs are resolved from that directory (see ndr.reader.tiffstack and
@@ -28,11 +40,11 @@
 %
 % Timing vs NANSEN: NANSEN's PrairieViewTiffs reads the XML metadata but
 % derives frame times from a single uniform frame period (1/dt). This reader
-% instead reads the actual per-frame timestamps from the legacy config's
-% '[Image TimeStamp (us)]' section, preserving real (possibly irregular)
-% timing. Modern Prairie View 2.2+ XML is not parsed here yet; for modern XML
-% recordings use ndr.reader.imagestack (NANSEN) for pixels, noting its timing
-% is uniform.
+% instead reads the actual per-frame timestamps: from the legacy config's
+% '[Image TimeStamp (us)]' section for .pcf recordings, and from the per-frame
+% '<Frame absoluteTime>' (modern PVScan) or '<Time>' (legacy) entries for .xml
+% recordings (see ndr.format.prairieview.readxml). This preserves real
+% (possibly irregular) timing for both the .pcf and .xml formats.
 %
 % This reader is a revised port of the PrairieView platform from
 % VH-Lab/vhlab-TwoPhoton-matlab (readprairieconfig.m, tpconfigfilename.m).
