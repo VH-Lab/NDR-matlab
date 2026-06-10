@@ -202,6 +202,24 @@ classdef TestTiffstack < matlab.unittest.TestCase
                 'Directory epoch and explicit file-list epoch disagree.');
         end
 
+        function testAnchorFileResolvesToDirectory(testCase)
+            % An epoch given as a non-TIFF anchor/marker file (the .xml a file
+            % navigator would match on) must resolve to the TIFFs in the
+            % anchor's directory -- same frames and same directory-level
+            % timestamps as passing the directory itself.
+            anchor = fullfile(testCase.DirEpoch,'metadata.xml');
+            byAnchor = testCase.Reader.readframes({anchor}, 1);
+            byDir    = testCase.Reader.readframes({testCase.DirEpoch}, 1);
+            testCase.verifyEqual(byAnchor, byDir, ...
+                'Anchor-file epoch did not resolve to the directory frames.');
+            ftAnchor = testCase.Reader.frametimes({anchor}, 1);
+            testCase.verifyEqual(ftAnchor, testCase.DirTimes, ...
+                'Anchor-file epoch did not pick up the directory frame times.');
+            ec = testCase.Reader.epochclock({anchor}, 1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', ...
+                'Anchor-file epoch should be dev_local_time (directory has frametimes.txt).');
+        end
+
     end % methods (Test)
 
     methods (Static)

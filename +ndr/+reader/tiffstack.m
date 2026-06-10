@@ -70,10 +70,21 @@ classdef tiffstack < ndr.reader.base
 			%
 			% FILES = IMAGEFILES(TIFFSTACK_OBJ, EPOCHSTREAMS)
 			%
-			% EPOCHSTREAMS may contain single TIFF files, directories (whose
-			% .tif/.tiff contents are expanded), or a mix. Returns a cell array
-			% of full-path TIFF file names ordered by name. Errors if no TIFF
-			% files are found.
+			% EPOCHSTREAMS entries may be, in any combination:
+			%   - a single TIFF file (used directly);
+			%   - a directory (its .tif/.tiff contents are expanded);
+			%   - an ANCHOR file that is not itself a TIFF (e.g. a Prairie
+			%     '.xml'/'.pcf' config, or another per-epoch marker the file
+			%     navigator matched on) -- the TIFFs are then taken from the
+			%     anchor's parent directory.
+			% Returns a cell array of full-path TIFF file names ordered by name.
+			% Errors if no TIFF files are found.
+			%
+			% Resolving an anchor file to its directory is what lets the file
+			% navigator discover epochs by matching a marker file (a bare
+			% directory is not matchable) while the reader still reads the
+			% whole stack. Format-specific parsing of the anchor (e.g. reading
+			% frame times out of a Prairie config) layers on top of this.
 			%
 				if ~iscell(epochstreams)
 					epochstreams = {epochstreams};
@@ -82,16 +93,14 @@ classdef tiffstack < ndr.reader.base
 				for i=1:numel(epochstreams)
 					entry = epochstreams{i};
 					if isfolder(entry)
-						d = [dir(fullfile(entry,'*.tif')); dir(fullfile(entry,'*.tiff'))];
-						for k=1:numel(d)
-							if ~d(k).isdir
-								files{end+1} = fullfile(d(k).folder, d(k).name); %#ok<AGROW>
-							end
-						end
+						files = [files, tiffstack_obj.tiffsindir(entry)]; %#ok<AGROW>
 					else
 						[~,~,ext] = fileparts(entry);
 						if any(strcmpi(ext,{'.tif','.tiff'}))
 							files{end+1} = entry; %#ok<AGROW>
+						else
+							% an anchor / marker file: take TIFFs from its folder
+							files = [files, tiffstack_obj.tiffsindir(fileparts(entry))]; %#ok<AGROW>
 						end
 					end
 				end
@@ -101,6 +110,21 @@ classdef tiffstack < ndr.reader.base
 						'No .tif/.tiff file found in epoch files or directories.');
 				end
 		end % imagefiles()
+
+		function files = tiffsindir(tiffstack_obj, folder)
+			% TIFFSINDIR - return the full-path .tif/.tiff files in a folder
+			%
+			% FILES = TIFFSINDIR(TIFFSTACK_OBJ, FOLDER)
+			%
+				files = {};
+				if isempty(folder), folder = '.'; end
+				d = [dir(fullfile(folder,'*.tif')); dir(fullfile(folder,'*.tiff'))];
+				for k=1:numel(d)
+					if ~d(k).isdir
+						files{end+1} = fullfile(d(k).folder, d(k).name); %#ok<AGROW>
+					end
+				end
+		end % tiffsindir()
 
 		function filename = filenamefromepochfiles(tiffstack_obj, filename_array)
 			% FILENAMEFROMEPOCHFILES - return the first TIFF file name for an epoch
