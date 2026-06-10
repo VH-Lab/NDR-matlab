@@ -44,13 +44,24 @@ classdef imagestack < ndr.reader.base
 			%
 		end % ndr.reader.imagestack.imagestack
 
-		function filename = filenamefromepochfiles(imagestack_obj, filename_array)
-			% FILENAMEFROMEPOCHFILES - return the primary image file for the epoch
+		function imsrc = imagesource(imagestack_obj, filename_array)
+			% IMAGESOURCE - resolve epoch files to the path(s) handed to nansen.stack.open
 			%
-			% FILENAME = FILENAMEFROMEPOCHFILES(IMAGESTACK_OBJ, FILENAME_ARRAY)
+			% IMSRC = IMAGESOURCE(IMAGESTACK_OBJ, FILENAME_ARRAY)
 			%
-			% Returns the first file in FILENAME_ARRAY. NANSEN's ImageStack
-			% itself resolves whatever companion files a format needs.
+			% FILENAME_ARRAY (the epoch streams) may contain single files,
+			% directories, or a mix. nansen.stack.open does NOT accept a bare
+			% folder, so a directory is expanded here into the ordered list of
+			% image files it contains. Returns either:
+			%   - a single char path (when the epoch is one file), or
+			%   - a cell array of same-extension image file paths (when the
+			%     epoch is a directory / multi-file acquisition, e.g. Prairie
+			%     View). open() then selects the adapter and, for TIFFs, sniffs
+			%     the Software tag to dispatch to ScanImage/Prairie/etc.
+			%
+			% Directory expansion gathers the most common image extension among
+			% the directory's files so that companion files (e.g. Prairie .xml
+			% / .env) are not passed to open() (which requires one extension).
 			%
 				if ~iscell(filename_array)
 					filename_array = {filename_array};
@@ -58,8 +69,74 @@ classdef imagestack < ndr.reader.base
 				if isempty(filename_array)
 					error('ndr:reader:imagestack:nofile','No file found in epoch files.');
 				end
-				filename = filename_array{1};
-		end % filenamefromepochfiles()
+
+				hasfolder = false;
+				for i=1:numel(filename_array)
+					if isfolder(filename_array{i}), hasfolder = true; break; end
+				end
+
+				if ~hasfolder
+					if numel(filename_array)==1
+						imsrc = filename_array{1};
+					else
+						imsrc = imagestack_obj.sameextfiles(filename_array);
+					end
+					return;
+				end
+
+				% expand directories (and keep any explicitly-listed files)
+				files = {};
+				for i=1:numel(filename_array)
+					entry = filename_array{i};
+					if isfolder(entry)
+						d = dir(entry);
+						for k=1:numel(d)
+							if ~d(k).isdir
+								files{end+1} = fullfile(d(k).folder, d(k).name); %#ok<AGROW>
+							end
+						end
+					else
+						files{end+1} = entry; %#ok<AGROW>
+					end
+				end
+				imfiles = imagestack_obj.sameextfiles(files);
+				if numel(imfiles)==1
+					imsrc = imfiles{1};
+				else
+					imsrc = imfiles;
+				end
+		end % imagesource()
+
+		function imfiles = sameextfiles(imagestack_obj, files)
+			% SAMEEXTFILES - keep the image files sharing the most common image extension
+			%
+			% IMFILES = SAMEEXTFILES(IMAGESTACK_OBJ, FILES)
+			%
+			% From a list FILES, returns (name-ordered) those whose extension
+			% is the most common image extension present, so that one
+			% same-extension set is passed to nansen.stack.open. Non-image
+			% companion files (e.g. .xml, .env, .txt) are dropped.
+			%
+				imgexts = {'.tif','.tiff','.h5','.hdf5','.raw','.avi','.mp4','.mov','.png','.jpg','.jpeg','.bmp'};
+				exts = {};
+				for i=1:numel(files)
+					[~,~,e] = fileparts(files{i});
+					exts{end+1} = lower(e); %#ok<AGROW>
+				end
+				keep = ismember(exts, imgexts);
+				files = files(keep);
+				exts = exts(keep);
+				if isempty(files)
+					error('ndr:reader:imagestack:noimagefile',...
+						'No recognized image files found in the epoch directory/files.');
+				end
+				% choose the most common image extension
+				uext = unique(exts);
+				counts = cellfun(@(x) sum(strcmp(exts,x)), uext);
+				[~,mi] = max(counts);
+				chosen = uext{mi};
+				imfiles = sort(files(strcmp(exts,chosen)));
+		end % sameextfiles()
 
 		function s = imagestackobject(imagestack_obj, epochstreams)
 			% IMAGESTACKOBJECT - construct the underlying nansen.stack.ImageStack
@@ -67,10 +144,12 @@ classdef imagestack < ndr.reader.base
 			% S = IMAGESTACKOBJECT(IMAGESTACK_OBJ, EPOCHSTREAMS)
 			%
 			% Builds a nansen.stack.ImageStack for the epoch by opening the
-			% file with nansen.stack.open (which selects the right +virtual
-			% adapter from the file extension) and wrapping the resulting
-			% virtual data object. Errors with a clear message if NANSEN is
-			% not installed.
+			% file(s) with nansen.stack.open (which selects the right +virtual
+			% adapter from the file extension, and for TIFFs sniffs the Software
+			% tag) and wrapping the resulting virtual data object. A directory
+			% epoch is expanded to its ordered image files first (see
+			% IMAGESOURCE), since open() does not accept a bare folder. Errors
+			% with a clear message if NANSEN is not installed.
 			%
 				if exist('nansen.stack.ImageStack','class')~=8
 					error('ndr:reader:imagestack:nonansen',...
@@ -80,8 +159,8 @@ classdef imagestack < ndr.reader.base
 						 'tools/requirements.txt (matbox.installRequirements). Use ' ...
 						 'ndr.reader.tiffstack for plain multipage TIFFs to avoid this dependency.']);
 				end
-				filename = imagestack_obj.filenamefromepochfiles(epochstreams);
-				virtualData = nansen.stack.open(filename);
+				imsrc = imagestack_obj.imagesource(epochstreams);
+				virtualData = nansen.stack.open(imsrc);
 				s = nansen.stack.ImageStack(virtualData);
 		end % imagestackobject()
 

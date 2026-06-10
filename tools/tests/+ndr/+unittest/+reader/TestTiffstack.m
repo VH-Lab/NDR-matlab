@@ -28,6 +28,9 @@ classdef TestTiffstack < matlab.unittest.TestCase
         ClocklessFile char
         MovieFile char
         MovieTimes double % frame times written for the movie case
+        DirEpoch char     % directory of single-frame TIFFs (Prairie-like), with frametimes.txt
+        DirEpochFiles cell % ordered list of the single-frame TIFF files
+        DirTimes double   % frame times written into the directory sidecar
     end
 
     methods (TestClassSetup)
@@ -58,6 +61,24 @@ classdef TestTiffstack < matlab.unittest.TestCase
             testCase.MovieTimes = (0:Tl-1)' * 0.1 + 10;
             ndr.unittest.reader.TestTiffstack.writeAscii( ...
                 fullfile(testCase.TempDir,'stack_movie_frametimes.txt'), testCase.MovieTimes);
+
+            % directory of single-frame TIFFs (Prairie-like), anchored on the
+            % directory, with a frametimes.txt sidecar in that directory and a
+            % non-image companion file (.xml) that must be ignored
+            testCase.DirEpoch = fullfile(testCase.TempDir,'prairie_like');
+            mkdir(testCase.DirEpoch);
+            testCase.DirEpochFiles = cell(1,Tl);
+            for i=1:Tl
+                fn = fullfile(testCase.DirEpoch, sprintf('frame_%05d.tif', i));
+                ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fn, truth(:,:,:,:,i));
+                testCase.DirEpochFiles{i} = fn;
+            end
+            testCase.DirTimes = (0:Tl-1)' * 0.25 + 5;
+            ndr.unittest.reader.TestTiffstack.writeAscii( ...
+                fullfile(testCase.DirEpoch,'frametimes.txt'), testCase.DirTimes);
+            % companion metadata file that the reader must ignore
+            ndr.unittest.reader.TestTiffstack.writeAscii( ...
+                fullfile(testCase.DirEpoch,'metadata.xml'), [1;2;3]);
         end
     end
 
@@ -139,6 +160,46 @@ classdef TestTiffstack < matlab.unittest.TestCase
             channels = testCase.Reader.getchannelsepoch(ef,1);
             testCase.verifyNumElements(channels, 1, 'Expected a single image channel.');
             testCase.verifyEqual(channels(1).type, 'image', 'Channel type should be image.');
+        end
+
+        function testDirectoryEpochGeometryAndFrames(testCase)
+            % An epoch given as a directory of single-frame TIFFs is read as
+            % one ordered stack; the .xml companion is ignored.
+            ef = {testCase.DirEpoch};
+            testCase.verifyEqual(testCase.Reader.numframes(ef,1), testCase.T, ...
+                'numframes mismatch for directory epoch.');
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(sz, [testCase.Y testCase.X 1 1 testCase.T], ...
+                'framesize mismatch for directory epoch.');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(frames, testCase.Truth, ...
+                'Directory-epoch frames did not round-trip / order correctly.');
+            subset = testCase.Reader.readframes(ef,1,[1 3]);
+            testCase.verifyEqual(subset, testCase.Truth(:,:,:,:,[1 3]), ...
+                'Directory-epoch frame subset did not round-trip.');
+        end
+
+        function testDirectoryEpochTimes(testCase)
+            % The frame-times sidecar in the epoch directory makes it a movie.
+            ef = {testCase.DirEpoch};
+            ec = testCase.Reader.epochclock(ef,1);
+            testCase.verifyEqual(ec{1}.type, 'dev_local_time', ...
+                'Directory epoch with frametimes.txt should be dev_local_time.');
+            ft = testCase.Reader.frametimes(ef,1);
+            testCase.verifyEqual(ft, testCase.DirTimes, ...
+                'Directory-epoch frametimes mismatch.');
+            t0t1 = testCase.Reader.t0_t1(ef,1);
+            testCase.verifyEqual(t0t1{1}, [testCase.DirTimes(1) testCase.DirTimes(end)], ...
+                'Directory-epoch t0_t1 mismatch.');
+        end
+
+        function testDirectoryAndFileListAgree(testCase)
+            % Passing the directory must be equivalent to passing the ordered
+            % list of files that the directory contains.
+            byDir  = testCase.Reader.readframes({testCase.DirEpoch}, 1);
+            byList = testCase.Reader.readframes(testCase.DirEpochFiles, 1);
+            testCase.verifyEqual(byDir, byList, ...
+                'Directory epoch and explicit file-list epoch disagree.');
         end
 
     end % methods (Test)
