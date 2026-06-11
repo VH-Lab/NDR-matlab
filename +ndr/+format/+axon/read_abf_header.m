@@ -8,5 +8,5 @@ function h = read_abf_header(filename)
 % Relies on abfload from https://github.com/fcollman/abfload
 %
 
-[d,si,h]=abfload2(filename,'start',0,'stop',0.1,'doDispInfo',false);
+[d,si,h]=abfload3(filename,'start',0,'stop',0.1,'doDispInfo',false);
 
