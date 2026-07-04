@@ -46,6 +46,9 @@
           - ndr.format.tdt.read_SEV_channel: 'reference/+ndr/+format/+tdt/read_SEV_channel.m.md'
           - ndr.format.tdt.read_SEV_header: 'reference/+ndr/+format/+tdt/read_SEV_header.m.md'
           - ndr.format.tdt.read_SEV_logs: 'reference/+ndr/+format/+tdt/read_SEV_logs.m.md'
+        - vld PACKAGE:
+          - ndr.format.vld.readvhlvheaderfile: 'reference/+ndr/+format/+vld/readvhlvheaderfile.m.md'
+          - ndr.format.vld.readvhlvdatafile: 'reference/+ndr/+format/+vld/readvhlvdatafile.m.md'
         - whitematter PACKAGE:
           - ndr.format.whitematter.header: 'reference/+ndr/+format/+whitematter/header.m.md'
           - ndr.format.whitematter.read: 'reference/+ndr/+format/+whitematter/read.m.md'
@@ -65,6 +68,7 @@
         - ndr.reader.somecompany_someformat: 'reference/+ndr/+reader/somecompany_someformat.m.md'
         - ndr.reader.spikegadgets_rec: 'reference/+ndr/+reader/spikegadgets_rec.m.md'
         - ndr.reader.tdt_sev: 'reference/+ndr/+reader/tdt_sev.m.md'
+        - ndr.reader.vld: 'reference/+ndr/+reader/vld.m.md'
         - ndr.reader.whitematter: 'reference/+ndr/+reader/whitematter.m.md'
       - string PACKAGE:
         - ndr.string.channelstring2channels: 'reference/+ndr/+string/channelstring2channels.m.md'
@@ -103,6 +107,9 @@
           - tdt_sev PACKAGE:
             - ndr.test.reader.tdt_sev.readertest: 'reference/+ndr/+test/+reader/+tdt_sev/readertest.m.md'
             - ndr.test.reader.tdt_sev.test: 'reference/+ndr/+test/+reader/+tdt_sev/test.m.md'
+          - vld PACKAGE:
+            - ndr.test.reader.vld.readertest: 'reference/+ndr/+test/+reader/+vld/readertest.m.md'
+            - ndr.test.reader.vld.test: 'reference/+ndr/+test/+reader/+vld/test.m.md'
       - time PACKAGE:
         - ndr.time.clocktype: 'reference/+ndr/+time/clocktype.m.md'
         - ndr.time.timereference: 'reference/+ndr/+time/timereference.m.md'
