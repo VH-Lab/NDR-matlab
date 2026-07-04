@@ -44,8 +44,8 @@ mystruct = rmfield(mystruct,'emptyfield'); % make it have no fields
  %         we have no expectation that this will be large, so
  %         let's read the whole business at once
 
-[wholepath,myfilenameactual,myext] = fileparts(myfilename);
-if strcmp(upper(myext),upper('.vld')),
+[~,~,myext] = fileparts(myfilename);
+if strcmpi(myext,'.vld'),
 	error(['It appears you are trying to open a data file ' myfilename ' with the code that reads the header.']);
 end;
 

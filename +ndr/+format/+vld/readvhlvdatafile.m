@@ -60,11 +60,11 @@ vlt.data.assign(varargin{:});
 multiplexed = 0;
 
 if isempty(headerstruct),
-	[mypath,myname,myext] = fileparts(myfilename);
+	[mypath,myname,~] = fileparts(myfilename);
 	headerstruct=ndr.format.vld.readvhlvheaderfile(fullfile(mypath,[myname '.vlh']));
 end;
 
-if any(channelnums<1) | any(channelnums>headerstruct.NumChans),
+if any(channelnums<1) || any(channelnums>headerstruct.NumChans),
 	error(['Requested channel numbers must be between 1 and NumChans, which for this header file is ' int2str(headerstruct.NumChans) '.']);
 end;
 
