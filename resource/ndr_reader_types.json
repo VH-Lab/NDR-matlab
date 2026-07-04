@@ -50,5 +50,9 @@
 	{
 		"type": ["prairieview", "prairie", "pv", "prairieview_pcf"],
 		"classname": "ndr.reader.prairieview"
+	},
+	{
+		"type": ["vld", "vlh", "vhlv", "vhlabview", "labview"],
+		"classname": "ndr.reader.vld"
 	}
 ]
