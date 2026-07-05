@@ -1,0 +1,7 @@
+ChannelString:	Dev1/ai0:3
+NumChans:	4
+SamplingRate:	1000.000000
+SamplesPerChunk:	100
+Multiplexed:	1
+Scale:	10.000000
+precision:	int16
