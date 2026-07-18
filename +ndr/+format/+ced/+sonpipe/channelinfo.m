@@ -9,6 +9,11 @@ function ci = channelinfo(header, channel_number)
 %
 %   See also ndr.format.ced.sonpipe.read_SOMSMR_header
 
+	arguments
+		header
+		channel_number {mustBeNumeric}
+	end
+
 	if isempty(header) || ~isfield(header, 'channelinfo') || isempty(header.channelinfo)
 		error('sonpipe:noChannels', 'The header contains no channels.');
 	end

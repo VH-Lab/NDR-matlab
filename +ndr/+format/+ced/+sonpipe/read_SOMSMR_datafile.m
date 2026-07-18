@@ -32,6 +32,14 @@ function [data, total_samples, total_time, blockinfo, time] = read_SOMSMR_datafi
 %
 %   See also ndr.format.ced.sonpipe.read_SOMSMR_header, ndr.format.ced.sonpipe.read_SOMSMR_sampleinterval
 
+	arguments
+		filename       {mustBeTextScalar}
+		header                                       % [] or a header struct
+		channel_number {mustBeNumeric}
+		t0 (1,1)       {mustBeNumeric}
+		t1 (1,1)       {mustBeNumeric}
+	end
+
 	data = [];
 	total_samples = [];
 	total_time = [];

@@ -14,6 +14,10 @@ function [status, out] = runcmd(cmd)
 %
 %   See also ndr.format.ced.sonpipe.executable
 
+	arguments
+		cmd {mustBeTextScalar}
+	end
+
 	if ispc
 		[status, out] = system(cmd);
 		return;

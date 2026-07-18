@@ -18,6 +18,12 @@ function [sampleinterval, total_samples, total_time] = read_SOMSMR_sampleinterva
 %
 %   See also ndr.format.ced.sonpipe.read_SOMSMR_header, ndr.format.ced.sonpipe.read_SOMSMR_datafile
 
+	arguments
+		filename       {mustBeTextScalar}
+		header                                       % [] or a header struct (unused)
+		channel_number {mustBeNumeric}
+	end
+
 	txt = invoke_text(sprintf('sampleinterval "%s" -c %d', filename, channel_number));
 	r = jsondecode(txt);
 
