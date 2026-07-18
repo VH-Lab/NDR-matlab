@@ -44,6 +44,9 @@ classdef TestSonpipeRead < matlab.unittest.TestCase
 			if ~isempty(tc.File) && exist(tc.File, 'file')
 				delete(tc.File);
 			end
+			% Reset the cached executable so the fake CLI does not leak into
+			% other tests (e.g. TestSonpipeIntegration, which needs the real one).
+			ndr.format.ced.sonpipe.executable('');
 		end
 	end
 
