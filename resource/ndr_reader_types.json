@@ -4,7 +4,7 @@
 		"classname": "ndr.reader.intan_rhd"
         },
 	{
-		"type": ["ced-smr", "smr", "son"],
+		"type": ["ced-smr", "smr", "son", "smrx", "ced-smrx"],
 		"classname": "ndr.reader.ced_smr"
         },
 	{

@@ -38,6 +38,14 @@ total_time = [];
 blockinfo = [];
 time = [];
 
+% 64-bit CED files (son64/.smrx) are read via the sonpipe bridge; 32-bit files
+% (son32/.smr/.son) use the built-in sigTOOL reader below.
+if ndr.format.ced.isSON64(filename),
+	[data,total_samples,total_time,blockinfo,time] = ...
+		ndr.format.ced.sonpipe.read_SOMSMR_datafile(filename,header,channel_number,t0,t1);
+	return;
+end;
+
 if isempty(header),
 	header = ndr.format.ced.read_SOMSMR_header(filename);
 end;
