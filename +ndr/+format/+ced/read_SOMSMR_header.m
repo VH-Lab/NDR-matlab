@@ -22,6 +22,14 @@ function [header] = read_SOMSMR_header(filename);
 % See also: ndr.format.ced.read_SOMSMR_datafile, ndr.format.ced.read_SOMSMR_sampleinterval,
 %   SONFILEHEADER (documents HEADER.fileinfo),
 %
+% For 64-bit CED files (the son64 format, normally .smrx) the header is read via
+% the sonpipe command-line bridge; 32-bit files (son32, normally .smr/.son) use
+% the built-in sigTOOL reader below. See ndr.format.ced.isSON64.
+
+if ndr.format.ced.isSON64(filename),
+	header = ndr.format.ced.sonpipe.read_SOMSMR_header(filename);
+	return;
+end;
 
 [pathname filename2 extension] = fileparts(filename);
 if strcmpi(extension,'.smr'), % little endian

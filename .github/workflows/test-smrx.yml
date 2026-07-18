@@ -1,0 +1,96 @@
+name: Test .smrx (real sonpipe)
+
+# Reads the checked-in 64-bit CED file example_data/spike2data.smrx through the
+# REAL sonpipe CLI and CED's sonpy, validating NDR's 64-bit dispatch end-to-end.
+# It dogfoods the non-interactive installer: sonpipe is installed from inside
+# MATLAB via ndr.setup.sonpipe('install', true).
+#
+# CED ships sonpy wheels for Python 3.14 (Linux/macOS) and 3.9-3.14 (Windows);
+# this runs on Linux (3.14) and Windows (3.11). (macOS Apple Silicon needs an
+# x86_64 Python under Rosetta -- covered by the sonpipe repo's own CI.)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smrx:
+    name: smrx / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: '3.14'
+          - os: windows-latest
+            python-version: '3.11'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Start virtual display server
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          Xvfb :99 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v3
+        with:
+          release: latest
+          products: |
+            Signal_Processing_Toolbox
+            Statistics_and_Machine_Learning_Toolbox
+
+      - name: Install MatBox
+        uses: ehennestad/matbox-actions/install-matbox@v1
+
+      - name: Install sonpipe (non-interactive) and run the .smrx integration test
+        uses: matlab-actions/run-command@v3
+        with:
+          command: |
+            addpath(pwd);
+            addpath(fullfile(pwd, "tools", "tests"));
+
+            % MATLAB dependencies (vlt, used by the reader).
+            matbox.installRequirements(fullfile(pwd, "tools"));
+
+            % Dogfood the non-interactive installer. sonpipe is not yet on PyPI,
+            % so install from the repo; drop the 'source' argument once released.
+            ok = ndr.setup.sonpipe('install', true, ...
+                'source', 'git+https://github.com/VH-Lab/sonpipe.git');
+            assert(ok, 'ndr.setup.sonpipe(''install'', true) failed');
+
+            results = runtests('ndr.unittest.format.ced.TestSonpipeIntegration', ...
+                'OutputDetail', 'Detailed');
+            disp(table(results));
+            assert(all(~[results.Failed]), 'smrx integration tests failed');
+            assert(any(~[results.Incomplete]), ...
+                'smrx integration tests were all skipped -- sonpipe was not detected by MATLAB');
+
+      - name: Restore MATLAB Path
+        uses: matlab-actions/run-command@v3
+        if: always()
+        with:
+          command: |
+            restoredefaultpath();
+            savepath();

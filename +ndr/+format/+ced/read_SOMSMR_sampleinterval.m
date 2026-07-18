@@ -24,6 +24,15 @@ function [sampleinterval,total_samples,total_time,blockinfo] = read_SOMSMR_sampl
 %  See also: ndr.format.ced.read_SOMSMR_datafile, ndr.format.ced.read_SOMSMR_header
 %
 
+% 64-bit CED files (son64/.smrx) are read via the sonpipe bridge; 32-bit files
+% (son32/.smr/.son) use the built-in sigTOOL reader below.
+if ndr.format.ced.isSON64(filename),
+	[sampleinterval,total_samples,total_time] = ...
+		ndr.format.ced.sonpipe.read_SOMSMR_sampleinterval(filename,header,channel_number);
+	blockinfo = [];
+	return;
+end;
+
 if isempty(header),
 	header = ndr.format.ced.read_SOMSMR_header(filename);
 end;

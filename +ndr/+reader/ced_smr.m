@@ -263,21 +263,23 @@ classdef ced_smr < ndr.reader.base
 	methods (Static)  % helper functions
 
 		function smrfile = cedsmrfile(filelist)
-			% CEDSMRFILE - Identify the .SMR file out of a file list
-			% 
+			% CEDSMRFILE - Identify the CED Spike2 file out of a file list
+			%
 			% FILENAME = CEDSMRFILE(FILELIST)
 			%
 			% Given a cell array of strings FILELIST with full-path file names,
-			% this function identifies the first file with an extension '.smr' (case insensitive)
-			% and returns the result in FILENAME (full-path file name).
+			% this function identifies the first CED Spike2 file (extension
+			% '.smr', '.smrx', or '.son', case insensitive) and returns the
+			% result in FILENAME (full-path file name). 32-bit (.smr/.son) and
+			% 64-bit (.smrx) files are both supported.
 				for k=1:numel(filelist),
 					[pathpart,filenamepart,extpart] = fileparts(filelist{k});
-					if strcmpi(extpart,'.smr'),
+					if any(strcmpi(extpart,{'.smr','.smrx','.son'})),
 						smrfile = filelist{k}; % assume only 1 file
 						return;
-					end; % got the .smr file
+					end; % got the CED Spike2 file
 				end
-				error(['Could not find any .smr file in the file list.']);
+				error(['Could not find any .smr/.smrx/.son file in the file list.']);
 		end
 
 		function channeltype = cedsmrheader2readerchanneltype(cedsmrchanneltype)
