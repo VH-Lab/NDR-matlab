@@ -24,6 +24,13 @@ jobs:
   smrx:
     name: smrx / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # matbox resolves and downloads its MATLAB dependencies (e.g.
+    # vhlab-toolbox-matlab) through the GitHub API. Give it the runner's built-in
+    # token (auto-provided; no secret to configure) so those calls are
+    # authenticated (5000 req/hr) instead of hitting the shared unauthenticated
+    # limit (60 req/hr), which was intermittently failing dependency install.
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
     strategy:
       fail-fast: false
       matrix:

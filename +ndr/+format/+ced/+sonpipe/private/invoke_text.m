@@ -9,6 +9,10 @@ function txt = invoke_text(args)
 %
 %   This is a private helper for the +sonpipe package.
 
+	arguments
+		args {mustBeTextScalar}
+	end
+
 	exe = ndr.format.ced.sonpipe.executable();
 	cmd = [exe ' ' args];
 	[status, txt] = ndr.format.ced.sonpipe.runcmd(cmd);
