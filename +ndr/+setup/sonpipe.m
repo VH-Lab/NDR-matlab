@@ -33,6 +33,23 @@ function tf = sonpipe(varargin)
 %   Licensing: sonpipe itself is open-source (MIT). It installs CED's sonpy
 %   (GPL v3, shipped by CED as prebuilt binaries) as a dependency.
 %
+%   Troubleshooting a crash while reading a file:
+%
+%   CED's sonpy is a compiled binary that, on some files, fails an internal
+%   assertion and aborts its own process. NDR's reader detects a mid-read abort
+%   and raises a 'sonpipe:crash'/'sonpipe:truncated' error instead of returning
+%   truncated data. To find WHICH sonpy call is responsible, turn on sonpipe's
+%   breadcrumb log and re-run the failing read:
+%
+%       setenv('SONPIPE_LOG', '1');   % or a full path to a log file
+%       ... % the read that crashes
+%       setenv('SONPIPE_LOG', '');    % turn logging back off
+%
+%   sonpipe then writes a line before and after every call into sonpy (flushed
+%   so it survives the abort) to ~/.local/var/log/sonpipe-<uid>.log; the last
+%   line names the crashing call. See the sonpipe README ("Troubleshooting")
+%   for how to read the log.
+%
 %   See also: ndr.format.ced.sonpipe.executable, ndr.format.ced.isSON64
 
 	opts = struct('executable', '', 'install', false, 'source', 'sonpipe', 'python', '');
