@@ -94,6 +94,11 @@ def main():
             count = max(0, min(count, N - start))
             vals = [float(start + i) for i in range(count)]
             sys.stdout.buffer.write(struct.pack("<%dd" % len(vals), *vals))
+            sys.stdout.buffer.flush()
+            # Completion sentinel, matching the real CLI. The MATLAB layer relies
+            # on this line to distinguish a finished read from a mid-stream crash.
+            sys.stderr.write(
+                "sonpipe: wrote %d samples (double) for channel %d\n" % (len(vals), c))
             return 0
         if kind in (2, 3, 4):  # event -> raw little-endian double times
             times = [k * SI for k in range(N)]
@@ -103,6 +108,9 @@ def main():
             if t1 is not None:
                 times = [t for t in times if t <= float(t1)]
             sys.stdout.buffer.write(struct.pack("<%dd" % len(times), *times))
+            sys.stdout.buffer.flush()
+            sys.stderr.write(
+                "sonpipe: wrote %d event times (double) for channel %d\n" % (len(times), c))
             return 0
         # marker / textmark -> JSON
         markers = [{"tick": t, "time": t * TIMEBASE, "code": [1, 0, 0, 0],
