@@ -121,7 +121,15 @@ classdef prairieview < ndr.reader.tiffstack
 						['The recording does not have the same set of frames for every '...
 						 'channel; cannot assemble a uniform multi-channel stack.']);
 				end
+				% PrairieView TIFFs frequently carry zero-valued X/YResolution
+				% tags, which makes imfinfo warn "Division by zero ... set to
+				% NaN". Only Height/Width/BitsPerSample are used below, so
+				% silence warnings for just this imfinfo call and restore the
+				% previous warning state immediately after (even on error).
+				oldWarnState = warning('off','all');
+				restoreWarn = onCleanup(@() warning(oldWarnState));
 				fi = imfinfo(grid{1,1});
+				clear restoreWarn;   % restore warning state now
 				L.files = files;
 				L.channels = channels;
 				L.keys = keys;
