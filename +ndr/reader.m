@@ -547,6 +547,32 @@ classdef reader
                 frames = ndr_reader_obj.ndr_reader_base.readframes(epochstreams, epoch_select, frameind);
         end % readframes()
 
+        function m = metadata(ndr_reader_obj, epochstreams, epoch_select)
+            %METADATA - standardized image-acquisition metadata for an epoch
+            %
+            %   M = METADATA(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+            %
+            %   Returns the standardized image-acquisition metadata struct for
+            %   the epoch (raster line/frame timing, geometry, scan direction),
+            %   with all time fields in SECONDS. This calls the corresponding
+            %   method of the underlying specific reader object
+            %   (`ndr_reader_base`); readers that are not raster imagers return
+            %   the default "unknown" struct (see
+            %   ndr.reader.base.emptyimagemetadata).
+            %
+            %   Inputs:
+            %       NDR_READER_OBJ - The ndr.reader object.
+            %       EPOCHSTREAMS   - Cell array of filenames for the epoch.
+            %       EPOCH_SELECT   - The epoch index (default: 1).
+            %
+            %   Outputs:
+            %       M              - Standardized image-metadata struct.
+            %
+            % See also: ndr.reader.base/metadata, ndr.reader.base.emptyimagemetadata
+                if nargin<3, epoch_select = 1; end
+                m = ndr_reader_obj.ndr_reader_base.metadata(epochstreams, epoch_select);
+        end % metadata()
+
         function b = MightHaveTimeGaps(ndr_reader_obj)
             %MIGHTHAVETIMEGAPS - does the reader potentially have time gaps?
             %

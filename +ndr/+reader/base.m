@@ -436,9 +436,68 @@ classdef base
 				frames = []; % abstract class
 		end % readframes()
 
+		function m = metadata(ndr_reader_base_obj, epochstreams, epoch_select)
+			% METADATA - standardized image-acquisition metadata for an epoch
+			%
+			% M = METADATA(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns a struct of standardized acquisition metadata for an image
+			% epoch. It describes HOW the frames were acquired (in particular the
+			% raster-scan timing that lets one compute when each line/pixel was
+			% sampled), separately from the pixel data itself. ALL TIME FIELDS
+			% ARE IN SECONDS. The struct has the fields:
+			%
+			%   israster        - logical; true if this epoch is a raster scan
+			%                     with known line/frame timing
+			%   frame_period    - time to acquire one frame (s)
+			%   line_period     - time to acquire one scanned line/row (s)
+			%   dwell_time      - per-pixel dwell time (s)
+			%   lines_per_frame - number of scanned lines (rows) per frame
+			%   pixels_per_line - number of pixels (columns) per line
+			%   bidirectional   - logical; true if alternate lines are scanned
+			%                     in the reverse direction
+			%
+			% A raster scan does not acquire a frame instantaneously: it sweeps
+			% line by line, so at slow frame rates the top of a frame is acquired
+			% well before the bottom. LINE_PERIOD (plus FRAMETIMES) is what lets a
+			% caller reconstruct the acquisition time of each line/pixel.
+			%
+			% The abstract class returns the "empty" struct (israster=false, NaN
+			% timing) from ndr.reader.base.emptyimagemetadata. Raster readers
+			% (e.g. ndr.reader.prairieview) override this and fill in the fields
+			% they can determine; fields that cannot be determined stay NaN.
+			%
+			% See also: ndr.reader.base.emptyimagemetadata,
+			%   ndr.reader.prairieview/metadata, ndr.reader.base/frametimes
+				m = ndr.reader.base.emptyimagemetadata();
+		end % metadata()
+
 	end; % methods
 
 	methods (Static), % functions that don't need the object
+
+		function m = emptyimagemetadata()
+			% EMPTYIMAGEMETADATA - the standardized image-metadata struct with default (unknown) values
+			%
+			% M = ndr.reader.base.emptyimagemetadata()
+			%
+			% Returns the standardized image-acquisition metadata struct used by
+			% ndr.reader.base/metadata, with every field at its "unknown"
+			% default: israster=false, bidirectional=false, and NaN for each
+			% timing/geometry value. A reader fills in the fields it can supply
+			% and leaves the rest at these defaults, so consumers always see the
+			% same field set. ALL TIME FIELDS ARE IN SECONDS.
+			%
+			% See also: ndr.reader.base/metadata
+				m = struct('israster', false, ...
+					'frame_period', NaN, ...
+					'line_period', NaN, ...
+					'dwell_time', NaN, ...
+					'lines_per_frame', NaN, ...
+					'pixels_per_line', NaN, ...
+					'bidirectional', false);
+		end % emptyimagemetadata()
+
 		function ct = mfdaq_channeltypes
 			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
 			%

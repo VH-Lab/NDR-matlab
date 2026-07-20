@@ -266,6 +266,60 @@ classdef prairieview < ndr.reader.tiffstack
 				end
 		end % t0_t1()
 
+		function m = metadata(prairieview_obj, epochstreams, epoch_select)
+			% METADATA - standardized raster-scan metadata from the Prairie config
+			%
+			% M = METADATA(PRAIRIEVIEW_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the standardized image-acquisition metadata struct (see
+			% ndr.reader.base/metadata), filled in from the PrairieView config.
+			% ALL TIME FIELDS ARE IN SECONDS. The config stores periods in
+			% microseconds (Frame_period__us_, Dwell_time__us_,
+			% ScanLine_period__us_); they are converted to seconds here.
+			%
+			% LINE_PERIOD is taken from the config's scanLinePeriod when present
+			% (the exact, hardware-reported value); otherwise it is derived as
+			% FRAME_PERIOD / LINES_PER_FRAME. That derivation ignores inter-line
+			% flyback/retrace and so slightly OVERESTIMATES the true line period;
+			% prefer a recording whose config supplies scanLinePeriod when exact
+			% sub-frame timing matters.
+			%
+			% Fields the config does not provide are left at their defaults (NaN,
+			% or false for BIDIRECTIONAL). ISRASTER is set true when a frame or
+			% line period could be determined.
+			%
+			% See also: ndr.reader.base/metadata, ndr.reader.prairieview/config,
+			%   ndr.format.prairieview.readconfig
+				m = ndr.reader.base.emptyimagemetadata();
+				v = prairieview_obj.config(epochstreams);
+				if ~isstruct(v) || ~isfield(v,'Main')
+					return;
+				end
+				M = v.Main;
+				if isfield(M,'Lines_per_frame') && ~isempty(M.Lines_per_frame) && isnumeric(M.Lines_per_frame)
+					m.lines_per_frame = double(M.Lines_per_frame);
+				end
+				if isfield(M,'Pixels_per_line') && ~isempty(M.Pixels_per_line) && isnumeric(M.Pixels_per_line)
+					m.pixels_per_line = double(M.Pixels_per_line);
+				end
+				if isfield(M,'Frame_period__us_') && ~isempty(M.Frame_period__us_) && isnumeric(M.Frame_period__us_)
+					m.frame_period = double(M.Frame_period__us_) / 1e6;
+				end
+				if isfield(M,'Dwell_time__us_') && ~isempty(M.Dwell_time__us_) && isnumeric(M.Dwell_time__us_)
+					m.dwell_time = double(M.Dwell_time__us_) / 1e6;
+				end
+				if isfield(M,'ScanLine_period__us_') && ~isempty(M.ScanLine_period__us_) && isnumeric(M.ScanLine_period__us_)
+					m.line_period = double(M.ScanLine_period__us_) / 1e6;
+				elseif ~isnan(m.frame_period) && ~isnan(m.lines_per_frame) && m.lines_per_frame>0
+					% derived: ignores inter-line flyback (slight overestimate)
+					m.line_period = m.frame_period / m.lines_per_frame;
+				end
+				if isfield(M,'Bidirectional') && ~isempty(M.Bidirectional)
+					m.bidirectional = logical(M.Bidirectional);
+				end
+				m.israster = ~isnan(m.frame_period) || ~isnan(m.line_period);
+		end % metadata()
+
 	end % methods
 
 end % classdef
