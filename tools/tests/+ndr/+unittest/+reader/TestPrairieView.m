@@ -13,6 +13,15 @@ classdef TestPrairieView < matlab.unittest.TestCase
         Y = 9;   % image height  (Lines per frame)
         X = 7;   % image width   (Pixels per line)
         T = 5;   % number of frames / images
+
+        % raster-timing parameters written into the modern PVScan XML fixture,
+        % exercised by the metadata() tests. FramePeriodSec / ScanLinePeriodSec
+        % are in seconds (as PrairieView stores framePeriod / scanLinePeriod);
+        % DwellTimeUs is in microseconds (as PrairieView stores dwellTime).
+        FramePeriodSec = 1.4819328;
+        ScanLinePeriodSec = 6.316e-05;
+        DwellTimeUs = 3.6;
+        BidirectionalTruth = true;
     end
 
     properties (SetAccess=protected)
@@ -354,6 +363,49 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'Multi-cycle frame times should span all cycles, in seconds.');
         end
 
+        function testEmptyImageMetadataContract(testCase)
+            % the shared "empty" struct defines the standardized field set
+            m = ndr.reader.base.emptyimagemetadata();
+            testCase.verifyEqual(sort(fieldnames(m)), sort({'israster';'frame_period'; ...
+                'line_period';'dwell_time';'lines_per_frame';'pixels_per_line';'bidirectional'}), ...
+                'emptyimagemetadata field set mismatch.');
+            testCase.verifyFalse(m.israster, 'israster should default false.');
+            testCase.verifyFalse(m.bidirectional, 'bidirectional should default false.');
+            testCase.verifyTrue(isnan(m.frame_period) && isnan(m.line_period) && ...
+                isnan(m.dwell_time), 'timing defaults should be NaN.');
+        end
+
+        function testMetadataFromXml(testCase)
+            % modern PVScan XML: frame/line/dwell come from the config, in
+            % seconds; line_period is the exact scanLinePeriod (not derived)
+            m = testCase.Reader.metadata({testCase.XmlDir},1);
+            testCase.verifyTrue(m.israster, 'XML raster scan should set israster=true.');
+            testCase.verifyEqual(m.frame_period, testCase.FramePeriodSec, 'AbsTol', 1e-9, ...
+                'frame_period should be framePeriod (s).');
+            testCase.verifyEqual(m.line_period, testCase.ScanLinePeriodSec, 'AbsTol', 1e-12, ...
+                'line_period should be the exact scanLinePeriod (s).');
+            testCase.verifyEqual(m.dwell_time, testCase.DwellTimeUs/1e6, 'AbsTol', 1e-15, ...
+                'dwell_time should be dwellTime converted us->s.');
+            testCase.verifyEqual(m.lines_per_frame, testCase.Y, 'lines_per_frame mismatch.');
+            testCase.verifyEqual(m.pixels_per_line, testCase.X, 'pixels_per_line mismatch.');
+            testCase.verifyEqual(m.bidirectional, testCase.BidirectionalTruth, ...
+                'bidirectional should be parsed from bidirectionalScan.');
+        end
+
+        function testMetadataDerivedLinePeriod(testCase)
+            % legacy .pcf has a frame period but no scanLinePeriod, so
+            % line_period is derived as frame_period / lines_per_frame, and
+            % there is no dwell time
+            m = testCase.Reader.metadata({testCase.DirEpoch},1);
+            testCase.verifyTrue(m.israster, 'A .pcf with a frame period should set israster=true.');
+            testCase.verifyEqual(m.frame_period, 0.25, 'AbsTol', 1e-9, ...
+                'frame_period should be Frame period (us)=250000 in seconds.');
+            testCase.verifyEqual(m.line_period, 0.25/testCase.Y, 'AbsTol', 1e-12, ...
+                'line_period should be derived as frame_period / lines_per_frame.');
+            testCase.verifyTrue(isnan(m.dwell_time), '.pcf has no dwell time -> NaN.');
+            testCase.verifyFalse(m.bidirectional, 'No bidirectional key -> false.');
+        end
+
     end % methods (Test)
 
     methods (Static)
@@ -391,8 +443,10 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 fprintf(fid,'      <PVStateShard>\n');
                 fprintf(fid,'        <Key key="linesPerFrame" permissions="Read, Write, Save" value="%d" />\n', Y);
                 fprintf(fid,'        <Key key="pixelsPerLine" permissions="Read, Write, Save" value="%d" />\n', X);
-                fprintf(fid,'        <Key key="framePeriod" permissions="Read, Write, Save" value="1.4819328" />\n');
-                fprintf(fid,'        <Key key="dwellTime" permissions="Read, Write, Save" value="3.6" />\n');
+                fprintf(fid,'        <Key key="framePeriod" permissions="Read, Write, Save" value="%.12g" />\n', ndr.unittest.reader.TestPrairieView.FramePeriodSec);
+                fprintf(fid,'        <Key key="scanLinePeriod" permissions="Read, Write, Save" value="%.12g" />\n', ndr.unittest.reader.TestPrairieView.ScanLinePeriodSec);
+                fprintf(fid,'        <Key key="dwellTime" permissions="Read, Write, Save" value="%.12g" />\n', ndr.unittest.reader.TestPrairieView.DwellTimeUs);
+                fprintf(fid,'        <Key key="bidirectionalScan" permissions="Read, Write, Save" value="True" />\n');
                 fprintf(fid,'      </PVStateShard>\n');
                 fprintf(fid,'    </Frame>\n');
                 fprintf(fid,'  </Sequence>\n');
