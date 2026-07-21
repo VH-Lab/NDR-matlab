@@ -392,6 +392,25 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'bidirectional should be parsed from bidirectionalScan.');
         end
 
+        function testReadframesSelectC(testCase)
+            % SelectC on a 2-channel recording returns only the requested
+            % channels (prairieview reads only those channel files)
+            ef = {testCase.MultiDir};
+            % single channel
+            f2 = testCase.Reader.readframes(ef,1,[],'SelectC',2);
+            testCase.verifyEqual(size(f2,3), 1, 'SelectC=2 should return a single channel.');
+            testCase.verifyEqual(f2, testCase.MultiTruth(:,:,2,:,:), 'SelectC=2 returned the wrong channel.');
+            % reversed channel order is honored
+            f21 = testCase.Reader.readframes(ef,1,[],'SelectC',[2 1]);
+            testCase.verifyEqual(f21, testCase.MultiTruth(:,:,[2 1],:,:), 'SelectC=[2 1] order mismatch.');
+            % combined with a timepoint (frameind) subset
+            f2sub = testCase.Reader.readframes(ef,1,[2 4],'SelectC',1);
+            testCase.verifyEqual(f2sub, testCase.MultiTruth(:,:,1,:,[2 4]), 'SelectC + frameind subset mismatch.');
+            % default (no SelectC) is unchanged
+            fall = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(fall, testCase.MultiTruth, 'Default readframes (all channels) should be unchanged.');
+        end
+
         function testMetadataDerivedLinePeriod(testCase)
             % legacy .pcf has a frame period but no scanLinePeriod, so
             % line_period is derived as frame_period / lines_per_frame, and
