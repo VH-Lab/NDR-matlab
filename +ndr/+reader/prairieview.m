@@ -121,7 +121,15 @@ classdef prairieview < ndr.reader.tiffstack
 						['The recording does not have the same set of frames for every '...
 						 'channel; cannot assemble a uniform multi-channel stack.']);
 				end
+				% PrairieView TIFFs frequently carry zero-valued X/YResolution
+				% tags, which makes imfinfo warn "Division by zero ... set to
+				% NaN". Only Height/Width/BitsPerSample are used below, so
+				% silence warnings for just this imfinfo call and restore the
+				% previous warning state immediately after (even on error).
+				oldWarnState = warning('off','all');
+				restoreWarn = onCleanup(@() warning(oldWarnState));
 				fi = imfinfo(grid{1,1});
+				clear restoreWarn;   % restore warning state now
 				L.files = files;
 				L.channels = channels;
 				L.keys = keys;
@@ -154,26 +162,48 @@ classdef prairieview < ndr.reader.tiffstack
 				dt = L.datatype;
 		end % datatype()
 
-		function frames = readframes(prairieview_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(prairieview_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read timepoints, with all channels on the C axis
 			%
 			% FRAMES = READFRAMES(PRAIRIEVIEW_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
-			% Returns an array in 'YXCZT' order, size [Y X C 1 numel(FRAMEIND)],
-			% where the C axis holds the recording's channels (in ascending Ch
-			% number) for each requested timepoint.
+			% Returns an array in 'YXCZT' order, size
+			% [Y X numel(C) numel(Z) numel(FRAMEIND)], where the C axis holds the
+			% recording's channels (in ascending Ch number) for each requested
+			% timepoint.
+			%
+			% Because PrairieView stores each channel as a separate TIFF, the
+			% 'SelectC' option is honored by reading ONLY the selected channels'
+			% files (the unselected channel files are never read). PrairieView
+			% has a single Z plane, so 'SelectZ' is applied by post-selection.
+			arguments
+				prairieview_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
 				L = prairieview_obj.framelayout(epochstreams);
-				if nargin<4
+				if isempty(frameind)
 					frameind = 1:L.nframes;
 				end
-				frames = zeros(L.Y, L.X, L.C, 1, numel(frameind), L.datatype);
+				if isempty(options.SelectC)
+					cidx = 1:L.C;
+				else
+					cidx = options.SelectC;
+				end
+				frames = zeros(L.Y, L.X, numel(cidx), 1, numel(frameind), L.datatype);
 				for i=1:numel(frameind)
 					ti = frameind(i);
-					for ci=1:L.C
-						im = imread(L.grid{ti,ci});
-						frames(:,:,ci,1,i) = reshape(cast(im,L.datatype), L.Y, L.X);
+					for j=1:numel(cidx)
+						im = imread(L.grid{ti,cidx(j)});   % only selected channels are read
+						frames(:,:,j,1,i) = reshape(cast(im,L.datatype), L.Y, L.X);
 					end
 				end
+				% channels already selected above; apply any Z selection (Z==1)
+				frames = ndr.reader.base.selectframeCZ(frames, [], options.SelectZ);
 		end % readframes()
 
 		function v = config(prairieview_obj, epochstreams)
@@ -257,6 +287,60 @@ classdef prairieview < ndr.reader.tiffstack
 					t0t1 = t0_t1@ndr.reader.tiffstack(prairieview_obj, epochstreams, epoch_select);
 				end
 		end % t0_t1()
+
+		function m = metadata(prairieview_obj, epochstreams, epoch_select)
+			% METADATA - standardized raster-scan metadata from the Prairie config
+			%
+			% M = METADATA(PRAIRIEVIEW_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns the standardized image-acquisition metadata struct (see
+			% ndr.reader.base/metadata), filled in from the PrairieView config.
+			% ALL TIME FIELDS ARE IN SECONDS. The config stores periods in
+			% microseconds (Frame_period__us_, Dwell_time__us_,
+			% ScanLine_period__us_); they are converted to seconds here.
+			%
+			% LINE_PERIOD is taken from the config's scanLinePeriod when present
+			% (the exact, hardware-reported value); otherwise it is derived as
+			% FRAME_PERIOD / LINES_PER_FRAME. That derivation ignores inter-line
+			% flyback/retrace and so slightly OVERESTIMATES the true line period;
+			% prefer a recording whose config supplies scanLinePeriod when exact
+			% sub-frame timing matters.
+			%
+			% Fields the config does not provide are left at their defaults (NaN,
+			% or false for BIDIRECTIONAL). ISRASTER is set true when a frame or
+			% line period could be determined.
+			%
+			% See also: ndr.reader.base/metadata, ndr.reader.prairieview/config,
+			%   ndr.format.prairieview.readconfig
+				m = ndr.reader.base.emptyimagemetadata();
+				v = prairieview_obj.config(epochstreams);
+				if ~isstruct(v) || ~isfield(v,'Main')
+					return;
+				end
+				M = v.Main;
+				if isfield(M,'Lines_per_frame') && ~isempty(M.Lines_per_frame) && isnumeric(M.Lines_per_frame)
+					m.lines_per_frame = double(M.Lines_per_frame);
+				end
+				if isfield(M,'Pixels_per_line') && ~isempty(M.Pixels_per_line) && isnumeric(M.Pixels_per_line)
+					m.pixels_per_line = double(M.Pixels_per_line);
+				end
+				if isfield(M,'Frame_period__us_') && ~isempty(M.Frame_period__us_) && isnumeric(M.Frame_period__us_)
+					m.frame_period = double(M.Frame_period__us_) / 1e6;
+				end
+				if isfield(M,'Dwell_time__us_') && ~isempty(M.Dwell_time__us_) && isnumeric(M.Dwell_time__us_)
+					m.dwell_time = double(M.Dwell_time__us_) / 1e6;
+				end
+				if isfield(M,'ScanLine_period__us_') && ~isempty(M.ScanLine_period__us_) && isnumeric(M.ScanLine_period__us_)
+					m.line_period = double(M.ScanLine_period__us_) / 1e6;
+				elseif ~isnan(m.frame_period) && ~isnan(m.lines_per_frame) && m.lines_per_frame>0
+					% derived: ignores inter-line flyback (slight overestimate)
+					m.line_period = m.frame_period / m.lines_per_frame;
+				end
+				if isfield(M,'Bidirectional') && ~isempty(M.Bidirectional)
+					m.bidirectional = logical(M.Bidirectional);
+				end
+				m.israster = ~isnan(m.frame_period) || ~isnan(m.line_period);
+		end % metadata()
 
 	end % methods
 

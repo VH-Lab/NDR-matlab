@@ -61,6 +61,18 @@ function v = localReadModern(txt)
 	if ~isempty(dt) && isnumeric(dt)
 		v.Main.Dwell_time__us_ = dt;
 	end
+	% scanLinePeriod is the (exact) time to scan one line, in seconds
+	slp = ndr.format.prairieview.keyvalue(txt,'scanLinePeriod');
+	if ~isempty(slp) && isnumeric(slp)
+		v.Main.ScanLine_period__us_ = slp * 1e6;
+	end
+	% bidirectionalScan is stored as a 'True'/'False' string
+	bd = ndr.format.prairieview.keyvalue(txt,'bidirectionalScan');
+	if ischar(bd)
+		v.Main.Bidirectional = strcmpi(strtrim(bd),'true');
+	elseif ~isempty(bd) && isnumeric(bd)
+		v.Main.Bidirectional = logical(bd);
+	end
 end
 
 % ----- legacy MM-era XML (ported from readprairieviewxml) -------------------

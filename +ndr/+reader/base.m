@@ -422,23 +422,120 @@ classdef base
 				t = []; % abstract class
 		end % frametimes()
 
-		function frames = readframes(ndr_reader_base_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(ndr_reader_base_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read image frames from an epoch
 			%
 			% FRAMES = READFRAMES(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
-			% Lazily reads the frames indexed by FRAMEIND (indices along the
-			% ordering axes T, and Z when present) and returns them as an array
-			% laid out in DIMENSIONORDER (default 'YXCZT'). All channels are
-			% returned. The abstract class returns [].
+			% Reads the timepoints indexed by FRAMEIND (indices along the T axis)
+			% and returns them as an array laid out in DIMENSIONORDER (default
+			% 'YXCZT').
+			%
+			% Name/value options select a subset of the channel (C) and plane (Z)
+			% axes; the returned array is [Y X numel(C) numel(Z) numel(FRAMEIND)]:
+			%   'SelectC' - vector of channel indices (default [] = all channels)
+			%   'SelectZ' - vector of Z-plane indices (default [] = all planes)
+			% A reader may honor these by not reading the unselected data (e.g.
+			% skipping channel files); readers that cannot must post-select with
+			% ndr.reader.base.selectframeCZ so the result is identical.
+			%
+			% The abstract class returns [].
 			%
 			% Modeled on nansen.stack.ImageStack/getFrameSet.
+			arguments
+				ndr_reader_base_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
 				frames = []; % abstract class
 		end % readframes()
+
+		function m = metadata(ndr_reader_base_obj, epochstreams, epoch_select)
+			% METADATA - standardized image-acquisition metadata for an epoch
+			%
+			% M = METADATA(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
+			%
+			% Returns a struct of standardized acquisition metadata for an image
+			% epoch. It describes HOW the frames were acquired (in particular the
+			% raster-scan timing that lets one compute when each line/pixel was
+			% sampled), separately from the pixel data itself. ALL TIME FIELDS
+			% ARE IN SECONDS. The struct has the fields:
+			%
+			%   israster        - logical; true if this epoch is a raster scan
+			%                     with known line/frame timing
+			%   frame_period    - time to acquire one frame (s)
+			%   line_period     - time to acquire one scanned line/row (s)
+			%   dwell_time      - per-pixel dwell time (s)
+			%   lines_per_frame - number of scanned lines (rows) per frame
+			%   pixels_per_line - number of pixels (columns) per line
+			%   bidirectional   - logical; true if alternate lines are scanned
+			%                     in the reverse direction
+			%
+			% A raster scan does not acquire a frame instantaneously: it sweeps
+			% line by line, so at slow frame rates the top of a frame is acquired
+			% well before the bottom. LINE_PERIOD (plus FRAMETIMES) is what lets a
+			% caller reconstruct the acquisition time of each line/pixel.
+			%
+			% The abstract class returns the "empty" struct (israster=false, NaN
+			% timing) from ndr.reader.base.emptyimagemetadata. Raster readers
+			% (e.g. ndr.reader.prairieview) override this and fill in the fields
+			% they can determine; fields that cannot be determined stay NaN.
+			%
+			% See also: ndr.reader.base.emptyimagemetadata,
+			%   ndr.reader.prairieview/metadata, ndr.reader.base/frametimes
+				m = ndr.reader.base.emptyimagemetadata();
+		end % metadata()
 
 	end; % methods
 
 	methods (Static), % functions that don't need the object
+
+		function m = emptyimagemetadata()
+			% EMPTYIMAGEMETADATA - the standardized image-metadata struct with default (unknown) values
+			%
+			% M = ndr.reader.base.emptyimagemetadata()
+			%
+			% Returns the standardized image-acquisition metadata struct used by
+			% ndr.reader.base/metadata, with every field at its "unknown"
+			% default: israster=false, bidirectional=false, and NaN for each
+			% timing/geometry value. A reader fills in the fields it can supply
+			% and leaves the rest at these defaults, so consumers always see the
+			% same field set. ALL TIME FIELDS ARE IN SECONDS.
+			%
+			% See also: ndr.reader.base/metadata
+				m = struct('israster', false, ...
+					'frame_period', NaN, ...
+					'line_period', NaN, ...
+					'dwell_time', NaN, ...
+					'lines_per_frame', NaN, ...
+					'pixels_per_line', NaN, ...
+					'bidirectional', false);
+		end % emptyimagemetadata()
+
+		function frames = selectframeCZ(frames, SelectC, SelectZ)
+			% SELECTFRAMECZ - post-select the channel (C) and plane (Z) axes of a frame array
+			%
+			% FRAMES = ndr.reader.base.selectframeCZ(FRAMES, SELECTC, SELECTZ)
+			%
+			% Given a frame array FRAMES in 'YXCZT' order, returns the subset
+			% with channels SELECTC (dim 3) and Z-planes SELECTZ (dim 4). An
+			% empty selection ([]) keeps all of that axis. This is the shared
+			% helper readers use to honor readframes' 'SelectC'/'SelectZ' options
+			% when they cannot avoid reading the unselected data at the source.
+			%
+			% See also: ndr.reader.base/readframes
+				if ~isempty(SelectC)
+					frames = frames(:,:,SelectC,:,:);
+				end
+				if ~isempty(SelectZ)
+					frames = frames(:,:,:,SelectZ,:);
+				end
+		end % selectframeCZ()
+
 		function ct = mfdaq_channeltypes
 			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects
 			%

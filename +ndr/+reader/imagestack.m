@@ -228,20 +228,34 @@ classdef imagestack < ndr.reader.base
 				end
 		end % frametimes()
 
-		function frames = readframes(imagestack_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(imagestack_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read image frames from an epoch
+			%
+			% FRAMES = READFRAMES(IMAGESTACK_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameSet. ImageStack
 			% returns data in YXCZT order but SQUEEZED along singleton
 			% dimensions; we restore the full [Y X C Z nframes] shape so the
-			% NDR frame contract (explicit singleton C/Z) holds.
-				if nargin<4
+			% NDR frame contract (explicit singleton C/Z) holds. The
+			% 'SelectC'/'SelectZ' options are applied by post-selection (a future
+			% version may push the channel/plane subset into ImageStack).
+			arguments
+				imagestack_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
+				if isempty(frameind)
 					frameind = 1:imagestack_obj.numframes(epochstreams, epoch_select);
 				end
 				s = imagestack_obj.imagestackobject(epochstreams);
 				frames = s.getFrameSet(frameind);
 				sz = [s.ImageHeight s.ImageWidth s.NumChannels s.NumPlanes];
 				frames = reshape(frames, [sz(1) sz(2) sz(3) sz(4) numel(frameind)]);
+				frames = ndr.reader.base.selectframeCZ(frames, options.SelectC, options.SelectZ);
 		end % readframes()
 
 		function ec = epochclock(imagestack_obj, epochstreams, epoch_select)

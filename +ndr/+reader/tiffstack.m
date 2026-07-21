@@ -283,17 +283,29 @@ classdef tiffstack < ndr.reader.base
 				end
 		end % frametimes()
 
-		function frames = readframes(tiffstack_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(tiffstack_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read frames (TIFF pages across the ordered files)
 			%
 			% FRAMES = READFRAMES(TIFFSTACK_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
-			% Reads the frames indexed by FRAMEIND and returns them as an array
-			% in 'YXCZT' order: size [Y X C 1 numel(FRAMEIND)].
+			% Reads the timepoints indexed by FRAMEIND and returns them as an
+			% array in 'YXCZT' order: size [Y X numel(C) numel(Z) numel(FRAMEIND)].
+			% The channels of a multi-sample TIFF page are interleaved in a
+			% single page (one read), and tiffstack has a single Z plane, so the
+			% 'SelectC'/'SelectZ' options are applied by post-selection here.
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameSet.
+			arguments
+				tiffstack_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
 				info = tiffstack_obj.resolveepoch(epochstreams);
-				if nargin<4
+				if isempty(frameind)
 					frameind = 1:info.nframes;
 				end
 				sz = tiffstack_obj.framesize(epochstreams, epoch_select);
@@ -305,6 +317,7 @@ classdef tiffstack < ndr.reader.base
 					im = imread(fname, page);
 					frames(:,:,:,1,i) = reshape(cast(im,dt), Y, X, C);
 				end
+				frames = ndr.reader.base.selectframeCZ(frames, options.SelectC, options.SelectZ);
 		end % readframes()
 
 		function ec = epochclock(tiffstack_obj, epochstreams, epoch_select)
