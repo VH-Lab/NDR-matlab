@@ -536,15 +536,28 @@ classdef reader
                 t = ndr_reader_obj.ndr_reader_base.frametimes(epochstreams, epoch_select, frameind);
         end % frametimes()
 
-        function frames = readframes(ndr_reader_obj, epochstreams, epoch_select, frameind)
+        function frames = readframes(ndr_reader_obj, epochstreams, epoch_select, frameind, options)
             %READFRAMES - read image frames from an epoch
             %
             %   FRAMES = READFRAMES(NDR_READER_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+            %   FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
+            %
+            %   Reads the timepoints FRAMEIND. The 'SelectC'/'SelectZ' options
+            %   restrict the returned channels/planes (default [] = all); see
+            %   ndr.reader.base/readframes. Forwarded to the underlying reader.
             %
             % See also: ndr.reader.base/readframes
-                if nargin<3, epoch_select = 1; end
-                if nargin<4, frameind = 1:ndr_reader_obj.numframes(epochstreams, epoch_select); end
-                frames = ndr_reader_obj.ndr_reader_base.readframes(epochstreams, epoch_select, frameind);
+            arguments
+                ndr_reader_obj
+                epochstreams
+                epoch_select = 1
+                frameind = []
+                options.SelectC (1,:) double = []
+                options.SelectZ (1,:) double = []
+            end
+                if isempty(frameind), frameind = 1:ndr_reader_obj.numframes(epochstreams, epoch_select); end
+                frames = ndr_reader_obj.ndr_reader_base.readframes(epochstreams, epoch_select, frameind, ...
+                    'SelectC', options.SelectC, 'SelectZ', options.SelectZ);
         end % readframes()
 
         function m = metadata(ndr_reader_obj, epochstreams, epoch_select)

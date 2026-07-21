@@ -422,17 +422,35 @@ classdef base
 				t = []; % abstract class
 		end % frametimes()
 
-		function frames = readframes(ndr_reader_base_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(ndr_reader_base_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read image frames from an epoch
 			%
 			% FRAMES = READFRAMES(NDR_READER_BASE_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
-			% Lazily reads the frames indexed by FRAMEIND (indices along the
-			% ordering axes T, and Z when present) and returns them as an array
-			% laid out in DIMENSIONORDER (default 'YXCZT'). All channels are
-			% returned. The abstract class returns [].
+			% Reads the timepoints indexed by FRAMEIND (indices along the T axis)
+			% and returns them as an array laid out in DIMENSIONORDER (default
+			% 'YXCZT').
+			%
+			% Name/value options select a subset of the channel (C) and plane (Z)
+			% axes; the returned array is [Y X numel(C) numel(Z) numel(FRAMEIND)]:
+			%   'SelectC' - vector of channel indices (default [] = all channels)
+			%   'SelectZ' - vector of Z-plane indices (default [] = all planes)
+			% A reader may honor these by not reading the unselected data (e.g.
+			% skipping channel files); readers that cannot must post-select with
+			% ndr.reader.base.selectframeCZ so the result is identical.
+			%
+			% The abstract class returns [].
 			%
 			% Modeled on nansen.stack.ImageStack/getFrameSet.
+			arguments
+				ndr_reader_base_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
 				frames = []; % abstract class
 		end % readframes()
 
@@ -497,6 +515,26 @@ classdef base
 					'pixels_per_line', NaN, ...
 					'bidirectional', false);
 		end % emptyimagemetadata()
+
+		function frames = selectframeCZ(frames, SelectC, SelectZ)
+			% SELECTFRAMECZ - post-select the channel (C) and plane (Z) axes of a frame array
+			%
+			% FRAMES = ndr.reader.base.selectframeCZ(FRAMES, SELECTC, SELECTZ)
+			%
+			% Given a frame array FRAMES in 'YXCZT' order, returns the subset
+			% with channels SELECTC (dim 3) and Z-planes SELECTZ (dim 4). An
+			% empty selection ([]) keeps all of that axis. This is the shared
+			% helper readers use to honor readframes' 'SelectC'/'SelectZ' options
+			% when they cannot avoid reading the unselected data at the source.
+			%
+			% See also: ndr.reader.base/readframes
+				if ~isempty(SelectC)
+					frames = frames(:,:,SelectC,:,:);
+				end
+				if ~isempty(SelectZ)
+					frames = frames(:,:,:,SelectZ,:);
+				end
+		end % selectframeCZ()
 
 		function ct = mfdaq_channeltypes
 			% MFDAQ_CHANNELTYPES - channel types for ndi.daq.system.mfdaq objects

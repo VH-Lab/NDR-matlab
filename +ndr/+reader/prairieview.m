@@ -162,26 +162,48 @@ classdef prairieview < ndr.reader.tiffstack
 				dt = L.datatype;
 		end % datatype()
 
-		function frames = readframes(prairieview_obj, epochstreams, epoch_select, frameind)
+		function frames = readframes(prairieview_obj, epochstreams, epoch_select, frameind, options)
 			% READFRAMES - read timepoints, with all channels on the C axis
 			%
 			% FRAMES = READFRAMES(PRAIRIEVIEW_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
+			% FRAMES = READFRAMES(..., 'SelectC', C, 'SelectZ', Z)
 			%
-			% Returns an array in 'YXCZT' order, size [Y X C 1 numel(FRAMEIND)],
-			% where the C axis holds the recording's channels (in ascending Ch
-			% number) for each requested timepoint.
+			% Returns an array in 'YXCZT' order, size
+			% [Y X numel(C) numel(Z) numel(FRAMEIND)], where the C axis holds the
+			% recording's channels (in ascending Ch number) for each requested
+			% timepoint.
+			%
+			% Because PrairieView stores each channel as a separate TIFF, the
+			% 'SelectC' option is honored by reading ONLY the selected channels'
+			% files (the unselected channel files are never read). PrairieView
+			% has a single Z plane, so 'SelectZ' is applied by post-selection.
+			arguments
+				prairieview_obj
+				epochstreams
+				epoch_select = 1
+				frameind = []
+				options.SelectC (1,:) double = []
+				options.SelectZ (1,:) double = []
+			end
 				L = prairieview_obj.framelayout(epochstreams);
-				if nargin<4
+				if isempty(frameind)
 					frameind = 1:L.nframes;
 				end
-				frames = zeros(L.Y, L.X, L.C, 1, numel(frameind), L.datatype);
+				if isempty(options.SelectC)
+					cidx = 1:L.C;
+				else
+					cidx = options.SelectC;
+				end
+				frames = zeros(L.Y, L.X, numel(cidx), 1, numel(frameind), L.datatype);
 				for i=1:numel(frameind)
 					ti = frameind(i);
-					for ci=1:L.C
-						im = imread(L.grid{ti,ci});
-						frames(:,:,ci,1,i) = reshape(cast(im,L.datatype), L.Y, L.X);
+					for j=1:numel(cidx)
+						im = imread(L.grid{ti,cidx(j)});   % only selected channels are read
+						frames(:,:,j,1,i) = reshape(cast(im,L.datatype), L.Y, L.X);
 					end
 				end
+				% channels already selected above; apply any Z selection (Z==1)
+				frames = ndr.reader.base.selectframeCZ(frames, [], options.SelectZ);
 		end % readframes()
 
 		function v = config(prairieview_obj, epochstreams)
