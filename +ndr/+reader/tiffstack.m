@@ -378,6 +378,15 @@ classdef tiffstack < ndr.reader.base
 				fmt = 'Unsigned';
 				if isfield(fi,'SampleFormat') && ~isempty(fi(1).SampleFormat)
 					fmt = fi(1).SampleFormat;
+					% For a multi-sample (C>1) TIFF, imfinfo returns one
+					% SampleFormat per sample (a cell array, or a char matrix
+					% with one row per sample); use the first sample's format so
+					% the SWITCH below sees a single character vector.
+					if iscell(fmt)
+						fmt = fmt{1};
+					elseif ischar(fmt) && size(fmt,1) > 1
+						fmt = fmt(1,:);
+					end
 				end
 				switch lower(fmt)
 					case {'ieeefloat','float'}
