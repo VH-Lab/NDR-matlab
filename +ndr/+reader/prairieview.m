@@ -232,10 +232,23 @@ classdef prairieview < ndr.reader.tiffstack
 				tf = false;
 				try
 					v = prairieview_obj.config(epochstreams);
-					tf = isfield(v,'Image_TimeStamp__us_') && ~isempty(v.Image_TimeStamp__us_) ...
-						&& ~all(isnan(v.Image_TimeStamp__us_));
-				catch
-					tf = false;
+					if isfield(v,'Image_TimeStamp__us_')
+						ts = v.Image_TimeStamp__us_;
+						tf = ~isempty(ts) && ~all(isnan(ts));
+						if tf && any(isnan(ts))
+							warning('ndr:format:prairieview:nanTimestamps',...
+								'Prairie config Image_TimeStamp__us_ contains NaN values; per-frame timing may be incomplete.');
+						end
+					end
+				catch ME
+					% Only a genuinely missing config means "no config times";
+					% anything else (a malformed/unreadable scan XML) must not be
+					% silently downgraded to a clockless epoch.
+					if strcmp(ME.identifier,'ndr:format:prairieview:noconfig')
+						tf = false;
+					else
+						rethrow(ME);
+					end
 				end
 		end % hasconfigtimes()
 

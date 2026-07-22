@@ -43,7 +43,37 @@ function fname = configfilename(dirname)
 			error('ndr:format:prairieview:noconfig',...
 				['Could not find a Prairie config file (*_Main.pcf or *.xml) for ' dirname '.']);
 		end
-		fname = fullfile(tpdir, xmls(include(end)).name);
+		if numel(include)==1
+			fname = fullfile(tpdir, xmls(include(1)).name);
+		else
+			% Multiple candidate XMLs (e.g. the scan XML plus a companion
+			% '*_Cycle....._VoltageRecording_*.xml'). Picking the last in
+			% lexical order chose the voltage-recording file, because '_'
+			% (0x5F) sorts after '.' (0x2E) -- yielding empty timestamps.
+			% Prefer the XML whose basename is a prefix of the recording's
+			% TIFF files (the scan XML); error if the choice is ambiguous.
+			tiffs = [dir(fullfile(tpdir,'*.tif')); dir(fullfile(tpdir,'*.tiff'))];
+			tiffnames = {tiffs.name};
+			matches = [];
+			for k=1:numel(include)
+				[~,base,~] = fileparts(xmls(include(k)).name);
+				if ~isempty(base) && ~isempty(tiffnames) && any(startsWith(tiffnames, base))
+					matches(end+1) = include(k); %#ok<AGROW>
+				end
+			end
+			if numel(matches)==1
+				fname = fullfile(tpdir, xmls(matches(1)).name);
+			elseif isempty(matches)
+				error('ndr:format:prairieview:noconfig',...
+					['Could not unambiguously choose a Prairie scan XML among ' ...
+					 int2str(numel(include)) ' candidates in ' tpdir ...
+					 ' (none matches a TIFF prefix).']);
+			else
+				error('ndr:format:prairieview:noconfig',...
+					['Ambiguous Prairie scan XML: ' int2str(numel(matches)) ...
+					 ' candidates match a TIFF prefix in ' tpdir '.']);
+			end
+		end
 	else
 		fname = fullfile(tpdir, pcfile(end).name);
 	end
