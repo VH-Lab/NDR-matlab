@@ -34,12 +34,14 @@ channelSizeBytes = str2num(NumChannels) * 2; %int16 = 2 bytes
 %blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes; needs edits in
 %this case due to changes in bytes to read int32 or int8 for a few things
 %samplingRate = str2num(samplingRate);
+packetSizeBytes = headerSizeBytes + 4 + channelSizeBytes; % true per-sample packet: header + uint32 timestamp + channel data
 
 %get the timestamps
 %junk = fread(fid,configsize,'char');
 %junk = fread(fid,headerSize,'int16');
 fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
 fseek(fid,headerSizeBytes,'cof'); %seek to headerSizeBytes length from current position in file
+fseek(fid,(s0-1)*packetSizeBytes,'cof'); %honor start sample s0 (advance whole packets)
 timestamps = fread(fid,s1-s0+1,'1*uint32=>uint32',(headerSizeBytes)+(channelSizeBytes))';
 timestamps = double(timestamps)/samplingRate;
 %frewind(fid);
@@ -53,6 +55,7 @@ for i = 1:length(bytesToRead)
     %junk = fread(fid,bytesToRead(i)-1,'char'); %skip bytes in header block up to the correct byte
     fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
     fseek(fid,bytesToRead(i)-1,'cof'); %seek to byte position from current position in file
+    fseek(fid,(s0-1)*packetSizeBytes,'cof'); %honor start sample s0 (advance whole packets)
     %Read the actual data desired size from sample numbers inputed s1-s0+1, skipping block each time, read a byte each time, skipping (headerSizeBytes)+3+(channelSizeBytes)
     tmpData = fread(fid,s1-s0+1,'1*char=>uint8',(headerSizeBytes)+3+(channelSizeBytes))'; %3->2+1, extra byte comes from
     %frewind(fid);
