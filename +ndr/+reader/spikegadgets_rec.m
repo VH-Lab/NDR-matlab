@@ -177,17 +177,19 @@ end
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
-				blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes;
+				packetSizeBytes = headerSizeBytes + 4 + channelSizeBytes; % header + uint32 timestamp + channel data
+
+				% The data begins AFTER the multi-kB XML configuration block,
+				% not after the tens-of-bytes per-packet header. Compute the
+				% config-block size the same way read_rec_config does (shared
+				% helper), and floor() the packet count.
+				configsize = ndr.format.spikegadgets.configsize(filename);
 
 				s = dir(filename);
 
 				bytes_present = s.bytes;
 
-				bytes_per_block = blockSizeBytes;
-
-				num_data_blocks = (bytes_present - headerSizeBytes) / bytes_per_block;
-
-				total_samples = num_data_blocks;
+				total_samples = floor((bytes_present - configsize) / packetSizeBytes);
 				total_time = (total_samples - 1) / str2num(fileconfig.samplingRate); % in seconds
 
 				t0 = 0;
