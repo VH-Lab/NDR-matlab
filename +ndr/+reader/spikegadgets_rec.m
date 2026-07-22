@@ -89,7 +89,7 @@ end
 
 				%Adds all nTrodes to the list
 				for i=1:length(fileconfig.nTrodes)
-					for j=1:4 %argument for 4 channels, variable could be used later to deal with this in a more general way
+					for j=1:numel(fileconfig.nTrodes(i).channelInfo) %support nTrode groups of any size (stereotrodes, 8-channel silicon probes, ...)
 						channelNumber = fileconfig.nTrodes(i).channelInfo(j).packetLocation;
 						channels(end+1).name = strcat('ai',num2str(channelNumber+1));
 						channels(end).type = 'analog_in';
@@ -225,7 +225,7 @@ end
 						channels = [channels nTrodes(i).channelInfo(j).packetLocation + 1];
 					end
 					%Object that deals with channels
-					devicestringobject = ndi.daq.daqsystemstring('SpikeGadgets',{'ai','ai','ai','ai'}, channels);
+					devicestringobject = ndi.daq.daqsystemstring('SpikeGadgets',repmat({'ai'},1,numel(channels)), channels);
 					devicestringstring = devicestringobject.devicestring();
 					% FIX: we need some way of specifying the subject, which is not in the file to my knowledge (although maybe it is)
 					obj = ndi.daq.metadata.epochprobemap_daqsystem(name,reference,type,devicestringstring,'anteater52@nosuchlab.org');
