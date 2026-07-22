@@ -98,5 +98,46 @@ classdef TestVld < matlab.unittest.TestCase
             testCase.verifyLessThan(max(abs(double(d2(:))-double(Dexpected(10:20,2)))),1e-3);
             testCase.verifyLessThan(max(abs(double(t2(:))-((10:20)'-1)/samplerate)),1e-9);
         end
+
+        function testHeaderValueIsNotEvaluated(testCase)
+            % Regression for the .vlh eval() RCE: a header value must NEVER be
+            % evaluated. A value that would run code must be stored verbatim
+            % (no throw), and an arithmetic expression must be stored as the
+            % literal string '1+1' (NOT 2 -- asserting 2 would lock in eval).
+            tdir = tempname(); mkdir(tdir);
+            testCase.addTeardown(@() rmdir(tdir,'s'));
+            vlh = fullfile(tdir,'evil.vlh');
+            fid = fopen(vlh,'wt');
+            testCase.assertGreaterThan(fid,0);
+            fprintf(fid,['NumChans:\t' '3' '\n']);
+            fprintf(fid,['Evil:\t' 'error(''should not run'')' '\n']);
+            fprintf(fid,['Expr:\t' '1+1' '\n']);
+            fprintf(fid,['Name:\t' '/dev/ai0' '\n']);
+            fclose(fid);
+
+            s = ndr.format.vld.readvhlvheaderfile(vlh);
+            % code was not executed and the payload is stored verbatim
+            testCase.verifyEqual(s.Evil, 'error(''should not run'')');
+            % an arithmetic expression is a literal string, not its value
+            testCase.verifyEqual(s.Expr, '1+1');
+            testCase.verifyNotEqual(s.Expr, 2);
+            % legitimate numeric/string values still parse identically
+            testCase.verifyEqual(s.NumChans, 3);
+            testCase.verifyEqual(s.Name, '/dev/ai0');
+        end
+
+        function testHeaderRejectsInvalidFieldName(testCase)
+            % A header line whose field name is not a valid MATLAB variable
+            % name must be rejected with a specific error, not interpolated.
+            tdir = tempname(); mkdir(tdir);
+            testCase.addTeardown(@() rmdir(tdir,'s'));
+            vlh = fullfile(tdir,'badfield.vlh');
+            fid = fopen(vlh,'wt');
+            testCase.assertGreaterThan(fid,0);
+            fprintf(fid,['bad field:\t' '3' '\n']);   % space -> invalid field name
+            fclose(fid);
+            testCase.verifyError(@() ndr.format.vld.readvhlvheaderfile(vlh), ...
+                'ndr:format:vld:invalidFieldName');
+        end
     end
 end
