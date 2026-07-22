@@ -191,7 +191,10 @@ while i<=chunkstop,
 
 		end;
 		if isfield(headerstruct,'Scale'),
-			myData_ = eval([output_precision '(myData_) * headerstruct.Scale/maxint;']);
+			% output_precision is an internal precision string ('double',
+			% 'single', 'int16', 'int32'); use cast() instead of eval() so no
+			% file-derived text is ever evaluated.
+			myData_ = cast(myData_,output_precision) * headerstruct.Scale/maxint;
 		end;
 		if prod(size(myData_))==headerstruct.SamplesPerChunk*1,
 			% if we got a full read
