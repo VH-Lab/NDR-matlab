@@ -162,17 +162,57 @@ classdef tiffstack < ndr.reader.base
 			%   .files        ordered cell of TIFF file names
 			%   .dirpath      the directory anchoring the epoch (parent of the
 			%                    files), used for the frame-times sidecar
-			%   .pagesperfile number of pages in each file (homogeneous; taken
-			%                    from the first file)
-			%   .nframes      total number of frames (pagesperfile * numfiles)
+			%   .pagecounts   1xN vector: number of pages in each file
+			%   .pageoffsets  1x(N+1) cumulative page offsets ([0 cumsum(pagecounts)]);
+			%                    file k holds global frames pageoffsets(k)+1 .. pageoffsets(k+1)
+			%   .pagesperfile pages in the first file (retained for back-compat)
+			%   .nframes      total number of frames (sum of pagecounts)
 			%   .firstinfo    imfinfo struct of the first file
 			%
+			% imfinfo is read for EVERY file (not just the first) so that
+			% heterogeneous page counts are indexed correctly and geometry
+			% mismatches are caught rather than silently truncated/misindexed.
+			% NOTE (perf): resolveepoch runs on every numframes/framesize/
+			% readframes call; imfinfo over N files is O(N) file opens. A
+			% per-object imfinfo cache would help but its invalidation needs
+			% review (see PR notes).
 				files = tiffstack_obj.imagefiles(epochstreams);
-				firstinfo = imfinfo(files{1});
+				pagecounts = zeros(1,numel(files));
+				firstinfo = [];
+				refHeight = []; refWidth = []; refSPP = []; refBPS = [];
+				for k=1:numel(files)
+					fik = imfinfo(files{k});
+					if isfield(fik,'SamplesPerPixel') && ~isempty(fik(1).SamplesPerPixel)
+						sppk = fik(1).SamplesPerPixel;
+					else
+						sppk = 1;
+					end
+					if isfield(fik,'BitsPerSample') && ~isempty(fik(1).BitsPerSample)
+						bpsk = fik(1).BitsPerSample;
+					else
+						bpsk = [];
+					end
+					if k==1
+						firstinfo = fik;
+						refHeight = fik(1).Height; refWidth = fik(1).Width;
+						refSPP = sppk; refBPS = bpsk;
+					else
+						if fik(1).Height~=refHeight || fik(1).Width~=refWidth ...
+								|| ~isequal(sppk,refSPP) || ~isequal(bpsk,refBPS)
+							error('ndr:reader:tiffstack:geometrymismatch',...
+								['TIFF file ' files{k} ' geometry (Height/Width/' ...
+								 'SamplesPerPixel/BitsPerSample) differs from ' files{1} ...
+								 '; a heterogeneous stack cannot be read as one epoch.']);
+						end
+					end
+					pagecounts(k) = numel(fik);
+				end
 				info.files = files;
 				info.dirpath = fileparts(files{1});
-				info.pagesperfile = numel(firstinfo);
-				info.nframes = info.pagesperfile * numel(files);
+				info.pagecounts = pagecounts;
+				info.pageoffsets = [0 cumsum(pagecounts)];
+				info.pagesperfile = pagecounts(1);
+				info.nframes = sum(pagecounts);
 				info.firstinfo = firstinfo;
 		end % resolveepoch()
 
@@ -185,9 +225,15 @@ classdef tiffstack < ndr.reader.base
 			% frame index FRAMEIDX, returns the file and 1-based page within
 			% that file that hold the frame.
 			%
-				ppf = info.pagesperfile;
-				fileidx = floor((frameidx-1)/ppf) + 1;
-				page = mod(frameidx-1, ppf) + 1;
+				% Map the global frame index using the cumulative per-file page
+				% counts (handles heterogeneous page counts across files).
+				if frameidx<1 || frameidx>info.nframes
+					error('ndr:reader:tiffstack:frameoutofrange',...
+						['Frame index ' int2str(frameidx) ' is out of range 1..' ...
+						 int2str(info.nframes) '.']);
+				end
+				fileidx = find(frameidx > info.pageoffsets, 1, 'last');
+				page = frameidx - info.pageoffsets(fileidx);
 				filename = info.files{fileidx};
 		end % framesource()
 
