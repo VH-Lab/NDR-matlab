@@ -169,7 +169,7 @@ classdef imagestack < ndr.reader.base
 			%
 			% Adapted from nansen.stack.ImageStack NumTimepoints/NumPlanes.
 				s = imagestack_obj.imagestackobject(epochstreams);
-				n = s.NumTimepoints * s.NumPlanes;
+				n = s.NumTimepoints; % a frame is a timepoint (tiffstack convention): numframes == framesize(...,5) and matches readframes [was NumTimepoints*NumPlanes]
 		end % numframes()
 
 		function sz = framesize(imagestack_obj, epochstreams, epoch_select)
