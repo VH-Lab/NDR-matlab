@@ -94,11 +94,25 @@ for i=2:length(linefeeds),  % parse each line, starting from 2nd
 		end;
 		field_value_string = text(field_value_start:field_value_end);
 
-		% now try to add the field.  First, we'll try to add it as a number; if it fails, we'll add as a string
+		% Validate the field name before using it as a dynamic struct field.
+		% This, together with the eval-free value parsing below, prevents a
+		% malicious .vlh file from executing arbitrary code (previously the
+		% value text was interpolated straight into eval()).
+		if ~isvarname(field_name),
+			error('ndr:format:vld:invalidFieldName', ...
+				['Invalid header field name ''' field_name ''' in file ' myfilename '.']);
+		end;
 
-		try,
-			mystruct = eval(['setfield(mystruct,field_name,' field_value_string ');']);
-		catch,
+		% Add the field.  First try to interpret the value as a number with
+		% str2double (which does NOT evaluate expressions); if that yields NaN
+		% (i.e. the text is not a plain number) store the raw string instead.
+		% This mirrors the eval-free NDR-python implementation
+		% (readvhlvheaderfile.py:_coerce) and reproduces the same values for
+		% all legitimate (literal) header entries.
+		field_value_numeric = str2double(field_value_string);
+		if ~isnan(field_value_numeric),
+			mystruct = setfield(mystruct,field_name,field_value_numeric);
+		else,
 			mystruct = setfield(mystruct,field_name,field_value_string);
 		end;
 	end;
