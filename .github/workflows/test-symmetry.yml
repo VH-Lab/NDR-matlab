@@ -1,4 +1,9 @@
-name: Test NDR Symmetry
+# NOTE: until an actual NDR-python leg is wired into this job (checkout + run
+# NDR-python and produce pythonArtifacts), this workflow only self-checks the
+# MATLAB readers by generating artifacts (makeArtifacts) and reading them back
+# (readArtifacts). The pythonArtifacts parameterizations pass vacuously. Named
+# honestly so a green badge is not mistaken for a cross-language comparison.
+name: MATLAB reader self-check (symmetry artifacts)
 
 on:
   push:
@@ -98,6 +103,13 @@ jobs:
             disp(table(results));
 
             assert(all(~[results.Failed]), "Some symmetry tests failed")
+
+            % An Incomplete result means a test was filtered/assumed-out rather
+            % than actually run -- that must NOT masquerade as a pass. On CI all
+            % example_data fixtures are present, so a legitimately-run suite has
+            % zero Incomplete. (The pythonArtifacts leg is a plain 'return', which
+            % counts as Passed, not Incomplete.)
+            assert(all(~[results.Incomplete]), "Some symmetry tests were incomplete/skipped")
 
       - name: Restore MATLAB Path
         uses: matlab-actions/run-command@v3
