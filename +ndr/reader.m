@@ -351,13 +351,13 @@ classdef reader
                     data = {};
                     for i=1:numel(channel),
                         % optimization speed opportunity
-                        srd = ndr_reader_obj.samplerate(epochfiles,{'di'}, channel(i)); % Note: This assumes samplerate works with cell type
+                        srd = ndr_reader_obj.samplerate(epochstreams, epoch_select, {'di'}, channel(i)); % 5-arg signature: (epochstreams, epoch_select, channeltype, channel)
                         s0d = 1+round(srd*t0);
                         s1d = 1+round(srd*t1);
                         data_here = ndr_reader_obj.readchannels_epochsamples(repmat({'di'},1,numel(channel(i))),channel(i),epochstreams,epoch_select,s0d,s1d); % Pass epoch_select
                         time_here = ndr_reader_obj.readchannels_epochsamples(repmat({'time'},1,numel(channel(i))),channel(i),epochstreams,epoch_select,s0d,s1d); % Pass epoch_select
                         if any(strcmp(channeltype{i},{'dep','dimp'})), % look for 0 to 1 transitions
-                            transitions_on_samples = find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
+                            transitions_on_samples = 1+ find( (data_here(1:end-1)==0) & (data_here(2:end) == 1)); % first sample at the new level, consistent with the off-transition convention
                             if strcmp(channeltype{i},'dimp'),
                                 transitions_off_samples = 1+ find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
                             else
@@ -365,7 +365,7 @@ classdef reader
                             end
                         elseif any(strcmp(channeltype{i},{'den','dimn'})), % look for 1 to 0 transitions
                             transitions_on_samples = find( (data_here(1:end-1)==1) & (data_here(2:end) == 0));
-                            if strcmp(channeltype{i},'dimp'), % Should be 'dimn' for neg impulse off? Check logic. Assuming 'dimn' means 0->1 is off.
+                            if strcmp(channeltype{i},'dimn'), % negative impulse (1->0->1): the off edge is the 0->1 return
                                 transitions_off_samples = 1+ find( (data_here(1:end-1)==0) & (data_here(2:end) == 1));
                             else
                                 transitions_off_samples = [];
