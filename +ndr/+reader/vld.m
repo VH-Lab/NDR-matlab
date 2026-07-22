@@ -449,7 +449,7 @@ classdef vld < ndr.reader.base
             if isempty(d)
                 error(['Could not find file ' filename ' to determine its size.']);
             end
-            tot_sam = d.bytes/(header.NumChans*unit_size);
+            tot_sam = floor(d.bytes/(header.NumChans*unit_size)); % a sample count must be an integer; a byte-truncated file must not yield a fractional count
         end % total_samples()
 
     end % methods (Static, Access = private)

@@ -123,7 +123,7 @@ if isfield(headerstruct,'Multiplexed'),
 end;
 
 d = dir(myfilename);
-tot_sam = d.bytes/(headerstruct.NumChans*unit_size);
+tot_sam = floor(d.bytes/(headerstruct.NumChans*unit_size)); % a sample count must be an integer; a byte-truncated file must not yield a fractional count
 tot_time = tot_sam / headerstruct.SamplingRate;
 
 T = []; D = [];
