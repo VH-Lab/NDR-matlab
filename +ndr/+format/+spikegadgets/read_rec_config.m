@@ -40,19 +40,18 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     headerText = fread(fid,headersize,'char');
     fclose(fid);
 
-    ndr.globals
-    
-    %Temporary xml file to easily access information
-    X = randi(100000);
-    Y = int2str(X);
-    filename = [ndr_globals.path.testpath filesep Y '.xml'];
-    fid = fopen([filename '.xml'],'w');
-    fwrite(fid,headerText);
-
-    fclose(fid);
+    %Parse the configuration XML directly from memory.
+    %Previously the header was written to a predictable randi()-derived name
+    %in a shared temp directory (world-writable on Linux) with a double '.xml'
+    %suffix, no fopen error check, and an unconditional delete that leaked the
+    %file whenever parsing threw. That risked cross-worker collisions, symlink
+    %attacks, and stale-file leaks. An in-memory InputSource avoids disk
+    %entirely and cannot leak.
+    headerChars = char(reshape(headerText,1,[]));
+    inputSource = org.xml.sax.InputSource(java.io.StringReader(headerChars));
 
     %Parses xml to DOM node saved in tree
-    tree = xmlread([filename '.xml']);
+    tree = xmlread(inputSource);
 
     %Starts parsing child nodes
     try
@@ -60,7 +59,6 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     catch
        error('Unable to parse XML');
     end
-    delete([filename '.xml']);
     
     %Variables where child index is stored
     globalOptionsInd = [];
