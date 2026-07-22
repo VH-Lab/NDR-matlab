@@ -83,6 +83,25 @@ classdef TestImagestack < matlab.unittest.TestCase
                 'imagestackobject should return a nansen.stack.ImageStack.');
         end
 
+        function testMultiPlaneFrameContract(testCase)
+            % Regression for the 3-way frame-count contradiction: numframes
+            % must equal framesize(...,5) and the timepoint count, and
+            % size(readframes(...),5) must equal numel(frameind). Previously
+            % numframes returned NumTimepoints*NumPlanes, contradicting both
+            % framesize(5) and readframes. The invariant below is the fix.
+            ef = {testCase.TiffFile};
+            s = testCase.Reader.ndr_reader_base.imagestackobject(ef);
+            n  = testCase.Reader.numframes(ef,1);
+            sz = testCase.Reader.framesize(ef,1);
+            testCase.verifyEqual(n, sz(5), ...
+                'numframes must equal framesize(...,5).');
+            testCase.verifyEqual(n, s.NumTimepoints, ...
+                'a frame is a timepoint: numframes must equal NumTimepoints (not NumTimepoints*NumPlanes).');
+            frames = testCase.Reader.readframes(ef,1);
+            testCase.verifyEqual(size(frames,5), n, ...
+                'default readframes must return numframes timepoints.');
+        end
+
         function testGeometry(testCase)
             ef = {testCase.TiffFile};
             testCase.verifyEqual(testCase.Reader.numframes(ef,1), testCase.T, ...

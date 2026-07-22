@@ -98,5 +98,74 @@ classdef TestVld < matlab.unittest.TestCase
             testCase.verifyLessThan(max(abs(double(d2(:))-double(Dexpected(10:20,2)))),1e-3);
             testCase.verifyLessThan(max(abs(double(t2(:))-((10:20)'-1)/samplerate)),1e-9);
         end
+
+        function testHeaderValueIsNotEvaluated(testCase)
+            % Regression for the .vlh eval() RCE: a header value must NEVER be
+            % evaluated. A value that would run code must be stored verbatim
+            % (no throw), and an arithmetic expression must be stored as the
+            % literal string '1+1' (NOT 2 -- asserting 2 would lock in eval).
+            tdir = tempname(); mkdir(tdir);
+            testCase.addTeardown(@() rmdir(tdir,'s'));
+            vlh = fullfile(tdir,'evil.vlh');
+            fid = fopen(vlh,'wt');
+            testCase.assertGreaterThan(fid,0);
+            fprintf(fid,['NumChans:\t' '3' '\n']);
+            fprintf(fid,['Evil:\t' 'error(''should not run'')' '\n']);
+            fprintf(fid,['Expr:\t' '1+1' '\n']);
+            fprintf(fid,['Name:\t' '/dev/ai0' '\n']);
+            fclose(fid);
+
+            s = ndr.format.vld.readvhlvheaderfile(vlh);
+            % code was not executed and the payload is stored verbatim
+            testCase.verifyEqual(s.Evil, 'error(''should not run'')');
+            % an arithmetic expression is a literal string, not its value
+            testCase.verifyEqual(s.Expr, '1+1');
+            testCase.verifyNotEqual(s.Expr, 2);
+            % legitimate numeric/string values still parse identically
+            testCase.verifyEqual(s.NumChans, 3);
+            testCase.verifyEqual(s.Name, '/dev/ai0');
+        end
+
+        function testHeaderRejectsInvalidFieldName(testCase)
+            % A header line whose field name is not a valid MATLAB variable
+            % name must be rejected with a specific error, not interpolated.
+            tdir = tempname(); mkdir(tdir);
+            testCase.addTeardown(@() rmdir(tdir,'s'));
+            vlh = fullfile(tdir,'badfield.vlh');
+            fid = fopen(vlh,'wt');
+            testCase.assertGreaterThan(fid,0);
+            fprintf(fid,['bad field:\t' '3' '\n']);   % space -> invalid field name
+            fclose(fid);
+            testCase.verifyError(@() ndr.format.vld.readvhlvheaderfile(vlh), ...
+                'ndr:format:vld:invalidFieldName');
+        end
+
+        function testTotalSamplesIsFloored(testCase)
+            % A byte-truncated .vld must not yield a fractional sample count:
+            % t0_t1 must report an integer number of COMPLETE samples.
+            num_channels = 3; samplerate = 100; unit_size = 8; % 'double'
+            tdir = tempname(); mkdir(tdir);
+            testCase.addTeardown(@() rmdir(tdir,'s'));
+            basename = 'trunc';
+            vld = fullfile(tdir,[basename '.vld']);
+            vlh = fullfile(tdir,[basename '.vlh']);
+            fid = fopen(vlh,'wt');
+            fprintf(fid,['ChannelString:\t' 'channels 1:3' '\n']);
+            fprintf(fid,['NumChans:\t' '3' '\n']);
+            fprintf(fid,['SamplingRate:\t' '100' '\n']);
+            fprintf(fid,['SamplesPerChunk:\t' '100' '\n']);
+            fprintf(fid,['Multiplexed:\t' '1' '\n']);
+            fclose(fid);
+            % 10 complete multiplexed samples (3 doubles each) + 1 stray double
+            % so the file size is NOT a whole multiple of NumChans*unit_size.
+            fid = fopen(vld,'w','ieee-be');
+            fwrite(fid, zeros(num_channels*10 + 1,1), 'double', 0, 'ieee-be');
+            fclose(fid);
+            r = ndr.reader('vld');
+            t0t1 = r.t0_t1({vld});
+            nsamp = round(t0t1{1}(2)*samplerate) + 1;
+            testCase.verifyEqual(nsamp, 10, ...
+                'total_samples must floor to the number of COMPLETE samples');
+        end
     end
 end

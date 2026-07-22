@@ -202,6 +202,42 @@ classdef TestPrairieView < matlab.unittest.TestCase
                 'configfilename did not find the .pcf from the directory.');
         end
 
+        function testConfigFilenamePrefersScanXml(testCase)
+            % Regression: a TSeries directory contains the scan XML
+            % (TSeries-001.xml) AND a companion voltage-recording XML.
+            % configfilename must choose the scan XML (its basename is a prefix
+            % of the TIFF files), not the last file in lexical order ('_' sorts
+            % after '.', which used to pick the voltage-recording XML).
+            d = fullfile(tempdir, ['ndr_pv_cfg_' char(java.util.UUID.randomUUID)]);
+            mkdir(d);
+            testCase.addTeardown(@() rmdir(d,'s'));
+            img = uint16(reshape(1:(6*4),6,4));
+            ndr.unittest.reader.TestPrairieView.writeTiff(...
+                fullfile(d,'TSeries-001_Cycle00001_Ch1_000001.tif'), img);
+            ndr.unittest.reader.TestPrairieView.writeTiff(...
+                fullfile(d,'TSeries-001_Cycle00001_Ch1_000002.tif'), img);
+            scanXml = fullfile(d,'TSeries-001.xml');
+            voltXml = fullfile(d,'TSeries-001_Cycle00001_VoltageRecording_001.xml');
+            fid=fopen(scanXml,'w'); fprintf(fid,'<PVScan/>\n'); fclose(fid);
+            fid=fopen(voltXml,'w'); fprintf(fid,'<VRec/>\n');  fclose(fid);
+            chosen = ndr.format.prairieview.configfilename(d);
+            testCase.verifyEqual(chosen, scanXml, ...
+                'configfilename must choose the scan XML, not the voltage-recording XML.');
+        end
+
+        function testConfigFilenameAmbiguousErrors(testCase)
+            % Two candidate XMLs and no TIFF whose name they prefix -> the
+            % choice is ambiguous; configfilename must error with
+            % ndr:format:prairieview:noconfig rather than silently guessing.
+            d = fullfile(tempdir, ['ndr_pv_amb_' char(java.util.UUID.randomUUID)]);
+            mkdir(d);
+            testCase.addTeardown(@() rmdir(d,'s'));
+            fid=fopen(fullfile(d,'alpha.xml'),'w'); fprintf(fid,'<a/>\n'); fclose(fid);
+            fid=fopen(fullfile(d,'beta.xml'),'w');  fprintf(fid,'<b/>\n'); fclose(fid);
+            testCase.verifyError(@() ndr.format.prairieview.configfilename(d), ...
+                'ndr:format:prairieview:noconfig');
+        end
+
         function testGeometry(testCase)
             ef = {testCase.DirEpoch};
             testCase.verifyEqual(testCase.Reader.numframes(ef,1), testCase.T, 'numframes mismatch.');

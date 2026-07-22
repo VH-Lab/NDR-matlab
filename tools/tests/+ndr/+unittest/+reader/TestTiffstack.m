@@ -220,6 +220,59 @@ classdef TestTiffstack < matlab.unittest.TestCase
                 'Anchor-file epoch should be dev_local_time (directory has frametimes.txt).');
         end
 
+        function testHeterogeneousPageCounts(testCase)
+            % Files of 5, 5, 2 pages -> numframes == 12, and the last frame is
+            % readable and comes from the correct (file, page). Before the fix
+            % nframes = pagesperfile*numfiles used only the first file's count.
+            Yl = testCase.Y; Xl = testCase.X;
+            subdir = fullfile(testCase.TempDir, ['hetero_' char(java.util.UUID.randomUUID)]);
+            mkdir(subdir);
+            testCase.addTeardown(@() rmdir(subdir,'s'));
+            pagecounts = [5 5 2];
+            files = cell(1,numel(pagecounts));
+            base = 0;
+            lastTruth = [];
+            for f=1:numel(pagecounts)
+                P = pagecounts(f);
+                stack = zeros(Yl, Xl, 1, 1, P, 'uint16');
+                for p=1:P
+                    stack(:,:,1,1,p) = uint16(reshape(1:(Yl*Xl), Yl, Xl) + (base+p)*1000);
+                end
+                base = base + P;
+                fn = fullfile(subdir, sprintf('part_%02d.tif', f));
+                ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fn, stack);
+                files{f} = fn;
+                if f==numel(pagecounts)
+                    lastTruth = stack(:,:,1,1,P);
+                end
+            end
+
+            n = testCase.Reader.numframes(files, 1);
+            testCase.verifyEqual(n, sum(pagecounts), ...
+                'numframes must sum per-file page counts (5+5+2=12).');
+
+            last = testCase.Reader.readframes(files, 1, n);
+            testCase.verifyEqual(uint16(last(:,:,1,1,1)), lastTruth, ...
+                'the last frame must read from the last file/page, not error or truncate.');
+        end
+
+        function testMismatchedGeometryErrors(testCase)
+            % A file of different width must raise an explicit error rather
+            % than silently reshaping / casting to the first file's geometry.
+            Yl = testCase.Y; Xl = testCase.X;
+            subdir = fullfile(testCase.TempDir, ['mismatch_' char(java.util.UUID.randomUUID)]);
+            mkdir(subdir);
+            testCase.addTeardown(@() rmdir(subdir,'s'));
+            a = uint16(reshape(1:(Yl*Xl), Yl, Xl));
+            b = uint16(reshape(1:(Yl*(Xl+2)), Yl, Xl+2)); % different width
+            fa = fullfile(subdir,'a_01.tif');
+            fb = fullfile(subdir,'b_02.tif');
+            ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fa, a);
+            ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fb, b);
+            testCase.verifyError(@() testCase.Reader.numframes({fa,fb}, 1), ...
+                'ndr:reader:tiffstack:geometrymismatch');
+        end
+
     end % methods (Test)
 
     methods (Static)
