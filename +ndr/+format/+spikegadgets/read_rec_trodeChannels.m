@@ -1,4 +1,4 @@
-function [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize,s0,s1)
+function [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize,s0,s1, configExists)
 % [recData, timestamps] = read_SpikeGadgets_trodeChannels(filename,NumChannels,channels,samplingRate,headerSize, s0, s1) )
 % Imports channel data in matlab from the raw data file
 %
@@ -32,12 +32,14 @@ end
 
 headerSizeBytes = str2num(headerSize) * 2; % int16 = 2 bytes
 channelSizeBytes = str2num(NumChannels) * 2; % int16 = 2 bytes
-blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes;
+blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes; % fread SKIP for a 2-byte int16 read (read + skip = one full packet) -- correct at line 54, do NOT delete
+packetSizeBytes = headerSizeBytes + 4 + channelSizeBytes; % true per-sample packet: header + uint32 timestamp + channel data
 
 if (nargout > 1)
     junk = fread(fid,configsize,'char');
     fseek(fid,configsize,'bof'); % seek to configsize length from beginning of file
     fseek(fid,headerSizeBytes,'cof'); % seek to headerSizeBytes length from current position in file
+    fseek(fid,(s0-1)*packetSizeBytes,'cof'); % honor start sample s0 (advance whole packets)
     timestamps = (fread(fid,s1-s0+1,'1*uint32=>double',(headerSizeBytes)+(channelSizeBytes))') / samplingRate;
 end
 
@@ -48,7 +50,7 @@ for i = 1:length(channels)
     fseek(fid, headerSizeBytes, 'cof'); % seek to headerSizeBytes length from current position in file
     fseek(fid, 4, 'cof'); % timestamp uint32 = 4 bytes
     fseek(fid, 2*(channels(i) - 1), 'cof'); % int16 = 2 bytes
-    fseek(fid, (s0-1) * blockSizeBytes, 'cof'); % goes to correct s0
+    fseek(fid, (s0-1) * packetSizeBytes, 'cof'); % goes to correct s0 (advance whole packets)
 
     % Read actual data for desired size from sample numbers inputed s1-s0+1, skipping block each time
     channelData = fread(fid, s1-s0+1, '1*int16=>int16', blockSizeBytes)'; % transposed from vertical to horizontal
