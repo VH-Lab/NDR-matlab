@@ -348,8 +348,14 @@ classdef intan_rhd < ndr.reader.base
 				head = ndr.format.intan.read_Intan_RHD2000_header(filename, 'fileMode', fileMode);
 				for i=1:numel(channel),
 					channeltype_here = vlt.data.celloritem(channeltype,i);
-					freq_fieldname = intan_rhd_obj.mfdaqchanneltype2intanfreqheader(channeltype_here);
-					sr(i) = getfield(head.frequency_parameters,freq_fieldname);
+					switch lower(channeltype_here),
+						case {'event','e','marker','mk','text','tx','eventmarktext'},
+							% timestamped event channels have no scalar sample rate
+							sr(i) = NaN;
+						otherwise,
+							freq_fieldname = intan_rhd_obj.mfdaqchanneltype2intanfreqheader(channeltype_here);
+							sr(i) = getfield(head.frequency_parameters,freq_fieldname);
+					end;
 				end
 		end % ndr.reader.intan_rhd.samplerate
 		
