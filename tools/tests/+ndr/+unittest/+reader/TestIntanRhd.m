@@ -332,5 +332,37 @@ classdef TestIntanRhd < matlab.unittest.TestCase
             testCase.verifyNotEmpty(sr);
             testCase.verifyTrue(isnumeric(sr));
         end
+
+        function testEventChannelSampleRateIsNaN(testCase)
+            % Timestamped event/marker/text channels have no scalar sample
+            % rate, so samplerate must return NaN for them instead of
+            % erroring with "Do not know frequency header for channel type
+            % ...". These synthetic channel types are used by ingestion and
+            % by subclasses such as ndi ...rayolab_intanseries, whose mk1/mk2
+            % markers are derived from a digital input.
+            reader = ndr.reader.intan_rhd();
+            ndr_path = ndr.fun.ndrpath();
+            rhd_file = fullfile(ndr_path, 'example_data', 'example.rhd');
+            epochstreams = {rhd_file};
+            epoch_select = 1;
+
+            eventtypes = {'event','e','marker','mk','text','tx','eventmarktext'};
+            for i = 1:numel(eventtypes)
+                sr = reader.samplerate(epochstreams, epoch_select, eventtypes{i}, 1);
+                testCase.verifyTrue(isnan(sr), ...
+                    sprintf('samplerate for ''%s'' should be NaN', eventtypes{i}));
+            end
+
+            % A mixed request (a real sampled type plus a marker type) must
+            % return a finite rate for the sampled channel and NaN for the
+            % marker channel, in order.
+            sr_mixed = reader.samplerate(epochstreams, epoch_select, ...
+                {'ai','marker'}, [1 1]);
+            testCase.verifyEqual(numel(sr_mixed), 2);
+            testCase.verifyTrue(isfinite(sr_mixed(1)) && sr_mixed(1) > 0, ...
+                'ai channel should have a finite positive sample rate');
+            testCase.verifyTrue(isnan(sr_mixed(2)), ...
+                'marker channel should have a NaN sample rate');
+        end
     end
 end
