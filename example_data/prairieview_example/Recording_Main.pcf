@@ -1,0 +1,12 @@
+[Main]
+Total images = 5
+Lines per frame = 9
+Pixels per line = 7
+Frame period (us) = 250000
+
+[Image TimeStamp (us)]
+1=0
+2=90000
+3=250000
+4=260000
+5=600000
