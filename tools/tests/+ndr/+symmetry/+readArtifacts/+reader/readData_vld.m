@@ -64,7 +64,16 @@ classdef readData_vld < matlab.unittest.TestCase
                 expectedSamples = expectedRead.ai_channel_1_samples_1_100(:)';
                 actualData = reader.readchannels_epochsamples(channeltype, channel, ...
                     epochstreams, epoch_select, 1, 100);
-                testCase.verifyEqual(actualData(:)', expectedSamples, 'AbsTol', 1e-9, ...
+                % vld_example.vlh declares precision int16, so the reader
+                % returns scaled SINGLE data, while jsondecode always yields
+                % double. The artifact is a cross-language JSON interchange
+                % that cannot carry a MATLAB numeric class (the Python leg
+                % produces float64 unconditionally), so the contract is
+                % numeric agreement in double, not class identity. Widening
+                % single -> double is exact, so no precision is invented.
+                % This matches readData_tiffstack.m / readData_prairieview.m,
+                % which already compare with double(...).
+                testCase.verifyEqual(double(actualData(:)'), expectedSamples, 'AbsTol', 1e-9, ...
                     ['Data mismatch for ai channel 1 samples 1-100 against ' SourceType ' artifacts.']);
             end
         end
