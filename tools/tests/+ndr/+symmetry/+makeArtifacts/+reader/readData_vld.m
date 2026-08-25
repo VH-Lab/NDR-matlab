@@ -76,7 +76,16 @@ classdef readData_vld < matlab.unittest.TestCase
                 epochstreams, epoch_select, s0, s1);
 
             readStruct = struct();
-            readStruct.ai_channel_1_samples_1_100 = data(:)';
+            % Cast to double BEFORE encoding. vld_example.vlh declares
+            % precision int16, so the reader returns SINGLE, and jsonencode
+            % formats a single with single-precision width -- it wrote
+            % "-0.303354" for a sample whose true value is
+            % -0.303353995084763, i.e. the artifact silently kept only ~6
+            % significant digits. That is a lossy cross-language contract:
+            % NDR-python would be checked against a 6-digit rounding rather
+            % than the value the reader actually produced. Widening to double
+            % first is exact and makes jsonencode emit full precision.
+            readStruct.ai_channel_1_samples_1_100 = double(data(:)');
 
             readJson = jsonencode(readStruct, 'ConvertInfAndNaN', true, 'PrettyPrint', true);
             fid = fopen(fullfile(artifactDir, 'readData.json'), 'w');

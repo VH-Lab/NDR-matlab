@@ -67,7 +67,14 @@ classdef readData < matlab.unittest.TestCase
                 epochstreams, epoch_select, s0, s1);
 
             readStruct = struct();
-            readStruct.ai_channel_1_samples_1_100 = data(:)';
+            % Cast to double before encoding for the same reason as the vld
+            % generator: jsonencode formats a single with single-precision
+            % width and silently truncates the artifact to ~6 significant
+            % digits. The intan reader returns double today, so this is a
+            % no-op now, but it stops the trap from reappearing if the
+            % reader's return type ever changes. (readData_tiffstack.m and
+            % readData_prairieview.m already do this.)
+            readStruct.ai_channel_1_samples_1_100 = double(data(:)');
 
             readJson = jsonencode(readStruct, 'ConvertInfAndNaN', true, 'PrettyPrint', true);
             fid = fopen(fullfile(artifactDir, 'readData.json'), 'w');
