@@ -9,6 +9,11 @@ classdef TestSpikegadgetsRecConfig < matlab.unittest.TestCase
     % parse nor a forced parse failure leaves any residue in the test path.
 
     methods (Static)
+        % NOTE: this class lives in the +ndr/+unittest/+reader package, so
+        % calls to this static method must use the fully qualified name
+        % (ndr.unittest.reader.TestSpikegadgetsRecConfig.snapshotTestpath).
+        % MATLAB does not resolve a bare class name from inside its own
+        % package, and an unqualified call raises MATLAB:undefinedVarOrClass.
         function names = snapshotTestpath()
             ndr.globals;
             global ndr_globals; %#ok<GVMIS>
@@ -29,9 +34,9 @@ classdef TestSpikegadgetsRecConfig < matlab.unittest.TestCase
             recfile = fullfile(ndr.fun.ndrpath(), 'example_data', 'example.rec');
             testCase.assumeTrue(isfile(recfile), ...
                 'example.rec not available; skipping.');
-            before = TestSpikegadgetsRecConfig.snapshotTestpath();
+            before = ndr.unittest.reader.TestSpikegadgetsRecConfig.snapshotTestpath();
             ndr.format.spikegadgets.read_rec_config(recfile);
-            after = TestSpikegadgetsRecConfig.snapshotTestpath();
+            after = ndr.unittest.reader.TestSpikegadgetsRecConfig.snapshotTestpath();
             testCase.verifyEqual(after, before, ...
                 'read_rec_config left a file in the test path on success.');
         end
@@ -48,10 +53,10 @@ classdef TestSpikegadgetsRecConfig < matlab.unittest.TestCase
             fwrite(fid, ['<junk></Configuration>XXXX'], 'char');
             fclose(fid);
 
-            before = TestSpikegadgetsRecConfig.snapshotTestpath();
+            before = ndr.unittest.reader.TestSpikegadgetsRecConfig.snapshotTestpath();
             testCase.verifyError( ...
                 @() ndr.format.spikegadgets.read_rec_config(badrec), ?MException);
-            after = TestSpikegadgetsRecConfig.snapshotTestpath();
+            after = ndr.unittest.reader.TestSpikegadgetsRecConfig.snapshotTestpath();
             testCase.verifyEqual(after, before, ...
                 'read_rec_config leaked a temp file after a parse error.');
         end
