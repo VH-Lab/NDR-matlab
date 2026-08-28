@@ -177,17 +177,23 @@ end
 
 				headerSizeBytes = str2num(fileconfig.headerSize) * 2; % int16 = 2 bytes
 				channelSizeBytes = str2num(fileconfig.numChannels) * 2; % int16 = 2 bytes
-				blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes;
+
+				% One packet is [header][4-byte uint32 timestamp][channel data].
+				% This previously used headerSizeBytes + 2 + channelSizeBytes,
+				% which is the skip argument the read functions hand to fread
+				% (fread advances after reading, so its skip is 2 short of the
+				% stride), not the packet width. It also subtracted only
+				% headerSizeBytes from the file length, when what precedes the
+				% packet stream is the whole configuration block. On the bundled
+				% example.rec the two errors gave 60090.714 packets -- a
+				% fractional sample count -- and an epoch about 17 ms too long.
+				packetSizeBytes = headerSizeBytes + 4 + channelSizeBytes;
 
 				s = dir(filename);
-
 				bytes_present = s.bytes;
+				configsize = ndr.format.spikegadgets.read_rec_configsize(filename);
 
-				bytes_per_block = blockSizeBytes;
-
-				num_data_blocks = (bytes_present - headerSizeBytes) / bytes_per_block;
-
-				total_samples = num_data_blocks;
+				total_samples = floor((bytes_present - configsize) / packetSizeBytes);
 				total_time = (total_samples - 1) / str2num(fileconfig.samplingRate); % in seconds
 
 				t0 = 0;
