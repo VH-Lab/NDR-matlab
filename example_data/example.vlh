@@ -1,0 +1,5 @@
+ChannelString:	/dev/ai0,/dev/ai1,/dev/ai2
+NumChans:	3
+SamplingRate:	1000
+SamplesPerChunk:	100
+Multiplexed:	0

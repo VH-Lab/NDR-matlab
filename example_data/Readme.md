@@ -360,3 +360,34 @@ Keep in mind Neo designates any channel type to one of the: `'analog_input'`, `'
 {'name': 'analog_input_channel_4', 'type': 'marker'}
 {'name': 'analog_input_channel_5', 'type': 'marker'}
 {'name': 'periodic_sampling_events', 'type': 'marker'}
+
+---
+
+## Synthetic fixtures for the vld and image readers
+
+These four fixtures are **generated**, not recorded: they are small,
+deterministic files created by `tools/make_example_data.py` in NDR-python and
+committed byte-identically to both repositories, so the cross-language
+symmetry tests read exactly the same bytes on both sides.
+
+| File | Reader | Contents |
+|---|---|---|
+| `example.vld` + `example.vlh` | `ndr.reader.vld` | 3 analog channels, 1000 Hz, 500 samples, chunked layout (`SamplesPerChunk` = 100, `Multiplexed` = 0), big-endian float64. Each channel carries a distinct sine (10/20/30 Hz, amplitude 1/2/3), so a channel-mapping error is visible. |
+| `example_movie.tif` | `ndr.reader.tiffstack` | 5-page uncompressed baseline TIFF, 16x12 `uint16`. Pixel value is `page*1000 + row*10 + col`, so every page and pixel is distinguishable and a transposed or mis-ordered read shows up immediately. |
+| `example_movie_frametimes.txt` | `ndr.reader.tiffstack` | One frame time per page (0, 0.05, ... 0.2 s), the sidecar that makes the epoch clocked rather than `no_time`. |
+| `prairieview/` | `ndr.reader.prairieview` | 2 channels x 4 frames of 8x6 `uint16` named `example_Cycle001_Ch<c>_<frame>.tif`, plus a legacy `example_Main.pcf`. Pixel value is `chan*1000 + frame*100 + row*10 + col`. |
+
+The Prairie View config sets `Frame period (us)` = 16000 and
+`ScanLine period (us)` = 1500 — deliberately *not* frame period divided by
+lines per frame (which would be 2000). A real raster scan has flyback overhead
+between lines, and keeping the two distinct means the symmetry artifacts can
+tell "read the line period from the config" apart from "derived it from the
+frame period".
+
+To regenerate (from an NDR-python checkout):
+
+```bash
+python3 tools/make_example_data.py \
+    /path/to/NDR-python/src/ndr/example_data \
+    /path/to/NDR-matlab/example_data
+```
