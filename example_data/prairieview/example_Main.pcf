@@ -1,0 +1,12 @@
+[Main]
+Lines per frame=8
+Pixels per line=6
+Frame period (us)=16000.0
+ScanLine period (us)=1500.0
+Total images=4
+
+[Image TimeStamp (us)]
+img1=0.0
+img2=16000.0
+img3=32000.0
+img4=48000.0
