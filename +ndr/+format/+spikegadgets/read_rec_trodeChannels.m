@@ -34,10 +34,23 @@ headerSizeBytes = str2num(headerSize) * 2; % int16 = 2 bytes
 channelSizeBytes = str2num(NumChannels) * 2; % int16 = 2 bytes
 blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes;
 
+%One sample occupies [header][4-byte uint32 timestamp][channel data], so the
+%stride from one sample to the next is headerSizeBytes + 4 + channelSizeBytes.
+%blockSizeBytes is deliberately 2 less than that: it is the skip argument to
+%fread, which advances AFTER reading 2 bytes. Use it only there. Any explicit
+%fseek to a sample boundary must use sampleStrideBytes instead -- using
+%blockSizeBytes lands 2 bytes short per sample skipped, so the error grows
+%with s0 and the read silently returns the wrong samples.
+sampleStrideBytes = headerSizeBytes + 4 + channelSizeBytes;
+
 if (nargout > 1)
     junk = fread(fid,configsize,'char');
     fseek(fid,configsize,'bof'); % seek to configsize length from beginning of file
     fseek(fid,headerSizeBytes,'cof'); % seek to headerSizeBytes length from current position in file
+    fseek(fid,(s0-1)*sampleStrideBytes,'cof'); % advance to sample s0
+    % Without the seek above these timestamps started at sample 1 while the
+    % data below started at s0. spikegadgets_rec.m:306 returns this vector as
+    % the 'time' channel, so that mismatch was user-visible.
     timestamps = (fread(fid,s1-s0+1,'1*uint32=>double',(headerSizeBytes)+(channelSizeBytes))') / samplingRate;
 end
 
@@ -48,7 +61,7 @@ for i = 1:length(channels)
     fseek(fid, headerSizeBytes, 'cof'); % seek to headerSizeBytes length from current position in file
     fseek(fid, 4, 'cof'); % timestamp uint32 = 4 bytes
     fseek(fid, 2*(channels(i) - 1), 'cof'); % int16 = 2 bytes
-    fseek(fid, (s0-1) * blockSizeBytes, 'cof'); % goes to correct s0
+    fseek(fid, (s0-1) * sampleStrideBytes, 'cof'); % goes to correct s0
 
     % Read actual data for desired size from sample numbers inputed s1-s0+1, skipping block each time
     channelData = fread(fid, s1-s0+1, '1*int16=>int16', blockSizeBytes)'; % transposed from vertical to horizontal

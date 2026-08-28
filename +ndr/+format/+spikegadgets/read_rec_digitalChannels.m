@@ -35,11 +35,21 @@ channelSizeBytes = str2num(NumChannels) * 2; %int16 = 2 bytes
 %this case due to changes in bytes to read int32 or int8 for a few things
 %samplingRate = str2num(samplingRate);
 
+%One sample occupies [header][4-byte uint32 timestamp][channel data], so the
+%stride from one sample to the next is headerSizeBytes + 4 + channelSizeBytes.
+%blockSizeBytes is deliberately 2 less than that: it is the skip argument to
+%fread, which advances AFTER reading 2 bytes. Use it only there. Any explicit
+%fseek to a sample boundary must use sampleStrideBytes instead -- using
+%blockSizeBytes lands 2 bytes short per sample skipped, so the error grows
+%with s0 and the read silently returns the wrong samples.
+sampleStrideBytes = headerSizeBytes + 4 + channelSizeBytes;
+
 %get the timestamps
 %junk = fread(fid,configsize,'char');
 %junk = fread(fid,headerSize,'int16');
 fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
 fseek(fid,headerSizeBytes,'cof'); %seek to headerSizeBytes length from current position in file
+fseek(fid,(s0-1)*sampleStrideBytes,'cof'); %advance to sample s0
 timestamps = fread(fid,s1-s0+1,'1*uint32=>uint32',(headerSizeBytes)+(channelSizeBytes))';
 timestamps = double(timestamps)/samplingRate;
 %frewind(fid);
@@ -53,6 +63,7 @@ for i = 1:length(bytesToRead)
     %junk = fread(fid,bytesToRead(i)-1,'char'); %skip bytes in header block up to the correct byte
     fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
     fseek(fid,bytesToRead(i)-1,'cof'); %seek to byte position from current position in file
+    fseek(fid,(s0-1)*sampleStrideBytes,'cof'); %advance to sample s0
     %Read the actual data desired size from sample numbers inputed s1-s0+1, skipping block each time, read a byte each time, skipping (headerSizeBytes)+3+(channelSizeBytes)
     tmpData = fread(fid,s1-s0+1,'1*char=>uint8',(headerSizeBytes)+3+(channelSizeBytes))'; %3->2+1, extra byte comes from
     %frewind(fid);

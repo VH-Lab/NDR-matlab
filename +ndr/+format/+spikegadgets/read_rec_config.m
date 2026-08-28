@@ -40,19 +40,25 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     headerText = fread(fid,headersize,'char');
     fclose(fid);
 
-    ndr.globals
-    
-    %Temporary xml file to easily access information
-    X = randi(100000);
-    Y = int2str(X);
-    filename = [ndr_globals.path.testpath filesep Y '.xml'];
-    fid = fopen([filename '.xml'],'w');
-    fwrite(fid,headerText);
-
-    fclose(fid);
+    %Parse the configuration XML straight from memory.
+    %
+    %This previously round-tripped the header through a temporary file named
+    %[testpath filesep int2str(randi(100000)) '.xml' '.xml'] -- note the
+    %doubled suffix, since '.xml' was appended to a name that already ended
+    %in it. Three problems came with that: the name is drawn from an
+    %unseeded 1..100000 range in a directory shared by every user and every
+    %parallel worker, so two callers collide and a pre-created symlink is
+    %followed; fopen's return was never checked, so a failed open passed -1
+    %to fwrite; and the delete below was skipped whenever parsing threw,
+    %leaving the file behind.
+    %
+    %xmlread accepts an org.xml.sax.InputSource, which needs no disk at all.
+    %This adds no new dependency: xmlread already requires the JVM.
+    headerChars = char(reshape(headerText,1,[]));
+    inputSource = org.xml.sax.InputSource(java.io.StringReader(headerChars));
 
     %Parses xml to DOM node saved in tree
-    tree = xmlread([filename '.xml']);
+    tree = xmlread(inputSource);
 
     %Starts parsing child nodes
     try
@@ -60,7 +66,6 @@ function [out,officialchannels] = read_SpikeGadgets_config(filename)
     catch
        error('Unable to parse XML');
     end
-    delete([filename '.xml']);
     
     %Variables where child index is stored
     globalOptionsInd = [];
