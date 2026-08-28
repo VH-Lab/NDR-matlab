@@ -33,12 +33,25 @@ headerSizeBytes = str2num(headerSize) * 2; %int16 = 2 bytes
 channelSizeBytes = str2num(NumChannels) * 2; %int16 = 2 bytes
 blockSizeBytes = headerSizeBytes + 2 + channelSizeBytes;
 
+%One sample occupies [header][4-byte uint32 timestamp][channel data], so the
+%stride from one sample to the next is headerSizeBytes + 4 + channelSizeBytes.
+%blockSizeBytes is deliberately 2 less than that: it is the skip argument to
+%fread, which advances AFTER reading 2 bytes. Use it only there. Any explicit
+%fseek to a sample boundary must use sampleStrideBytes instead -- using
+%blockSizeBytes lands 2 bytes short per sample skipped, so the error grows
+%with s0 and the read silently returns the wrong samples.
+sampleStrideBytes = headerSizeBytes + 4 + channelSizeBytes;
+
 %get the timestamps
 %junk = fread(fid,configsize,'char');
 %junk = fread(fid,headerSize,'int16');
 fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
 fseek(fid,headerSizeBytes,'cof'); %seek to headerSizeBytes length from current position in file
-timestamps = fread(fid,[1,inf],'1*uint32=>uint32',(headerSizeBytes)+(channelSizeBytes))';
+fseek(fid,(s0-1)*sampleStrideBytes,'cof'); %advance to sample s0
+%Read only the requested span. This used to read [1,inf] -- every timestamp
+%in the file, starting at sample 1 -- so the timestamps did not line up with
+%the data returned alongside them whenever s0 > 1.
+timestamps = fread(fid,s1-s0+1,'1*uint32=>uint32',(headerSizeBytes)+(channelSizeBytes))';
 timestamps = double(timestamps)/samplingRate;
 
 
@@ -48,7 +61,8 @@ for i = 1:length(bytesToRead)
     %junk = fread(fid,configsize,'char'); %skip config
     %junk = fread(fid,bytesToRead(i)-1,'char'); %skip bytes in header block up to the correct byte
     fseek(fid,configsize,'bof'); %seek to configsize length from beginning of file
-    fseek(fid,bytesToRead(i)-1,'cof'); %seek to headerSizeBytes length from current position in file
+    fseek(fid,bytesToRead(i)-1,'cof'); %seek to the channel's byte within the block
+    fseek(fid,(s0-1)*sampleStrideBytes,'cof'); %advance to sample s0
     %Read actual data for desired size from sample numbers inputed s1-s0+1, skipping block each time
     tmpData = fread(fid,s1-s0+1,'1*int16=>int16',blockSizeBytes)'; %transposed from vertical to horizontal
 

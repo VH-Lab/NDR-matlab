@@ -94,12 +94,36 @@ for i=2:length(linefeeds),  % parse each line, starting from 2nd
 		end;
 		field_value_string = text(field_value_start:field_value_end);
 
-		% now try to add the field.  First, we'll try to add it as a number; if it fails, we'll add as a string
-
-		try,
-			mystruct = eval(['setfield(mystruct,field_name,' field_value_string ');']);
-		catch,
-			mystruct = setfield(mystruct,field_name,field_value_string);
+		% Add the field.  The value is interpreted as a number when the text is a
+		% plain numeric literal, and stored as a raw string otherwise.
+		%
+		% This previously interpolated the file's own text into eval(), so any
+		% .vlh file could run arbitrary MATLAB simply by being opened -- a
+		% value of 'system(''...'')' executes before the assignment happens.
+		% Nothing about the format requires expression evaluation: the fields
+		% are scalars and strings.
+		%
+		% The regexp gate is deliberate rather than relying on str2double alone.
+		% str2double accepts things Python's float() rejects (notably digit
+		% grouping: str2double('1,000') is 1000), which would silently split the
+		% two ports. This accepts exactly the literals readvhlvheaderfile.py
+		% _coerce() accepts.
+		if ~isvarname(field_name),
+			error('ndr:format:vld:invalidFieldName', ...
+				['Invalid header field name ''' field_name ''' in file ' myfilename '.']);
 		end;
+
+		value_trimmed = strtrim(field_value_string);
+		number_pattern = '^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$';
+		if ~isempty(regexp(value_trimmed,number_pattern,'once')),
+			field_value = str2double(value_trimmed);
+		elseif ~isempty(regexp(value_trimmed,'^[+-]?[Ii][Nn][Ff]$','once')),
+			field_value = str2double(value_trimmed);
+		elseif ~isempty(regexp(value_trimmed,'^[Nn][Aa][Nn]$','once')),
+			field_value = NaN;
+		else,
+			field_value = field_value_string;
+		end;
+		mystruct = setfield(mystruct,field_name,field_value);
 	end;
 end;

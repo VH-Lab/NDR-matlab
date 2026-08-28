@@ -191,7 +191,11 @@ while i<=chunkstop,
 
 		end;
 		if isfield(headerstruct,'Scale'),
-			myData_ = eval([output_precision '(myData_) * headerstruct.Scale/maxint;']);
+			% output_precision is an internal precision name ('double', 'single',
+			% 'int16', ...), never file-derived text, so this was not exploitable --
+			% but cast() states the intent directly and removes the eval entirely.
+			% The sibling lines already use feval for the same purpose.
+			myData_ = cast(myData_,output_precision) * headerstruct.Scale/maxint;
 		end;
 		if prod(size(myData_))==headerstruct.SamplesPerChunk*1,
 			% if we got a full read
