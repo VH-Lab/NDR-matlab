@@ -23,6 +23,7 @@ some Matlab toolboxes from The MathWorks.
 | CED Spike2/SMR | `.smr` | 'SMR', 'Spike2', 'CEDSpike2' | Native Matlab via [sigTOOL](http://sigtool.sourceforge.net/sigtool.html) (included) | |
 | SpikeGadgets | `.rec` | 'SpikeGadgets', 'SpikeGadgetsREC' | Native Matlab | |
 | Blackrock Microsystems | '.NEV', 'NS#' | 'BlackrockNEV', 'BlackrockNS4', 'BlackrockNS5' | Native Matlab via NPMK (from Blackrock Microsystems) (included) | |
+| BGI/MGI Stereo-seq (SAW) | `.gef`, cellbin `.h5ad` | `ndr.format.stereoseq.readGEF`, `ndr.format.stereoseq.readCellBin` | Native Matlab | Spatial transcriptomics, not epoch-based: format-layer functions with no `ndr.reader` class. See [notes](notes/stereoseq_formats.md) |
 
 Dozens of other formats are supported via the integration with Neo-Python (see the list here - https://neo.readthedocs.io/en/stable/rawio.html#module-neo.rawio, note that NDR only suppports the Neo formats that implement `RawIO`).
 
