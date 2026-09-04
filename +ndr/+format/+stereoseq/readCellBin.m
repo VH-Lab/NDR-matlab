@@ -474,35 +474,12 @@ if isempty(sz), n = 1; else, n = prod(sz); end
 end
 
 function c = localReadStrings(f, dsetPath)
-% Read a string dataset, variable-length or fixed.
+% Read a string dataset as a cellstr.
 %
-% AnnData writes the obs index and every categorical's categories as
-% VARIABLE-LENGTH utf-8 strings, which MATLAB's high-level h5read does not
-% handle; the low-level H5D.read does. Fixed-length strings work either
-% way, which is why the .gef reader never needed this -- SAW writes those
-% as fixed-width S16.
-%
-% Both paths are attempted rather than one being assumed, and a failure
-% names the dataset and BOTH underlying messages: a reader of foreign
-% files should say which of the two ways of reading it failed and how,
-% not just that it could not.
-try
-    raw = h5read(f, dsetPath);
-catch readErr
-    try
-        fid = H5F.open(f, 'H5F_ACC_RDONLY', 'H5P_DEFAULT');
-        closeFile = onCleanup(@() H5F.close(fid));
-        did = H5D.open(fid, dsetPath);
-        closeDset = onCleanup(@() H5D.close(did));
-        raw = H5D.read(did);
-    catch lowErr
-        error('NDR:stereoseq:readCellBin:stringRead', ...
-            ['Could not read string dataset %s.\n' ...
-             '  h5read:   %s\n' ...
-             '  H5D.read: %s'], dsetPath, readErr.message, lowErr.message);
-    end
-end
-c = localToCellstr(raw);
+% h5read handles AnnData's variable-length utf-8 strings; what it returns
+% for them is a STRING ARRAY, not a cell or a char matrix, which is the
+% case localToCellstr has to get right.
+c = localToCellstr(h5read(f, dsetPath));
 end
 
 function g = localGroup(info, path)
@@ -548,13 +525,56 @@ end
 end
 
 function c = localToCellstr(v)
-if iscell(v)
-    c = cellfun(@(s) strtrim(char(s(:)')), v, 'UniformOutput', false);
+% Normalise whatever h5read returns for a string dataset into a cellstr.
+%
+% There are three shapes to cover, and which one arrives depends on the
+% dataset, not on anything the caller can see:
+%   string array  - what h5read gives for VARIABLE-LENGTH utf-8, which is
+%                   how AnnData writes the obs index and every
+%                   categorical's categories. cellstr converts it directly;
+%                   going via char() pads the elements into a matrix and
+%                   loses which characters belong to which entry.
+%   cell of char  - the usual variable-length case in older releases.
+%   char matrix   - FIXED-width strings, one per column, which is how SAW
+%                   writes a .gef gene table.
+if isstring(v)
+    c = cellstr(v(:));
+elseif iscell(v)
+    c = cell(numel(v), 1);
+    for i = 1:numel(v)
+        c{i} = localOneString(v{i});
+    end
 elseif ischar(v)
-    c = cellstr(v');
+    if size(v, 1) == 1
+        c = {v};
+    else
+        c = cellstr(v);
+    end
+elseif isnumeric(v)
+    c = cell(size(v, 2), 1);
+    for k = 1:size(v, 2)
+        c{k} = char(double(v(:, k))');
+    end
 else
-    c = arrayfun(@(k) strtrim(char(v(:,k)')), 1:size(v,2), 'UniformOutput', false);
+    error('NDR:stereoseq:readCellBin:stringShape', ...
+        ['Cannot convert a %s of size [%s] to text. This is what h5read ' ...
+         'returned for a string dataset; the reader handles string, cell, ' ...
+         'char and numeric.'], class(v), strjoin(string(size(v)), ' '));
 end
 c = c(:);
-c = strrep(c, char(0), '');
+for i = 1:numel(c)
+    s = c{i};
+    s(s == 0) = [];
+    c{i} = strtrim(s);
+end
+end
+
+function s = localOneString(e)
+if isstring(e)
+    s = char(e);
+elseif ischar(e)
+    s = e(:)';
+else
+    s = char(double(e(:))');
+end
 end
