@@ -80,6 +80,8 @@ function [x, y, geneIndex, count, geneID, geneName, meta] = readGEF(gefPath, opt
 %           m.box(3)-m.box(1)+1, m.box(4)-m.box(2)+1);
 %
 %   See also: ndi.fun.doc.gene.makePyramid, ndi.fun.doc.gene.makeGeneList
+%   File layouts and the SAW quirks these work around:
+%   docs/notes/stereoseq_formats.md
 %
 arguments
     gefPath (1,:) char {mustBeFile}

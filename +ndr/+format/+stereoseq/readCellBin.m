@@ -116,6 +116,8 @@ function [cellID, x, y, contours, obs, meta] = readCellBin(h5adPath, options)
 %           m.relativeEvidence.ratio);
 %
 %   See also: ndi.fun.doc.gene.makeCells, ndr.format.stereoseq.readGEF
+%   File layouts and the SAW quirks these work around:
+%   docs/notes/stereoseq_formats.md
 %
 arguments
     h5adPath (1,:) char {mustBeFile}
