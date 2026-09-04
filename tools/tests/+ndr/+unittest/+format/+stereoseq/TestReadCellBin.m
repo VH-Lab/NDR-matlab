@@ -34,36 +34,8 @@ classdef TestReadCellBin < matlab.unittest.TestCase
     methods (Test)
 
         function testReadsCellsCentroidsAndColumns(testCase)
-            % TEMPORARY INSTRUMENT. Every test in this class errored on the
-            % first two CI runs and the runner's summary reports only
-            % "Errored", not what was thrown -- the message is in the JUnit
-            % artifact, which is not reachable from where this was written.
-            % Two fixes reasoned out from inspection changed nothing, so
-            % this prints the actual error to stdout, which the job log
-            % does capture, and rethrows so the test stays honestly failed.
-            % Remove once the cause is known.
-            try
-                [cid, x, y, ~, obs, meta] = ndr.format.stereoseq.readCellBin( ...
-                    testCase.cb('basic'));
-            catch ME
-                fprintf('\n=== readCellBin diagnostic ===\n');
-                fprintf('identifier: %s\n', ME.identifier);
-                fprintf('message   : %s\n', ME.message);
-                for k = 1:numel(ME.stack)
-                    fprintf('  at %s (line %d)\n', ME.stack(k).name, ME.stack(k).line);
-                end
-                f = testCase.cb('basic');
-                fprintf('fixture    : %s (exists=%d, %d bytes)\n', f, ...
-                    isfile(f), localBytes(f));
-                try
-                    hi = h5info(f);
-                    fprintf('top groups : %s\n', strjoin({hi.Groups.Name}, ' '));
-                catch hiErr
-                    fprintf('h5info failed: %s\n', hiErr.message);
-                end
-                fprintf('=== end diagnostic ===\n\n');
-                rethrow(ME);
-            end
+            [cid, x, y, ~, obs, meta] = ndr.format.stereoseq.readCellBin( ...
+                testCase.cb('basic'));
 
             testCase.verifyEqual(meta.nCells, 5);
             testCase.verifyEqual(cid, testCase.expectedIDs());
@@ -223,12 +195,4 @@ classdef TestReadCellBin < matlab.unittest.TestCase
             end
         end
     end
-end
-
-function n = localBytes(f)
-try
-    d = dir(f); n = d.bytes;
-catch
-    n = -1;
-end
 end
