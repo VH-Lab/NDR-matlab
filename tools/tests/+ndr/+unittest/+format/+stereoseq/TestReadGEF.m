@@ -172,6 +172,29 @@ classdef TestReadGEF < matlab.unittest.TestCase
             testCase.verifyEqual(max(gi), int32(1));
         end
 
+        function testNonContiguousGeneBlocksTakeThePerGenePath(testCase)
+            % The fallback read strategy, which no other fixture reaches.
+            %
+            % readGEF picks between two strategies by checking whether the
+            % gene offsets are contiguous and ascending: contiguous files
+            % are read in large blocks, others one gene at a time. Every
+            % other fixture is contiguous, so without this one the fallback
+            % is only assumed to work.
+            %
+            % Here gene 1 sits at row 0, gene 0 at rows 1-3 and gene 2 at
+            % rows 4-5, so records come back in GENE order rather than file
+            % order -- which is also what proves each record was attributed
+            % to the right gene.
+            [x, y, gi, c, id] = ndr.format.stereoseq.readGEF( ...
+                testCase.gef('noncontiguous'));
+
+            testCase.verifyEqual(gi, int32([0;0;0;1;2;2]));
+            testCase.verifyEqual(double(x(:))', [11 12 20 10 30 31]);
+            testCase.verifyEqual(double(y(:))', [51 52 60 50 70 71]);
+            testCase.verifyEqual(double(c(:))', [2 200 7 1 8 9]);
+            testCase.verifyEqual(id, {'ENSG1';'ENSG2';'ENSG3'});
+        end
+
         function testNotAGefIsNamed(testCase)
             testCase.verifyError( ...
                 @() ndr.format.stereoseq.readGEF(testCase.gef('notagef')), ...
