@@ -132,6 +132,8 @@ classdef TestReadCellBin < matlab.unittest.TestCase
             testCase.verifyTrue(meta.labelColumns(strcmp(names,'leiden')).isUnsupervisedGuess);
             testCase.verifyFalse( ...
                 meta.labelColumns(strcmp(names,'subclass_nn_column')).isUnsupervisedGuess);
+            testCase.verifyEqual( ...
+                meta.labelColumns(strcmp(names,'subclass_nn_column')).nCategories, 3);
         end
 
         function testReferenceCanBeForcedAndSaysSo(testCase)

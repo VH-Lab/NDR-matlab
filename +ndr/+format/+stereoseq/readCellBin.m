@@ -139,7 +139,7 @@ end
 % -- identifiers --------------------------------------------------------
 indexName = localAttrChar(h5adPath, '/obs', '_index');
 if isempty(indexName), indexName = '_index'; end
-cellID = localToCellstr(h5read(h5adPath, ['/obs/' indexName]));
+cellID = localReadStrings(h5adPath, ['/obs/' indexName]);
 nCells = numel(cellID);
 
 meta = struct();
@@ -411,7 +411,12 @@ if ~isempty(obsGroup.Groups)
         if ismember('categories', members) && ismember('codes', members)
             k = numel(labelCols) + 1;
             labelCols(k).name = nm;
-            labelCols(k).nCategories = NaN;
+            % The COUNT comes from the dataspace, not from reading the
+            % category strings: the size is metadata, and the strings are
+            % variable-length, which is the awkward case (see
+            % localReadStrings).
+            labelCols(k).nCategories = localDatasetLength( ...
+                obsGroup.Groups(i), 'categories');
             labelCols(k).isUnsupervisedGuess = localUnsupervised(nm);
         end
     end
@@ -452,10 +457,52 @@ try
     if isempty(g), return; end
     nm = localAttrChar(f, '/var', '_index');
     if isempty(nm), nm = '_index'; end
-    n = numel(localToCellstr(h5read(f, ['/var/' nm])));
+    n = localDatasetLength(g, nm);
 catch
     n = NaN;
 end
+end
+
+function n = localDatasetLength(g, name)
+% Element count of a dataset, from h5info rather than by reading it.
+n = NaN;
+if isempty(g) || isempty(g.Datasets), return; end
+hit = find(strcmp({g.Datasets.Name}, name), 1);
+if isempty(hit), return; end
+sz = g.Datasets(hit).Dataspace.Size;
+if isempty(sz), n = 1; else, n = prod(sz); end
+end
+
+function c = localReadStrings(f, dsetPath)
+% Read a string dataset, variable-length or fixed.
+%
+% AnnData writes the obs index and every categorical's categories as
+% VARIABLE-LENGTH utf-8 strings, which MATLAB's high-level h5read does not
+% handle; the low-level H5D.read does. Fixed-length strings work either
+% way, which is why the .gef reader never needed this -- SAW writes those
+% as fixed-width S16.
+%
+% Both paths are attempted rather than one being assumed, and a failure
+% names the dataset and BOTH underlying messages: a reader of foreign
+% files should say which of the two ways of reading it failed and how,
+% not just that it could not.
+try
+    raw = h5read(f, dsetPath);
+catch readErr
+    try
+        fid = H5F.open(f, 'H5F_ACC_RDONLY', 'H5P_DEFAULT');
+        closeFile = onCleanup(@() H5F.close(fid));
+        did = H5D.open(fid, dsetPath);
+        closeDset = onCleanup(@() H5D.close(did));
+        raw = H5D.read(did);
+    catch lowErr
+        error('NDR:stereoseq:readCellBin:stringRead', ...
+            ['Could not read string dataset %s.\n' ...
+             '  h5read:   %s\n' ...
+             '  H5D.read: %s'], dsetPath, readErr.message, lowErr.message);
+    end
+end
+c = localToCellstr(raw);
 end
 
 function g = localGroup(info, path)
