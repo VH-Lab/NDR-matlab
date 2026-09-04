@@ -14,6 +14,10 @@ classdef TestReadCellBin < matlab.unittest.TestCase
     % fixed count, or drops empty cells rather than keeping their row,
     % shifts every later cell's contour onto the wrong cell.
     %
+    % cellbin_unlabeled.h5ad exists for one byte the others cannot hold: a
+    % categorical code of -1, which pandas writes for a cell the labeling
+    % never assigned and which cannot be produced by naming a category.
+    %
     % MATLAB's h5read returns dimensions in the REVERSE of the order h5py
     % wrote them, so obsm/spatial arrives 2 x nCells and obsm/cell_border
     % arrives 2 x V x nCells. That transposition is silent on a near-square
@@ -166,10 +170,63 @@ classdef TestReadCellBin < matlab.unittest.TestCase
             testCase.verifyEqual(fieldnames(obs), {'area'});
         end
 
+        function testLabelValuesComeBackWhenAskedForByName(testCase)
+            % meta.labelColumns says a labeling EXISTS; this is how its
+            % per-cell values get out of the file, and without it
+            % ndi.fun.doc.gene.makeCellTypeLabels has nothing to be given.
+            [~,~,~,~,obs] = ndr.format.stereoseq.readCellBin( ...
+                testCase.cb('basic'), 'obsColumns', {'subclass_nn_column'});
+            testCase.verifyClass(obs.subclass_nn_column, 'cell');
+            testCase.verifyEqual(obs.subclass_nn_column(:)', ...
+                {'L2/3 IT','Pvalb','L2/3 IT','Astro','Pvalb'});
+        end
+
+        function testLabelsAreNotReturnedByDefault(testCase)
+            % The default is measurements. A labeling is a claim about each
+            % cell and which one to believe is the caller's decision, so it
+            % is asked for by name rather than swept up.
+            [~,~,~,~,obs] = ndr.format.stereoseq.readCellBin(testCase.cb('basic'));
+            testCase.verifyFalse(isfield(obs, 'subclass_nn_column'));
+            testCase.verifyFalse(isfield(obs, 'leiden'));
+            testCase.verifyTrue(isfield(obs, 'area'));
+        end
+
+        function testNumericAndLabelColumnsMixInOneCall(testCase)
+            [~,~,~,~,obs] = ndr.format.stereoseq.readCellBin( ...
+                testCase.cb('basic'), 'obsColumns', {'area','leiden'});
+            testCase.verifyEqual(sort(fieldnames(obs))', {'area','leiden'});
+            testCase.verifyEqual(obs.leiden(:)', {'0','1','0','2','1'});
+        end
+
+        function testMissingCategoryBecomesUnlabeledNotAWrongLabel(testCase)
+            % pandas writes code -1 for a cell the labeling never assigned.
+            % A zero-based lookup that does not special-case it silently
+            % hands that cell the LAST category -- a real, plausible label
+            % on a cell that has none, which nothing downstream can catch.
+            [~,~,~,~,obs] = ndr.format.stereoseq.readCellBin( ...
+                testCase.cb('unlabeled'), 'obsColumns', {'subclass_nn_column'});
+            testCase.verifyEqual(obs.subclass_nn_column(:)', ...
+                {'L2/3 IT','','L2/3 IT','','Pvalb'});
+        end
+
         function testUnknownObsColumnNamesWhatIsThere(testCase)
             testCase.verifyError(@() ndr.format.stereoseq.readCellBin( ...
                 testCase.cb('basic'), 'obsColumns', {'nosuchcolumn'}), ...
                 'NDR:stereoseq:readCellBin:noSuchColumn');
+        end
+
+        function testUnknownColumnMessageListsLabelsToo(testCase)
+            % The available list must name the categorical columns as well,
+            % now that they can be asked for; a message that omits them
+            % sends the caller looking for a reader that already exists.
+            try
+                ndr.format.stereoseq.readCellBin( ...
+                    testCase.cb('basic'), 'obsColumns', {'nosuchcolumn'});
+                testCase.verifyFail('expected an error');
+            catch ME
+                testCase.verifySubstring(ME.message, 'subclass_nn_column');
+                testCase.verifySubstring(ME.message, 'area');
+            end
         end
 
         function testNotAnH5adIsNamed(testCase)
