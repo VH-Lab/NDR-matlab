@@ -41,7 +41,19 @@ function [cellID, x, y, contours, obs, meta] = readCellBin(h5adPath, options)
 %                                that is what spatialGeneExpressionCells
 %                                stores, and what int16 vertices can hold.
 %   obsColumns ({})            - per-cell columns to return; {} returns
-%                                every numeric one.
+%                                every numeric one. A CATEGORICAL column
+%                                may be named here too, and comes back as
+%                                a cellstr of its decoded category names,
+%                                one per cell -- that is how a labeling
+%                                gets out of the file and into
+%                                ndi.fun.doc.gene.makeCellTypeLabels. It
+%                                is not in the {} default because the
+%                                default is measurements, and a labeling
+%                                is a claim about each cell rather than a
+%                                measurement of it: which labeling to
+%                                believe is the caller's decision (see
+%                                META.labelColumns), so it must be asked
+%                                for by name.
 %
 %   Outputs:
 %   CELLID   - cellstr, one per cell, from the AnnData index. TEXT, never
@@ -54,7 +66,12 @@ function [cellID, x, y, contours, obs, meta] = readCellBin(h5adPath, options)
 %              usable boundary gets a 0x2 -- its ROW IS KEPT, because
 %              dropping it would shift every later cell's contour onto the
 %              wrong cell, silently.
-%   OBS      - struct of per-cell columns (area, dnbCount, ...)
+%   OBS      - struct of the requested per-cell columns, field names made
+%              valid for MATLAB. Numeric columns come back as double
+%              column vectors; a categorical column comes back as a
+%              cellstr of category names, with '' for a cell pandas
+%              recorded as missing (code -1), which is a real state -- an
+%              unassigned cell -- and not an error.
 %   META     - struct describing the file and every inference made; see
 %              below.
 %
@@ -229,14 +246,20 @@ if isempty(options.obsColumns)
 else
     want = options.obsColumns;
 end
+labelNames = {};
+if ~isempty(labelCols), labelNames = {labelCols.name}; end
 for i = 1:numel(want)
     c = want{i};
-    if ~ismember(c, numericCols)
+    fn = matlab.lang.makeValidName(c);
+    if ismember(c, numericCols)
+        obs.(fn) = double(h5read(h5adPath, ['/obs/' c]));
+    elseif ismember(c, labelNames)
+        obs.(fn) = localReadCategorical(h5adPath, c, nCells);
+    else
         error('NDR:stereoseq:readCellBin:noSuchColumn', ...
-            'No numeric /obs column %s; available: {%s}.', ...
-            c, strjoin(numericCols, ', '));
+            'No /obs column %s; available: {%s}.', ...
+            c, strjoin([numericCols(:); labelNames(:)]', ', '));
     end
-    obs.(matlab.lang.makeValidName(c)) = double(h5read(h5adPath, ['/obs/' c]));
 end
 
 end % readCellBin
@@ -482,6 +505,43 @@ function c = localReadStrings(f, dsetPath)
 % for them is a STRING ARRAY, not a cell or a char matrix, which is the
 % case localToCellstr has to get right.
 c = localToCellstr(h5read(f, dsetPath));
+end
+
+function v = localReadCategorical(f, name, nCells)
+% Decode an AnnData categorical /obs column into a cellstr, one per cell.
+%
+% The column is a GROUP, not a dataset: 'categories' holds the distinct
+% strings and 'codes' holds a ZERO-BASED index into them, one per cell.
+% pandas writes -1 for a value it has no category for, and that is a
+% meaningful state rather than a defect -- a cell the labeling never
+% assigned -- so it becomes '', which is exactly what
+% ndi.fun.doc.gene.makeCellTypeLabels documents an empty label to mean.
+%
+% Both bounds are CHECKED rather than trusted. A code array of the wrong
+% length or reaching past the categories would otherwise put a real
+% category name on the wrong cell, and nothing downstream could tell:
+% every label would still be a legal label.
+cats  = localReadStrings(f, ['/obs/' name '/categories']);
+codes = double(h5read(f, ['/obs/' name '/codes']));
+codes = codes(:);
+if numel(codes) ~= nCells
+    error('NDR:stereoseq:readCellBin:codeLength', ...
+        '/obs/%s/codes has %d entries but the file has %d cells.', ...
+        name, numel(codes), nCells);
+end
+if any(codes > numel(cats) - 1)
+    error('NDR:stereoseq:readCellBin:codeRange', ...
+        '/obs/%s/codes reaches category %d but only %d are defined.', ...
+        name, max(codes), numel(cats));
+end
+if any(codes < -1)
+    error('NDR:stereoseq:readCellBin:codeRange', ...
+        '/obs/%s/codes holds %d; the only negative code pandas writes is -1.', ...
+        name, min(codes));
+end
+v = repmat({''}, nCells, 1);
+assigned = codes >= 0;
+v(assigned) = cats(codes(assigned) + 1);
 end
 
 function g = localGroup(info, path)
