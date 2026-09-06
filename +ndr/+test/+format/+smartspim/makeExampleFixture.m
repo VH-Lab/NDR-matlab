@@ -118,7 +118,7 @@ function xml = buildStitcherXml(stacks, voxelV, voxelH, voxelD, ...
     end
     lines{end+1} = '    </STACKS>';
     lines{end+1} = '</TeraStitcher>';
-    xml = strjoin(lines, sprintf('\n'));
+    xml = strjoin(lines, newline);
 end
 
 function meta = buildMetadata(channels, stacks, numSlices, height, width)
@@ -247,7 +247,7 @@ function writeTextFile(path, txt)
         error('ndr:test:format:smartspim:makeExampleFixture:OpenFailed', ...
             'Could not open %s for writing.', path);
     end
-    cleanup = onCleanup(@() fclose(fid)); %#ok<NASGU>
+    cleanup = onCleanup(@() fclose(fid));
     fwrite(fid, txt, 'char');
 end
 

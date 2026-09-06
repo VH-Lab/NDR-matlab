@@ -55,7 +55,7 @@ function xmlData = readStitcherXml(xmlPath)
 
     try
         reader = java.io.StringReader(strippedXml);
-        cleanup = onCleanup(@() reader.close()); %#ok<NASGU>
+        cleanup = onCleanup(@() reader.close());
         source = org.xml.sax.InputSource(reader);
         doc = xmlread(source);
     catch ME
