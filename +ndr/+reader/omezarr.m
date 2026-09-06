@@ -68,7 +68,7 @@ classdef omezarr < ndr.reader.base
 			%
 		end % ndr.reader.omezarr.omezarr
 
-		function info = resolveepoch(omezarr_obj, epochstreams)
+		function info = resolveepoch(~, epochstreams)
 			% RESOLVEEPOCH - resolve an epoch to a Zarr path + pyramid
 			%
 			% INFO = RESOLVEEPOCH(OMEZARR_OBJ, EPOCHSTREAMS)
@@ -113,7 +113,7 @@ classdef omezarr < ndr.reader.base
 				idx = find(strcmp({pyramids.name}, pyramidName), 1);
 				if isempty(idx)
 					error('ndr:reader:omezarr:UnknownPyramid', ...
-						['Pyramid "%s" is not in %s. Available: %s.'], ...
+						'Pyramid "%s" is not in %s. Available: %s.', ...
 						pyramidName, zarrPath, ...
 						ndr.reader.omezarr.formatNameList({pyramids.name}));
 				end
@@ -125,7 +125,7 @@ classdef omezarr < ndr.reader.base
 					ndr.reader.omezarr.classifyAxes(pyramids(idx).axes);
 		end % resolveepoch()
 
-		function n = numframes(omezarr_obj, epochstreams, epoch_select)
+		function n = numframes(omezarr_obj, epochstreams, ~)
 			% NUMFRAMES - number of frames (Z-planes) at level 1
 			%
 			% For a Zarr with no Z axis, returns 1.
@@ -138,7 +138,7 @@ classdef omezarr < ndr.reader.base
 				end
 		end % numframes()
 
-		function sz = framesize(omezarr_obj, epochstreams, epoch_select)
+		function sz = framesize(omezarr_obj, epochstreams, ~)
 			% FRAMESIZE - the [Y X C Z T] extent of the stack at level 1
 			%
 			% Y = image height, X = image width, C = channel count,
@@ -153,12 +153,12 @@ classdef omezarr < ndr.reader.base
 				sz = [Y X C Z T];
 		end % framesize()
 
-		function order = dimensionorder(omezarr_obj, epochstreams, epoch_select)
+		function order = dimensionorder(~, ~, ~)
 			% DIMENSIONORDER - the dimension order of returned frames
 				order = 'YXCZT';
 		end % dimensionorder()
 
-		function dt = datatype(omezarr_obj, epochstreams, epoch_select)
+		function dt = datatype(omezarr_obj, epochstreams, ~)
 			% DATATYPE - the underlying numeric class at level 1
 				info = omezarr_obj.resolveepoch(epochstreams);
 				dt = ndr.reader.omezarr.zarrClass(info.pyramid.levels(1).dtype);
@@ -248,7 +248,7 @@ classdef omezarr < ndr.reader.base
 					frames, options.SelectC, options.SelectZ);
 		end % readframes()
 
-		function ec = epochclock(omezarr_obj, epochstreams, epoch_select)
+		function ec = epochclock(~, ~, ~)
 			% EPOCHCLOCK - clock type for an OME-Zarr epoch
 			%
 			% Returns {ndr.time.clocktype('no_time')} because the current
@@ -259,7 +259,7 @@ classdef omezarr < ndr.reader.base
 				ec = {ndr.time.clocktype('no_time')};
 		end % epochclock()
 
-		function t0t1 = t0_t1(omezarr_obj, epochstreams, epoch_select)
+		function t0t1 = t0_t1(~, ~, ~)
 			% T0_T1 - begin/end times of the epoch
 			%
 			% Returns {[NaN NaN]} for the clockless case, matching
@@ -267,7 +267,7 @@ classdef omezarr < ndr.reader.base
 				t0t1 = {[NaN NaN]};
 		end % t0_t1()
 
-		function channels = getchannelsepoch(omezarr_obj, epochstreams, epoch_select)
+		function channels = getchannelsepoch(~, ~, ~)
 			% GETCHANNELSEPOCH - list channels for an OME-Zarr epoch
 			%
 			% Returns a single 'image' channel named 'image1', matching
