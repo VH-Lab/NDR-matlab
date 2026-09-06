@@ -11,7 +11,7 @@ function test(varargin)
 %   Prints one line per test and errors if any fails.
 
     fixtureDir = ndr.test.format.omezarr.makeExampleFixture();
-    cleanup = onCleanup(@() safeRmdir(fixtureDir));  %#ok<NASGU>
+    cleanup = onCleanup(@() safeRmdir(fixtureDir));
 
     testIsOMEZarr(fixtureDir);
     testReadAttrs(fixtureDir);
@@ -31,7 +31,7 @@ function testIsOMEZarr(fixtureDir)
         'isOMEZarr should be false for a nonexistent path');
     emptyDir = tempname;
     mkdir(emptyDir);
-    cleanup = onCleanup(@() rmdir(emptyDir, 's'));  %#ok<NASGU>
+    cleanup = onCleanup(@() rmdir(emptyDir, 's'));
     assertFalse(ndr.format.omezarr.isOMEZarr(emptyDir), ...
         'isOMEZarr should be false for a directory without .zattrs');
     disp('  ok: isOMEZarr');
