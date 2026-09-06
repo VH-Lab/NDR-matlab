@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - '*.md'
       - '.github/workflows/**'
-      
+
   # Allows for manually running this workflow from the Actions tab
   workflow_dispatch:
 
@@ -20,13 +20,55 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# The job below is an inlined equivalent of
+# `ehennestad/matbox-actions/.github/workflows/test-code-workflow.yml@v1`,
+# so that we control where SVG badges are pushed. Badges are copied to the
+# dedicated `badges` branch under `<source-ref>/` rather than committed onto
+# the working branch; see .github/actions/push-badges-to-branch.
 jobs:
-  call-workflow-test-toolbox:
+  test-code:
     name: Test
-    uses: ehennestad/matbox-actions/.github/workflows/test-code-workflow.yml@v1
-    with:
-      source_directory: '+ndr'
-      tests_directory: 'tools/tests'
-      matlab_use_cache: true
-    secrets:
+    runs-on: ubuntu-latest
+    env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SHOULD_CREATE_BADGES: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && !github.event.pull_request.draft) }}
+      SHOULD_PUSH_BADGES: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: latest
+          cache: true
+
+      - name: Install MatBox
+        uses: ehennestad/matbox-actions/install-matbox@v1
+
+      - name: Check code and upload report
+        uses: ehennestad/matbox-actions/check-code@v1
+        with:
+          source_directory: '+ndr'
+          create_badge: ${{ env.SHOULD_CREATE_BADGES }}
+
+      - name: Run tests
+        uses: ehennestad/matbox-actions/test-code@v1
+        with:
+          source_directory: '+ndr'
+          tests_directory: 'tools/tests'
+          create_badge: ${{ env.SHOULD_CREATE_BADGES }}
+
+      - name: Push SVG badges to badges branch
+        if: always() && env.SHOULD_PUSH_BADGES == 'true'
+        uses: ./.github/actions/push-badges-to-branch
+        with:
+          source-ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload code coverage report to Codecov
+        uses: codecov/codecov-action@v4
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: docs/reports/codecoverage.xml
