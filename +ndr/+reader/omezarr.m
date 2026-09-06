@@ -216,16 +216,23 @@ classdef omezarr < ndr.reader.base
 				info = omezarr_obj.resolveepoch(epochstreams);
 				pyramidName = info.pyramidName;
 
-				if isempty(frameind)
-					frameind = 1:omezarr_obj.numframes(epochstreams, epoch_select);
-				end
-
-				sz = omezarr_obj.framesize(epochstreams, epoch_select);
-				Y = sz(1); X = sz(2); C = sz(3);
+				% Frame dimensions come from the SELECTED level, not
+				% level 1 -- otherwise a Level>1 read allocates the
+				% wrong-sized output buffer and the assignment below
+				% size-mismatches.
+				levelShape = info.pyramid.levels(options.Level).shape;
+				Y = ndr.reader.omezarr.axisSize(levelShape, info.axisIndex.y, 1);
+				X = ndr.reader.omezarr.axisSize(levelShape, info.axisIndex.x, 1);
+				C = ndr.reader.omezarr.axisSize(levelShape, info.axisIndex.c, 1);
 				dt = omezarr_obj.datatype(epochstreams, epoch_select);
 
 				zIdx = info.axisIndex.z;
-				levelShape = info.pyramid.levels(options.Level).shape;
+				zAtLevel = ndr.reader.omezarr.axisSize( ...
+					levelShape, zIdx, 1);
+				if isempty(frameind)
+					frameind = 1:zAtLevel;
+				end
+
 				nAxes = numel(levelShape);
 				startVec = ones(1, nAxes);
 				stopVec  = levelShape;
