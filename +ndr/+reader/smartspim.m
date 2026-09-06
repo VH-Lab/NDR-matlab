@@ -191,7 +191,11 @@ classdef smartspim < ndr.reader.base
                         'frameind out of range [1, %d].', n);
                 end
 
-                dt = info.tile.dtype;
+                % Route dtype through the reader's own datatype() so
+                % epoch_select is honoured -- a SmartSPIM epoch is
+                % fully specified by its epochstream, but the base-class
+                % API still passes epoch_select and callers may rely on it.
+                dt = smartspim_obj.datatype(epochstreams, epoch_select);
                 frames = zeros(Y, X, 1, 1, numel(frameind), dt);
                 for i = 1:numel(frameind)
                     z = frameind(i);
