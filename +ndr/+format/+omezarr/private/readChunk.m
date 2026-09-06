@@ -63,7 +63,7 @@ function chunk = readChunk(arrayDir, chunkIndex, meta)
     % Zarr writes C-order (last axis fastest). Reshape to reversed shape
     % as a Fortran-order matrix, then permute to get an array indexed
     % the same way numpy would index it.
-    if numel(chunkShape) == 1
+    if isscalar(chunkShape)
         chunk = reshape(linear, chunkShape, 1);
     else
         chunk = permute(reshape(linear, flip(chunkShape)), ...

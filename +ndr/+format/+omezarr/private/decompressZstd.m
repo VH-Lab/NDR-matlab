@@ -51,7 +51,10 @@ function bytesOut = decompressZstd(bytesIn, expectedSize)
         fwrite(fid, bytesIn, 'uint8');
         fclose(fid);
     catch ME
-        try, fclose(fid); catch, end %#ok<CTCH,NOSEM>
+        try
+            fclose(fid);
+        catch
+        end
         rethrow(ME);
     end
 
@@ -72,7 +75,10 @@ function bytesOut = decompressZstd(bytesIn, expectedSize)
         bytesOut = fread(fid2, inf, '*uint8');
         fclose(fid2);
     catch ME
-        try, fclose(fid2); catch, end %#ok<CTCH,NOSEM>
+        try
+            fclose(fid2);
+        catch
+        end
         rethrow(ME);
     end
 
