@@ -61,7 +61,11 @@ force_single_channel_read = 0;
 assign(varargin{:});
 
 if isempty(header),
-	header = ndr.format.intan.read_Intan_RHD2000_header([directoryname filesep 'info.rhd'] );
+	info_rhd = local_fixdatfilename([directoryname filesep 'info.rhd']);
+	if isempty(info_rhd),
+		error(['Could not find info.rhd (or a *info.rhd variant) in ' directoryname '.']);
+	end;
+	header = ndr.format.intan.read_Intan_RHD2000_header(info_rhd);
 end;
 
 [blockinfo, bytes_per_block, bytes_present, num_data_blocks] = ndr.format.intan.Intan_RHD2000_blockinfo('', header);
@@ -69,11 +73,11 @@ end;
  % we need to look at files to see what the total time is
  % usually time should always be present
 
-fileinfo = dir([directoryname filesep 'time.dat']);
-
-if isempty(fileinfo),
-	error(['No file ' directoryname filesep 'time.dat, required file.']);
+time_dat = local_fixdatfilename([directoryname filesep 'time.dat']);
+if isempty(time_dat),
+	error(['No file ' directoryname filesep 'time.dat (or a *time.dat variant), required file.']);
 end;
+fileinfo = dir(time_dat);
 
 total_samples = fileinfo.bytes / 4;
 total_time = total_samples / header.frequency_parameters.amplifier_sample_rate; % in seconds
@@ -108,6 +112,15 @@ end;
 
 data = []; % start out with blank data initially
 
+% Detect the on-disk layout. "one file per signal type" writes one .dat
+% per signal type (amplifier.dat, auxiliary.dat, supply.dat, analogin.dat,
+% digitalin.dat, digitalout.dat) with all channels of that type interleaved
+% sample-by-sample; "one file per channel" writes one .dat per channel
+% (amp-A-000.dat, aux-A-AUX1.dat, ...). The presence of a *amplifier.dat
+% file (possibly with an Intan timestamp or lab prefix) distinguishes them.
+amp_file = local_fixdatfilename([directoryname filesep 'amplifier.dat']);
+one_file_per_signal_type = ~isempty(amp_file);
+
 % channel_type will be a single number
 
 relevant_headers = { [], 'amplifier_channels', 'aux_input_channels', 'supply_voltage_channels', 'temp', 'board_adc_channels', ...
@@ -128,9 +141,9 @@ switch channel_type,
 		if numel(channel_numbers)~=1,
 			error(['Only 1 time channel, ' int2str(channel_numbers) ' requested.']);
 		end;
-		fid = fopen([directoryname filesep 'time.dat'],'r','ieee-le');
+		fid = fopen(time_dat,'r','ieee-le');
 		if fid<0,
-			error(['Could not open file ' directoryname filesep 'time.dat for reading.']);
+			error(['Could not open file ' time_dat ' for reading.']);
 		end;
 		% time samples are int32, 4 bytes
 		fseek(fid,4*(s0-1),'bof');
@@ -143,19 +156,32 @@ switch channel_type,
 			if channel_numbers(i) > numel(hinfo) | channel_numbers(i)<1,
 				error(['Channel ' int2str(channel_numbers(i)) ' not in range 1 ... ' int2str(numel(hinfo)) ' listed in header.']);
 			end;
-			fname = [fileprefix{channel_type} hinfo(channel_numbers(i)).custom_channel_name '.dat'];
-			fid = fopen([directoryname filesep fname],'r','ieee-le');
-			fseek(fid,sample_size_bytes(channel_type)*(s0-1),'bof'); % move to point in file where our samples are saved
-			data_here = double(fread(fid,s1-s0+1,sample_precision{channel_type}));
-			fclose(fid);
+			if one_file_per_signal_type,
+				data_here = double(ndr.format.intan.read_IntanRHD2000_one_file_per_channel_type( ...
+					directoryname, channel_type, channel_numbers(i), numel(hinfo), s0, s1));
+				if channel_type==7 || channel_type==8,
+					% "one file per signal type" digital files store the full
+					% 16-bit packed word each sample; extract this channel's
+					% bit using its native_order (0..15).
+					bit_pos = double(hinfo(channel_numbers(i)).native_order);
+					data_here = double(bitand(uint16(data_here), uint16(bitshift(uint16(1), bit_pos))) ~= 0);
+				end;
+			else,
+				fname = [fileprefix{channel_type} hinfo(channel_numbers(i)).custom_channel_name '.dat'];
+				fid = fopen([directoryname filesep fname],'r','ieee-le');
+				fseek(fid,sample_size_bytes(channel_type)*(s0-1),'bof'); % move to point in file where our samples are saved
+				data_here = double(fread(fid,s1-s0+1,sample_precision{channel_type}));
+				fclose(fid);
+				if channel_type==7 | channel_type==8,
+					% Per-channel files store the 16-bit packed word with only the
+					% corresponding native_order bit potentially set; normalize to 0/1.
+					data_here = double(data_here ~= 0);
+				end;
+			end;
 			if conversion_shift(channel_type) ~=0,
 				data_here = data_here - conversion_shift(channel_type);
 			end;
-			if channel_type==7 | channel_type==8,
-				% Per-channel files store the 16-bit packed word with only the
-				% corresponding native_order bit potentially set; normalize to 0/1.
-				data_here = double(data_here ~= 0);
-			else,
+			if channel_type~=7 && channel_type~=8,
 				data_here = data_here(:) * conversion_scale(channel_type);
 			end;
 			data(:,end+1) = data_here(:);
@@ -163,3 +189,20 @@ switch channel_type,
 	case 5,
 		error(['Do not know how to read temperature in this mode yet.']);
 end;
+
+function fn = local_fixdatfilename(filename)
+% LOCAL_FIXDATFILENAME - Resolve a filename that may carry an Intan
+% timestamp or lab-specific prefix (e.g., "febc0_u000_000_amplifier.dat"
+% for a caller who asked for "amplifier.dat"). Returns '' when neither
+% the exact name nor any *filename match is present.
+if isfile(filename),
+	fn = filename;
+	return;
+end;
+[parentdir,fname,ext] = fileparts(filename);
+d = dir([parentdir filesep '*' fname ext]);
+if ~isempty(d),
+	fn = [parentdir filesep d(1).name];
+	return;
+end;
+fn = '';
