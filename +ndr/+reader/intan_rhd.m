@@ -396,14 +396,16 @@ classdef intan_rhd < ndr.reader.base
 				else,
 					filename = filename_array{index};
 					[parentdir, fname, ext] = fileparts(filename);
-					if strcmp(fname,'info'),
-						s2 = ['time\.dat\>']; % equivalent of *.ext on the command line
+					% Directory mode when the .rhd is Intan's per-signal-type
+					% header (info.rhd or a <prefix>_info.rhd variant) AND a
+					% sibling *time.dat is present in the epoch file list.
+					if strcmp(fname,'info') || (numel(fname)>=4 && strcmp(fname(end-3:end),'info'))
+						s2 = '.*time\.dat\>';
 						tf2 = vlt.string.strcmp_substitution(s2,filename_array,'UseSubstituteString',0);
-						if any(tf),
-							% we will call it a directory
+						if any(tf2)
 							isdirectory = 1;
-						end;
-					end;
+						end
+					end
 				end
 		end; % ndr.reader.intan_rhd.filenamefromepochfiles
 		
