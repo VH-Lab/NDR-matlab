@@ -140,5 +140,29 @@ classdef TestOneFilePerSignalType < matlab.unittest.TestCase
                     testCase.tempDir, 2, 1, 1, 1, 1), ...
                 ?MException);
         end
+
+        function testReaderDetectsDirectoryFromPrefixedInfo(testCase)
+            % ndr.reader.intan_rhd.filenamefromepochfiles should treat a
+            % <prefix>_info.rhd paired with a *time.dat sibling as a
+            % directory-mode epoch, matching how KJNielsen-style Intan
+            % recordings put their per-signal-type files on disk.
+            reader = ndr.reader.intan_rhd();
+
+            info_path = fullfile(testCase.tempDir, 'febc0_u000_000_info.rhd');
+            time_path = fullfile(testCase.tempDir, 'febc0_u000_000_time.dat');
+            fclose(fopen(info_path, 'w'));
+            fclose(fopen(time_path, 'w'));
+
+            [~, ~, isdirectory, ~] = reader.filenamefromepochfiles({info_path, time_path});
+            testCase.verifyEqual(isdirectory, 1);
+
+            % Bare info.rhd + bare time.dat still count.
+            info_bare = fullfile(testCase.tempDir, 'info.rhd');
+            time_bare = fullfile(testCase.tempDir, 'time.dat');
+            fclose(fopen(info_bare, 'w'));
+            fclose(fopen(time_bare, 'w'));
+            [~, ~, isdirectory_bare, ~] = reader.filenamefromepochfiles({info_bare, time_bare});
+            testCase.verifyEqual(isdirectory_bare, 1);
+        end
     end
 end
