@@ -34,6 +34,38 @@ This package is being developed with a companion Python package NDR-python. Some
 
 Dozens of other formats are supported via the integration with Neo-Python (see the list here - https://neo.readthedocs.io/en/stable/rawio.html#module-neo.rawio, note that NDR only suppports the Neo formats that implement `RawIO`).
 
+## Blosc + Zstd chunk codec (self-installing)
+
+Writing OME-Zarr chunks with `compressor: blosc/zstd` (and reading Blosc
+containers back into MATLAB memory without shelling to the system `zstd`
+binary) is available at `ndr.format.blosc.encode` / `ndr.format.blosc.decode`.
+
+That path uses `numcodecs` (which bundles libblosc + libzstd) inside a
+**private virtual environment** at `<NDR-matlab>/private_env/blosc/` that
+NDR sets up on first use. Nothing here touches MATLAB's `pyenv` or the
+customer's Python configuration -- the interpreter is only ever invoked
+as a subprocess.
+
+Requirements the first time you call `ndr.format.blosc.encode/decode`:
+
+* A `python3` (3.9+) somewhere on PATH.
+* Network access to PyPI on that first run.
+
+After that first run, no network and no host `python3` are required.
+
+If your machine has no `python3`, or is offline, pre-seed the venv:
+
+```matlab
+% Point at a specific Python installation:
+ndr.util.blosc.setup('python', '/opt/homebrew/bin/python3');
+
+% Or an offline install from pre-downloaded wheels:
+ndr.util.blosc.setup('wheelDir', '/path/to/wheels');
+```
+
+`ndr.util.blosc.version()` returns the numcodecs/libblosc versions of
+the installed venv -- run it once after installing as a smoke test.
+
 ## Licenses from other software
 
 This package has files from a variety of distributions. It is our intention to only distribute code that is in the public domain or is licensed for re-distribution. If you find your code here that is not properly distributed please notify the maintainer.
