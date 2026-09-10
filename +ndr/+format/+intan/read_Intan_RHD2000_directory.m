@@ -62,9 +62,9 @@ assign(varargin{:});
 
 if isempty(header),
 	info_rhd = local_fixdatfilename([directoryname filesep 'info.rhd']);
-	if isempty(info_rhd),
+	if isempty(info_rhd)
 		error(['Could not find info.rhd (or a *info.rhd variant) in ' directoryname '.']);
-	end;
+	end
 	header = ndr.format.intan.read_Intan_RHD2000_header(info_rhd);
 end;
 
@@ -74,9 +74,9 @@ end;
  % usually time should always be present
 
 time_dat = local_fixdatfilename([directoryname filesep 'time.dat']);
-if isempty(time_dat),
+if isempty(time_dat)
 	error(['No file ' directoryname filesep 'time.dat (or a *time.dat variant), required file.']);
-end;
+end
 fileinfo = dir(time_dat);
 
 total_samples = fileinfo.bytes / 4;
@@ -156,34 +156,34 @@ switch channel_type,
 			if channel_numbers(i) > numel(hinfo) | channel_numbers(i)<1,
 				error(['Channel ' int2str(channel_numbers(i)) ' not in range 1 ... ' int2str(numel(hinfo)) ' listed in header.']);
 			end;
-			if one_file_per_signal_type,
+			if one_file_per_signal_type
 				data_here = double(ndr.format.intan.read_IntanRHD2000_one_file_per_channel_type( ...
 					directoryname, channel_type, channel_numbers(i), numel(hinfo), s0, s1));
-				if channel_type==7 || channel_type==8,
+				if channel_type==7 || channel_type==8
 					% "one file per signal type" digital files store the full
 					% 16-bit packed word each sample; extract this channel's
 					% bit using its native_order (0..15).
 					bit_pos = double(hinfo(channel_numbers(i)).native_order);
 					data_here = double(bitand(uint16(data_here), uint16(bitshift(uint16(1), bit_pos))) ~= 0);
-				end;
-			else,
+				end
+			else
 				fname = [fileprefix{channel_type} hinfo(channel_numbers(i)).custom_channel_name '.dat'];
 				fid = fopen([directoryname filesep fname],'r','ieee-le');
 				fseek(fid,sample_size_bytes(channel_type)*(s0-1),'bof'); % move to point in file where our samples are saved
 				data_here = double(fread(fid,s1-s0+1,sample_precision{channel_type}));
 				fclose(fid);
-				if channel_type==7 | channel_type==8,
+				if channel_type==7 || channel_type==8
 					% Per-channel files store the 16-bit packed word with only the
 					% corresponding native_order bit potentially set; normalize to 0/1.
 					data_here = double(data_here ~= 0);
-				end;
-			end;
+				end
+			end
 			if conversion_shift(channel_type) ~=0,
 				data_here = data_here - conversion_shift(channel_type);
 			end;
-			if channel_type~=7 && channel_type~=8,
+			if channel_type~=7 && channel_type~=8
 				data_here = data_here(:) * conversion_scale(channel_type);
-			end;
+			end
 			data(:,end+1) = data_here(:);
 		end;
 	case 5,
@@ -195,14 +195,14 @@ function fn = local_fixdatfilename(filename)
 % timestamp or lab-specific prefix (e.g., "febc0_u000_000_amplifier.dat"
 % for a caller who asked for "amplifier.dat"). Returns '' when neither
 % the exact name nor any *filename match is present.
-if isfile(filename),
+if isfile(filename)
 	fn = filename;
-	return;
-end;
+	return
+end
 [parentdir,fname,ext] = fileparts(filename);
 d = dir([parentdir filesep '*' fname ext]);
-if ~isempty(d),
+if ~isempty(d)
 	fn = [parentdir filesep d(1).name];
-	return;
-end;
+	return
+end
 fn = '';
