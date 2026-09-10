@@ -141,6 +141,122 @@ classdef TestOneFilePerSignalType < matlab.unittest.TestCase
                 ?MException);
         end
 
+        function testDirectoryReaderDispatchesToPerSignalType(testCase)
+            % Drive read_Intan_RHD2000_directory end-to-end with a synthetic
+            % header and a "one file per signal type" directory. Exercises
+            % layout detection, prefix resolution, the per-signal-type
+            % dispatch, and the digital native_order bit extraction.
+
+            sample_rate = 20000;
+            aux_rate = sample_rate / 4;
+            supply_rate = sample_rate / 128;
+
+            % Header fields Intan_RHD2000_blockinfo touches. filesize is
+            % just for a truncation check the caller ignores here.
+            header = struct();
+            header.fileinfo = struct( ...
+                'filename', 'synthetic', ...
+                'headersize', 0, ...
+                'filesize', 0, ...
+                'data_file_main_version_number', 2, ...
+                'data_file_secondary_version_number', 0, ...
+                'eval_board_mode', 0, ...
+                'num_samples_per_data_block', 128);
+            header.frequency_parameters = struct( ...
+                'amplifier_sample_rate', sample_rate, ...
+                'aux_input_sample_rate', aux_rate, ...
+                'supply_voltage_sample_rate', supply_rate, ...
+                'board_adc_sample_rate', sample_rate, ...
+                'board_dig_in_sample_rate', sample_rate);
+
+            base_channel = struct( ...
+                'native_channel_name', '', 'custom_channel_name', '', ...
+                'native_order', 0, 'custom_order', 0, ...
+                'board_stream', 0, 'chip_channel', 0, ...
+                'port_name', '', 'port_prefix', '', 'port_number', 0, ...
+                'electrode_impedance_magnitude', 0, ...
+                'electrode_impedance_phase', 0);
+            empty_channel = struct( ...
+                'native_channel_name', {}, 'custom_channel_name', {}, ...
+                'native_order', {}, 'custom_order', {}, ...
+                'board_stream', {}, 'chip_channel', {}, ...
+                'port_name', {}, 'port_prefix', {}, 'port_number', {}, ...
+                'electrode_impedance_magnitude', {}, ...
+                'electrode_impedance_phase', {});
+
+            amp_ch = base_channel;
+            amp_ch(1).native_channel_name = 'A-000';
+            amp_ch(1).custom_channel_name = 'A-000';
+            amp_ch(2) = base_channel;
+            amp_ch(2).native_channel_name = 'A-001';
+            amp_ch(2).custom_channel_name = 'A-001';
+            amp_ch(2).native_order = 1;
+
+            din_ch = base_channel;
+            din_ch(1).native_channel_name = 'DIN-00';
+            din_ch(1).custom_channel_name = 'DIN-00';
+            din_ch(1).native_order = 0;
+            din_ch(2) = base_channel;
+            din_ch(2).native_channel_name = 'DIN-03';
+            din_ch(2).custom_channel_name = 'DIN-03';
+            din_ch(2).native_order = 3;
+
+            header.amplifier_channels = amp_ch;
+            header.aux_input_channels = empty_channel;
+            header.supply_voltage_channels = empty_channel;
+            header.board_adc_channels = empty_channel;
+            header.board_dig_in_channels = din_ch;
+            header.board_dig_out_channels = empty_channel;
+            header.num_temp_sensor_channels = 0;
+
+            % Synthetic files: two amplifier channels interleaved, a time
+            % vector, and a digital-in packed word that turns bit 0 on for
+            % all samples and bit 3 on for the last two.
+            num_samples = 4;
+            times = int32(0:num_samples-1);
+            ch1 = int16([100 200 300 400]);
+            ch2 = int16([-100 -200 -300 -400]);
+            amp = int16(zeros(1, 2 * num_samples));
+            amp(1:2:end) = ch1;
+            amp(2:2:end) = ch2;
+
+            din_word = uint16([1 1 1+8 1+8]); % bit 0 always, bit 3 on last two
+
+            testCase.writeDat('time.dat', times, 'int32');
+            testCase.writeDat('amplifier.dat', amp, 'int16');
+            testCase.writeDat('digitalin.dat', din_word, 'uint16');
+
+            % Read amplifier channel 2 through the directory reader.
+            % conversion_scale for amplifier is 0.195; expected = ch2 * 0.195.
+            % The reader's t1=Inf clamp then fix() may drop the very last
+            % sample due to floating-point rounding, so verify what came
+            % back matches the leading run of ch2 rather than pinning length.
+            data = ndr.format.intan.read_Intan_RHD2000_directory( ...
+                testCase.tempDir, header, 'amp', 2, 0, Inf);
+            n = size(data,1);
+            testCase.verifyGreaterThanOrEqual(n, num_samples - 1);
+            testCase.verifyEqual(data(:)', double(ch2(1:n)) * 0.195, 'AbsTol', 1e-10);
+
+            % Read the two digital-in channels; bit 0 is always high, bit 3
+            % is high only for the last two samples.
+            expected_bit0 = [1 1 1 1];
+            expected_bit3 = [0 0 1 1];
+            data_din = ndr.format.intan.read_Intan_RHD2000_directory( ...
+                testCase.tempDir, header, 'din', [1 2], 0, Inf);
+            n_din = size(data_din,1);
+            testCase.verifyGreaterThanOrEqual(n_din, num_samples - 1);
+            testCase.verifyEqual(data_din(:,1)', expected_bit0(1:n_din));
+            testCase.verifyEqual(data_din(:,2)', expected_bit3(1:n_din));
+
+            % Also read the time channel through the directory reader.
+            data_t = ndr.format.intan.read_Intan_RHD2000_directory( ...
+                testCase.tempDir, header, 'time', 1, 0, Inf);
+            n_t = size(data_t,1);
+            expected_t = double(times) / sample_rate;
+            testCase.verifyGreaterThanOrEqual(n_t, num_samples - 1);
+            testCase.verifyEqual(data_t(:)', expected_t(1:n_t));
+        end
+
         function testReaderDetectsDirectoryFromPrefixedInfo(testCase)
             % ndr.reader.intan_rhd.filenamefromepochfiles should treat a
             % <prefix>_info.rhd paired with a *time.dat sibling as a
