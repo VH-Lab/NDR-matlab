@@ -33,7 +33,7 @@ function outBytes = runTool(subcommand, args, inBytes)
     inPath  = [tempname() '.in.bin'];
     outPath = [tempname() '.out.bin'];
     errPath = [tempname() '.err.log'];
-    cleaner = onCleanup(@() cleanupFiles({inPath, outPath, errPath})); %#ok<NASGU>
+    cleaner = onCleanup(@() cleanupFiles({inPath, outPath, errPath}));
 
     writeBinary(inPath, inBytes);
 
@@ -56,7 +56,7 @@ function writeBinary(path, bytes)
         error('ndr:util:blosc:runTool:TempWriteFailed', ...
             'Could not create tempfile %s.', path);
     end
-    closer = onCleanup(@() safeClose(fid)); %#ok<NASGU>
+    closer = onCleanup(@() safeClose(fid));
     fwrite(fid, bytes, 'uint8');
 end
 
@@ -70,7 +70,7 @@ function bytes = readBinary(path)
         error('ndr:util:blosc:runTool:OutputUnreadable', ...
             'Could not open %s for reading.', path);
     end
-    closer = onCleanup(@() safeClose(fid)); %#ok<NASGU>
+    closer = onCleanup(@() safeClose(fid));
     bytes = fread(fid, inf, '*uint8');
 end
 
