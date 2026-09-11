@@ -23,8 +23,11 @@ function container = encode(bytesIn, options)
 %     cname     - char, inner codec. Default 'zstd'. Other Blosc codecs
 %                 ('lz4', 'blosclz', 'snappy') are accepted and passed
 %                 through unchanged.
-%     clevel    - integer compression level. 1..22 for zstd, 1..9 for
-%                 the others. Default 5.
+%     clevel    - integer compression level, 1..9 for every codec
+%                 (Blosc's wrapper caps at 9 and maps to the inner
+%                 codec's own range). Default 5. On typical scientific
+%                 arrays 5 is the sweet spot; 9 buys ~few % smaller
+%                 files at ~3x encode time and rarely pays off.
 %     shuffle   - 0 = no shuffle, 1 = byte-shuffle, 2 = bit-shuffle.
 %                 Default 1.
 %     blocksize - target block size in bytes. Default 0 = numcodecs auto.
@@ -42,7 +45,8 @@ function container = encode(bytesIn, options)
         options.typesize (1,1) double {mustBeInteger, mustBeNonnegative} = 0
         options.cname (1,:) char = 'zstd'
         options.clevel (1,1) double {mustBeInteger, ...
-            mustBeGreaterThanOrEqual(options.clevel, 1)} = 5
+            mustBeGreaterThanOrEqual(options.clevel, 1), ...
+            mustBeLessThanOrEqual(options.clevel, 9)} = 5
         options.shuffle (1,1) double {mustBeMember(options.shuffle, [0 1 2])} = 1
         options.blocksize (1,1) double {mustBeInteger, mustBeNonnegative} = 0
     end
