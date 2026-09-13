@@ -46,15 +46,18 @@ function info = ensureMex(force)
         return;
     end
 
-    if ~force && exist('blosc.encode', 'file') == 2
-        info = struct( ...
-            'available', true, ...
-            'version',   BLOSC_MATLAB_VERSION, ...
-            'path',      fileparts(which('blosc.encode')), ...
-            'mex',       which(['blosc_mex.' mexext]), ...
-            'reason',    '');
-        cached = info;
-        return;
+    if ~force
+        existingMex = discoverExistingMex();
+        if ~isempty(existingMex)
+            info = struct( ...
+                'available', true, ...
+                'version',   BLOSC_MATLAB_VERSION, ...
+                'path',      fileparts(fileparts(fileparts(existingMex))), ...
+                'mex',       existingMex, ...
+                'reason',    '');
+            cached = info;
+            return;
+        end
     end
 
     assetName = pickAssetName();
@@ -120,6 +123,25 @@ function info = ensureMex(force)
             'blosc.encode still does not resolve.'], cacheDir);
     end
     cached = info;
+end
+
+function mexPath = discoverExistingMex()
+%DISCOVEREXISTINGMEX - path to a working blosc_mex on the path, or ''.
+%   Handles the case where the user has blosc-matlab on their path but
+%   hasn't installed the MEX yet: `which('blosc.encode')` returns the
+%   .m wrapper, but calling it would error because +blosc/private/
+%   is empty. Only claims a valid install when the platform MEX file
+%   actually sits next to the wrapper.
+    mexPath = '';
+    encWrapper = which('blosc.encode');
+    if isempty(encWrapper)
+        return;
+    end
+    encFolder = fileparts(encWrapper);
+    candidate = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
+    if isfile(candidate)
+        mexPath = candidate;
+    end
 end
 
 function name = pickAssetName()
