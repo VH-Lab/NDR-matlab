@@ -38,7 +38,7 @@ function info = ensureMex(force)
     end
 
     BLOSC_MATLAB_REPO    = 'Waltham-Data-Science/blosc-matlab';
-    BLOSC_MATLAB_VERSION = 'v0.1.0';
+    BLOSC_MATLAB_VERSION = 'v0.2.0';
 
     persistent cached
     if ~force && ~isempty(cached) && cached.available
@@ -126,12 +126,13 @@ function info = ensureMex(force)
 end
 
 function mexPath = discoverExistingMex()
-%DISCOVEREXISTINGMEX - path to a working blosc_mex on the path, or ''.
-%   Handles the case where the user has blosc-matlab on their path but
-%   hasn't installed the MEX yet: `which('blosc.encode')` returns the
-%   .m wrapper, but calling it would error because +blosc/private/
-%   is empty. Only claims a valid install when the platform MEX file
-%   actually sits next to the wrapper.
+%DISCOVEREXISTINGMEX - path to a working v0.2.0 blosc_mex on the path.
+%   Returns '' unless (a) the +blosc package is on the path, (b) its
+%   private/blosc_mex.<ext> exists, AND (c) the v0.2.0-introduced
+%   wrapper blosc.encodeChunk is resolvable. The last check is what
+%   forces a re-download when a user has a stale v0.1.0 install
+%   already on the path -- v0.1.0's MEX has no encode_chunk verb, so
+%   calling blosc.encodeChunk would error.
     mexPath = '';
     encWrapper = which('blosc.encode');
     if isempty(encWrapper)
@@ -139,9 +140,14 @@ function mexPath = discoverExistingMex()
     end
     encFolder = fileparts(encWrapper);
     candidate = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
-    if isfile(candidate)
-        mexPath = candidate;
+    if ~isfile(candidate)
+        return;
     end
+    % v0.2.0 marker: encodeChunk wrapper. Older installs lack it.
+    if isempty(which('blosc.encodeChunk'))
+        return;
+    end
+    mexPath = candidate;
 end
 
 function name = pickAssetName()
