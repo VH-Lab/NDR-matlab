@@ -29,5 +29,9 @@ function bytesOut = decode(container)
                  'typecast-able to one). typecast said: %s'], ME.message);
         end
     end
-    bytesOut = ndr.util.blosc.runTool('decode', '', container(:));
+    % Route through decodeMany with a 1-item batch so this call
+    % benefits from the persistent Blosc server (zero spawn cost
+    % after the first call in this MATLAB process or worker).
+    out = ndr.format.blosc.decodeMany({container(:)});
+    bytesOut = out{1};
 end

@@ -85,5 +85,70 @@ classdef TestBloscRoundtrip < matlab.unittest.TestCase
             testCase.verifyClass(info, 'struct');
             testCase.verifyNotEmpty(info.numcodecs);
         end
+
+        function testEncodeManyRoundtripMatchesSingular(testCase)
+            % encodeMany + decodeMany for a batch must match the
+            % result of calling encode/decode on each item.
+            rng(1);
+            items = { ...
+                uint16(randi([0 65535], 1, 512)), ...
+                uint16(randi([0 65535], 1, 1024)), ...
+                uint16(randi([0 65535], 1, 256))};
+            rawBytes = cellfun(@(x) typecast(x(:), 'uint8'), items, ...
+                'UniformOutput', false);
+            batched = ndr.format.blosc.encodeMany(rawBytes, ...
+                'typesize', 2);
+            testCase.verifyEqual(numel(batched), numel(items));
+            for i = 1:numel(items)
+                testCase.verifyTrue( ...
+                    ndr.format.blosc.isBlosc(batched{i}));
+                back = ndr.format.blosc.decode(batched{i});
+                recovered = typecast(back, 'uint16');
+                testCase.verifyEqual(recovered(:).', items{i}(:).');
+            end
+        end
+
+        function testDecodeManyMatchesSingular(testCase)
+            % decodeMany on a batch of pre-encoded containers must
+            % produce byte-identical output to decode on each.
+            rng(2);
+            items = { ...
+                uint16(randi([0 65535], 1, 512)), ...
+                uint16(randi([0 65535], 1, 1024))};
+            containers = cellfun(@(x) ndr.format.blosc.encode(x), ...
+                items, 'UniformOutput', false);
+            batchDecoded = ndr.format.blosc.decodeMany(containers);
+            for i = 1:numel(items)
+                soloDecoded = ndr.format.blosc.decode(containers{i});
+                testCase.verifyEqual(batchDecoded{i}, soloDecoded, ...
+                    sprintf('item %d differs between batched and ' ...
+                        'singular decode', i));
+            end
+        end
+
+        function testEmptyBatchIsNoop(testCase)
+            % Both APIs must accept an empty batch and return an
+            % empty cell without spawning a subprocess.
+            testCase.verifyEqual(ndr.format.blosc.encodeMany({}, ...
+                'typesize', 2), {});
+            testCase.verifyEqual(ndr.format.blosc.decodeMany({}), {});
+        end
+
+        function testPackUnpackRoundtripIsBitExact(testCase)
+            % Wire format helpers must roundtrip. This is the piece
+            % blosc_tool.py's server relies on; a bug here would
+            % desynchronise the client and server halves.
+            rng(3);
+            items = { ...
+                uint8(randi([0 255], 1, 17))', ...
+                uint8(randi([0 255], 1, 0))', ...
+                uint8(randi([0 255], 1, 4096))'};
+            body = ndr.util.blosc.packBatch(items);
+            back = ndr.util.blosc.unpackBatch(body);
+            testCase.verifyEqual(numel(back), numel(items));
+            for i = 1:numel(items)
+                testCase.verifyEqual(back{i}, items{i});
+            end
+        end
     end
 end

@@ -75,11 +75,17 @@ function container = encode(bytesIn, options)
             numel(raw), typesize);
     end
 
-    args = sprintf(['--cname %s --clevel %d --shuffle %d ' ...
-                    '--typesize %d --blocksize %d'], ...
-        options.cname, options.clevel, options.shuffle, ...
-        typesize, options.blocksize);
-    container = ndr.util.blosc.runTool('encode', args, raw);
+    % Route through encodeMany with a 1-item batch so this call
+    % benefits from the persistent Blosc server (zero spawn cost
+    % after the first call in this MATLAB process or worker). If
+    % the server cannot be reached, encodeMany falls back to a
+    % single one-shot subprocess; either way this stays one
+    % subprocess call.
+    out = ndr.format.blosc.encodeMany({raw}, ...
+        'cname', options.cname, 'clevel', options.clevel, ...
+        'shuffle', options.shuffle, 'typesize', typesize, ...
+        'blocksize', options.blocksize);
+    container = out{1};
 end
 
 function n = elementSize(cls)
