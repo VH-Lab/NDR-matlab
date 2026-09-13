@@ -30,6 +30,15 @@ function h = serverConnect()
         return;
     end
 
+    % An escape hatch for the persistent-server path. If the env var
+    % is set the caller falls back to the one-shot subprocess for
+    % every request; encodeMany/decodeMany try this function first
+    % and treat any error as a signal to use runTool.
+    if ~isempty(getenv('NDR_BLOSC_NO_SERVER'))
+        error('ndr:util:blosc:serverConnect:Disabled', ...
+            'NDR_BLOSC_NO_SERVER is set; persistent server is off.');
+    end
+
     pyExe = ndr.util.blosc.pythonExe();
     tool  = ndr.util.blosc.toolScript();
     if ~isfile(tool)
@@ -38,7 +47,13 @@ function h = serverConnect()
     end
 
     pb = java.lang.ProcessBuilder({pyExe, tool, 'server'});
-    pb.redirectErrorStream(false);
+    % CRITICAL: drain stderr somewhere. Without this a Python import
+    % warning (numcodecs used to emit DeprecationWarnings at import)
+    % fills the OS stderr pipe buffer and Python blocks on write --
+    % MATLAB then waits forever on stdout that will never come.
+    % INHERIT sends child stderr to the parent's stderr, which for
+    % MATLAB is a terminal or /dev/null-equivalent that never fills.
+    pb.redirectError(java.lang.ProcessBuilder.Redirect.INHERIT);
     proc = pb.start();
     handle = struct( ...
         'process', proc, ...
