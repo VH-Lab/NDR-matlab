@@ -16,10 +16,15 @@ function encoded = encodeMany(rawItems, options)
 %     'typesize'  - integer >= 1, item size in bytes; default 1.
 %     'blocksize' - integer >= 0; default 0 (auto).
 %
-%   Uses the persistent per-process Blosc server if available; falls
-%   back to a single one-shot subprocess call for the whole batch if
-%   not. Same result as looping ndr.format.blosc.encode over RAWITEMS
-%   at N times lower Python-startup overhead.
+%   Fast path: the blosc-matlab MEX (a direct C call, ~microseconds per
+%   chunk, no subprocess). If the MEX is not available on this platform
+%   or the download fails, falls back to a one-shot invocation of
+%   blosc_tool.py that handles the whole batch in a single subprocess.
+%
+%   This function itself is SERIAL over the batch. Callers who want
+%   parallel throughput should call it from within a parfor, one
+%   sub-batch per worker; the MEX is thread-safe (blosc_compress_ctx
+%   with nthreads=1). See the discussion in +ndr/+util/+blosc/ensureMex.
 
     arguments
         rawItems (1,:) cell
@@ -36,28 +41,25 @@ function encoded = encodeMany(rawItems, options)
         return;
     end
 
-    slug = sprintf('cname=%s,clevel=%d,shuffle=%d,typesize=%d,blocksize=%d', ...
-        options.cname, options.clevel, options.shuffle, ...
-        options.typesize, options.blocksize);
+    mexInfo = ndr.util.blosc.ensureMex();
+    if mexInfo.available
+        encoded = cell(size(rawItems));
+        for i = 1:n
+            encoded{i} = blosc.encode(rawItems{i}, ...
+                'cname',     options.cname, ...
+                'clevel',    options.clevel, ...
+                'shuffle',   options.shuffle, ...
+                'typesize',  options.typesize, ...
+                'blocksize', options.blocksize);
+        end
+        return;
+    end
 
     reqBody = ndr.util.blosc.packBatch(rawItems);
-
-    respBody = tryServer('ENCB', slug, reqBody);
-    if isempty(respBody)
-        cliArgs = sprintf(['--cname %s --clevel %d --shuffle %d ' ...
-            '--typesize %d --blocksize %d'], ...
-            options.cname, options.clevel, options.shuffle, ...
-            options.typesize, options.blocksize);
-        respBody = ndr.util.blosc.runTool('encode_batch', cliArgs, reqBody);
-    end
-
+    cliArgs = sprintf(['--cname %s --clevel %d --shuffle %d ' ...
+        '--typesize %d --blocksize %d'], ...
+        options.cname, options.clevel, options.shuffle, ...
+        options.typesize, options.blocksize);
+    respBody = ndr.util.blosc.runTool('encode_batch', cliArgs, reqBody);
     encoded = ndr.util.blosc.unpackBatch(respBody);
-end
-
-function payload = tryServer(op, opts, body)
-    payload = [];
-    try
-        payload = ndr.util.blosc.serverCall(op, opts, body);
-    catch
-    end
 end

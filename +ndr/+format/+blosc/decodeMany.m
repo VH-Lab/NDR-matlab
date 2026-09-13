@@ -7,16 +7,19 @@ function decompressed = decodeMany(containers)
 %   Blosc v1 container. Returns a cell array of the same size where
 %   OUT{i} is the raw uncompressed bytes of CONTAINERS{i}.
 %
-%   Uses the persistent per-process Blosc server if one is running
-%   (see ndr.util.blosc.serverConnect); the whole batch is one
-%   request over the pipe and Python is not respawned. If the server
-%   cannot be reached, falls back to a one-shot subprocess call
-%   (still one for the whole batch, not one per container). Either
-%   way, decoding N containers costs at most one subprocess spawn.
+%   Fast path: the blosc-matlab MEX (a direct C call, ~microseconds
+%   per chunk, no subprocess). If the MEX is not available on this
+%   platform or the download fails, falls back to a one-shot
+%   invocation of blosc_tool.py that handles the whole batch in a
+%   single subprocess. Same result as looping ndr.format.blosc.decode
+%   over CONTAINERS, at N times lower Python-startup overhead.
 %
-%   Same result as looping ndr.format.blosc.decode over CONTAINERS,
-%   at N times lower Python-startup overhead. Callers doing a large
-%   readArray should always prefer this to the singular form.
+%   This function itself is SERIAL over the batch. Callers who want
+%   parallel throughput should call it from within a parfor, one
+%   sub-batch per worker; the MEX is thread-safe
+%   (blosc_decompress_ctx with nthreads=1). No parpool is required
+%   for correctness -- the MEX is fast enough on a single MATLAB
+%   thread for typical read patterns.
 
     if ~iscell(containers)
         error('ndr:format:blosc:decodeMany:BadInput', ...
@@ -28,26 +31,16 @@ function decompressed = decodeMany(containers)
         return;
     end
 
+    mexInfo = ndr.util.blosc.ensureMex();
+    if mexInfo.available
+        decompressed = cell(size(containers));
+        for i = 1:n
+            decompressed{i} = blosc.decode(containers{i});
+        end
+        return;
+    end
+
     reqBody = ndr.util.blosc.packBatch(containers);
-
-    respBody = tryServer('DECB', '', reqBody);
-    if isempty(respBody)
-        respBody = ndr.util.blosc.runTool('decode_batch', '', reqBody);
-    end
-
+    respBody = ndr.util.blosc.runTool('decode_batch', '', reqBody);
     decompressed = ndr.util.blosc.unpackBatch(respBody);
-end
-
-function payload = tryServer(op, opts, body)
-% tryServer - one attempt at the persistent server, returning [] on failure
-%
-%   Any exception from the server (spawn refused, protocol error,
-%   process died mid-request) falls through to the tempfile-based
-%   runTool path. That keeps decodeMany working on machines where
-%   the Java bridge is unavailable or the server refused to start.
-    payload = [];
-    try
-        payload = ndr.util.blosc.serverCall(op, opts, body);
-    catch
-    end
 end

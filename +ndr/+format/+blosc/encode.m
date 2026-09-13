@@ -33,12 +33,16 @@ function container = encode(bytesIn, options)
 %     blocksize - target block size in bytes. Default 0 = numcodecs auto.
 %
 %   Implementation:
-%     Delegates to numcodecs.Blosc via a subprocess in a private venv
-%     (see ndr.util.blosc.setup). MATLAB's `pyenv` is never touched, so
-%     the customer's Python configuration is not affected.
+%     Delegates to the blosc-matlab MEX (a direct C call, no
+%     subprocess, ~microseconds per chunk). On first use, the MEX is
+%     downloaded from GitHub Releases and cached under prefdir(). If
+%     no prebuilt exists for this platform (Linux arm64, macOS Intel)
+%     or the download fails, falls back to numcodecs.Blosc via a
+%     subprocess in a private venv (ndr.util.blosc.setup). MATLAB's
+%     `pyenv` is never touched either way.
 %
 %   See also: ndr.format.blosc.decode, ndr.format.blosc.isBlosc,
-%             ndr.util.blosc.setup.
+%             ndr.util.blosc.ensureMex, ndr.util.blosc.setup.
 
     arguments
         bytesIn
@@ -75,12 +79,6 @@ function container = encode(bytesIn, options)
             numel(raw), typesize);
     end
 
-    % Route through encodeMany with a 1-item batch so this call
-    % benefits from the persistent Blosc server (zero spawn cost
-    % after the first call in this MATLAB process or worker). If
-    % the server cannot be reached, encodeMany falls back to a
-    % single one-shot subprocess; either way this stays one
-    % subprocess call.
     out = ndr.format.blosc.encodeMany({raw}, ...
         'cname', options.cname, 'clevel', options.clevel, ...
         'shuffle', options.shuffle, 'typesize', typesize, ...

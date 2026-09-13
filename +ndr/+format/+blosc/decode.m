@@ -14,11 +14,16 @@ function bytesOut = decode(container)
 %   and reshape to the chunk shape as the caller sees fit.
 %
 %   Implementation:
-%     Delegates to numcodecs.Blosc via a subprocess in a private venv
-%     (see ndr.util.blosc.setup). MATLAB's `pyenv` is never touched.
+%     Delegates to the blosc-matlab MEX (a direct C call, no
+%     subprocess, ~microseconds per chunk). On first use, the MEX is
+%     downloaded from GitHub Releases and cached under prefdir(). If
+%     no prebuilt exists for this platform (Linux arm64, macOS Intel)
+%     or the download fails, falls back to numcodecs.Blosc via a
+%     subprocess in a private venv (ndr.util.blosc.setup). MATLAB's
+%     `pyenv` is never touched either way.
 %
 %   See also: ndr.format.blosc.encode, ndr.format.blosc.isBlosc,
-%             ndr.format.blosc.header.
+%             ndr.format.blosc.header, ndr.util.blosc.ensureMex.
 
     if ~isa(container, 'uint8')
         try
@@ -29,9 +34,6 @@ function bytesOut = decode(container)
                  'typecast-able to one). typecast said: %s'], ME.message);
         end
     end
-    % Route through decodeMany with a 1-item batch so this call
-    % benefits from the persistent Blosc server (zero spawn cost
-    % after the first call in this MATLAB process or worker).
     out = ndr.format.blosc.decodeMany({container(:)});
     bytesOut = out{1};
 end
