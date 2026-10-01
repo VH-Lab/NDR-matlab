@@ -54,5 +54,9 @@
 	{
 		"type": ["vld", "vlh", "vhlv", "vhlabview", "labview"],
 		"classname": "ndr.reader.vld"
+	},
+	{
+		"type": ["video", "videoreader", "mp4", "avi", "mov"],
+		"classname": "ndr.reader.video"
 	}
 ]
