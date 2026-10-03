@@ -15,6 +15,7 @@ if fid<0,
 end;
 
 hdr = fread(fid,header_length);
+fclose(fid);
 
 hdrc = char(hdr(:)');
 
