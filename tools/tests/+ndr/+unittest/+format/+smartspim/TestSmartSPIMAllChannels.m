@@ -65,6 +65,19 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
             testCase.verifyEqual([lastName ext], '200000_100000_000030_ch1.tiff');
         end
 
+        function testInfoUint16WithExplicitSampleFormat(testCase)
+            % libtiff writers (e.g. TeraStitcher) may store SampleFormat = 1,
+            % which imfinfo reports as 'Unsigned integer'.
+            info = ndr.format.smartspim.readAllChannelsInfo(testCase.FixtureDir);
+            writeTiffWithSampleFormat(info.channels(1).slicePaths{1}, ...
+                repmat(uint16(40000), 106, 13), Tiff.SampleFormat.UInt);
+            info = ndr.format.smartspim.readAllChannelsInfo(testCase.FixtureDir);
+            testCase.verifyEqual(info.dtype, 'uint16');
+            vol = ndr.format.smartspim.readAllChannelsVolume( ...
+                testCase.FixtureDir, 'Ex_561_Em_561F_Ch2', 'ZRange', [1 1]);
+            testCase.verifyEqual(vol(1, 1, 1), uint16(40000));
+        end
+
         function testInfoWithoutHeader(testCase)
             info = ndr.format.smartspim.readAllChannelsInfo(testCase.FixtureDir, ...
                 'ReadHeader', false);
@@ -158,4 +171,19 @@ function safeRmdir(d)
     if ~isempty(d) && isfolder(d)
         rmdir(d, 's');
     end
+end
+
+function writeTiffWithSampleFormat(path, data, sampleFormat)
+    % Write a single-page grayscale TIFF that stores the SampleFormat tag.
+    t = Tiff(path, 'w');
+    cleanup = onCleanup(@() t.close());
+    t.setTag('ImageLength', size(data, 1));
+    t.setTag('ImageWidth', size(data, 2));
+    t.setTag('Photometric', Tiff.Photometric.MinIsBlack);
+    t.setTag('BitsPerSample', 8 * numel(typecast(data(1), 'uint8')));
+    t.setTag('SamplesPerPixel', 1);
+    t.setTag('SampleFormat', sampleFormat);
+    t.setTag('PlanarConfiguration', Tiff.PlanarConfiguration.Chunky);
+    t.setTag('Compression', Tiff.Compression.None);
+    t.write(data);
 end
