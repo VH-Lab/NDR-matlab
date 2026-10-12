@@ -1,8 +1,9 @@
-function fixtureDir = makeExampleFixture(parentDir)
+function fixtureDir = makeExampleFixture(parentDir, options)
 % ndr.test.format.smartspim.makeExampleFixture - write a tiny SmartSPIM tree
 %
 %   FIXTUREDIR = ndr.test.format.smartspim.MAKEEXAMPLEFIXTURE()
 %   FIXTUREDIR = ndr.test.format.smartspim.MAKEEXAMPLEFIXTURE(PARENTDIR)
+%   FIXTUREDIR = ndr.test.format.smartspim.MAKEEXAMPLEFIXTURE(..., 'AllChannels', true)
 %
 %   Builds a synthetic SmartSPIM acquisition directory on disk that
 %   mirrors the LifeCanvas layout documented in
@@ -28,8 +29,22 @@ function fixtureDir = makeExampleFixture(parentDir)
 %   The synthetic pixel values encode (channelIndex, z) so tests can
 %   verify that a read hits the right slice:
 %     pixel_value(channelIndex, z) = 100 * channelIndex + z
+%
+%   With 'AllChannels', true the fixture also gets an All_Channels
+%   folder shaped like SmartSPIM AutoStitch's stitched output: one
+%   LZW-compressed 106x13 uint16 TIFF per (z, channel) named
+%   "200000_100000_<z*10>_ch<k>.tiff", plus ImageList.txt. No
+%   _MIP_stitched folders are written, so k follows the filter-channel
+%   rank: Ex_561_Em_561F_Ch2 -> ch0, Ex_640_Em_640F_Ch3 -> ch1. Its
+%   pixel values are distinct from the tiles':
+%     pixel_value(k, z) = 1000 * (k + 1) + z
 
-    if nargin < 1 || isempty(parentDir)
+    arguments
+        parentDir = ''
+        options.AllChannels (1,1) logical = false
+    end
+
+    if isempty(parentDir)
         parentDir = tempname;
         mkdir(parentDir);
     end
@@ -85,6 +100,29 @@ function fixtureDir = makeExampleFixture(parentDir)
         buildMetadata(channels, stacksImport, numSlices, height, width));
     writeJSON(fullfile(fixtureDir, 'sequence.json'), ...
         buildSequence(channels));
+
+    if options.AllChannels
+        writeAllChannels(fixtureDir, numel(channels), numSlices);
+    end
+end
+
+function writeAllChannels(fixtureDir, numChannels, numSlices)
+    % Stitched canvas: 106 x 13 pixels (the xml_merging.xml mosaic of
+    % the two 8 x 10 tiles: 98 + 8 rows, 3 + 10 columns).
+    stitchedHeight = 106;
+    stitchedWidth  = 13;
+    allDir = fullfile(fixtureDir, 'All_Channels');
+    mkdir(allDir);
+    names = {};
+    for k = 0:(numChannels - 1)
+        for z = 0:(numSlices - 1)
+            img = repmat(uint16(1000 * (k + 1) + z), stitchedHeight, stitchedWidth);
+            name = sprintf('200000_100000_%06d_ch%d.tiff', z * 10, k);
+            imwrite(img, fullfile(allDir, name), 'tif', 'Compression', 'lzw');
+            names{end+1} = name; %#ok<AGROW>
+        end
+    end
+    writeTextFile(fullfile(allDir, 'ImageList.txt'), strjoin(names, newline));
 end
 
 function xml = buildStitcherXml(stacks, voxelV, voxelH, voxelD, ...
