@@ -113,6 +113,32 @@ classdef TestTiffstack < matlab.unittest.TestCase
                 'datatype mismatch.');
         end
 
+        function testFloatStackDatatypeAndFrames(testCase)
+            % A float32 TIFF (SampleFormat = IEEEFP) must read as 'single'
+            % with fractional values intact, not as a truncated uint32.
+            fn = fullfile(testCase.TempDir, 'stack_float.tif');
+            truth = reshape(single(1:(2*testCase.Y*testCase.X)) / 4 - 7.25, ...
+                testCase.Y, testCase.X, 1, 1, 2);
+            ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fn, truth, ...
+                Tiff.SampleFormat.IEEEFP);
+            testCase.verifyEqual(testCase.Reader.datatype({fn},1), 'single', ...
+                'float32 TIFF datatype mismatch.');
+            testCase.verifyEqual(testCase.Reader.readframes({fn},1), truth, ...
+                'float32 frames did not round-trip.');
+        end
+
+        function testSignedStackDatatypeAndFrames(testCase)
+            fn = fullfile(testCase.TempDir, 'stack_int16.tif');
+            truth = reshape(int16(-(1:(2*testCase.Y*testCase.X))), ...
+                testCase.Y, testCase.X, 1, 1, 2);
+            ndr.unittest.reader.TestTiffstack.writeMultipageTiff(fn, truth, ...
+                Tiff.SampleFormat.Int);
+            testCase.verifyEqual(testCase.Reader.datatype({fn},1), 'int16', ...
+                'int16 TIFF datatype mismatch.');
+            testCase.verifyEqual(testCase.Reader.readframes({fn},1), truth, ...
+                'int16 frames did not round-trip.');
+        end
+
         function testClocklessClockAndTimes(testCase)
             ef = {testCase.ClocklessFile};
             ec = testCase.Reader.epochclock(ef,1);
@@ -223,7 +249,10 @@ classdef TestTiffstack < matlab.unittest.TestCase
     end % methods (Test)
 
     methods (Static)
-        function writeMultipageTiff(filename, data)
+        function writeMultipageTiff(filename, data, sampleFormat)
+            if nargin<3
+                sampleFormat = Tiff.SampleFormat.UInt;
+            end
             sz = size(data);
             if numel(sz)<5, sz(end+1:5) = 1; end
             T = sz(5);
@@ -233,9 +262,9 @@ classdef TestTiffstack < matlab.unittest.TestCase
                 tags.ImageLength = sz(1);
                 tags.ImageWidth = sz(2);
                 tags.Photometric = Tiff.Photometric.MinIsBlack;
-                tags.BitsPerSample = 16;
+                tags.BitsPerSample = 8 * numel(typecast(data(1), 'uint8'));
                 tags.SamplesPerPixel = sz(3);
-                tags.SampleFormat = Tiff.SampleFormat.UInt;
+                tags.SampleFormat = sampleFormat;
                 tags.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
                 tags.Compression = Tiff.Compression.None;
                 t.setTag(tags);

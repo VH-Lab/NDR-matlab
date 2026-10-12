@@ -388,13 +388,17 @@ classdef tiffstack < ndr.reader.base
 						fmt = fmt(1,:);
 					end
 				end
-				switch lower(fmt)
-					case {'ieeefloat','float'}
-						if bits<=32, dt = 'single'; else, dt = 'double'; end
-					case {'two''s complement signed integer','signed','signed integer'}
-						dt = ['int' int2str(bits)];
-					otherwise % unsigned integer
-						dt = ['uint' int2str(bits)];
+				% Match by substring: imfinfo reports e.g. 'IEEE floating
+				% point' and 'Two''s complement signed integer', and
+				% 'Unsigned integer' also contains 'signed integer', so
+				% rule out 'unsigned' before testing for 'signed'.
+				fmt = lower(char(fmt));
+				if contains(fmt,'float') || contains(fmt,'ieee')
+					if bits<=32, dt = 'single'; else, dt = 'double'; end
+				elseif ~contains(fmt,'unsigned') && contains(fmt,'signed')
+					dt = ['int' int2str(bits)];
+				else % unsigned integer
+					dt = ['uint' int2str(bits)];
 				end
 		end % tiffclass()
 	end % methods (Static)
