@@ -127,8 +127,11 @@ function dt = tiffDtype(fi)
         end
     end
     isFloat = contains(sampleFmt, 'float') || contains(sampleFmt, 'ieee');
-    isSigned = contains(sampleFmt, 'signed integer') || ...
-        strcmp(sampleFmt, 'signed');
+    % imfinfo reports e.g. 'Unsigned integer' or 'Two''s complement
+    % signed integer'; 'unsigned integer' also contains 'signed integer',
+    % so rule it out first (only seen when a file stores SampleFormat).
+    isSigned = ~contains(sampleFmt, 'unsigned') && ...
+        (contains(sampleFmt, 'signed integer') || strcmp(sampleFmt, 'signed'));
     if isFloat
         if bd <= 32
             dt = 'single';
