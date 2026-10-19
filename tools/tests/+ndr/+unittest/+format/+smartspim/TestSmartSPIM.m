@@ -289,6 +289,35 @@ classdef TestSmartSPIM < matlab.unittest.TestCase
             end
         end
 
+        function testReadTileInfoUint16WithExplicitSampleFormat(testCase)
+            % A TIFF that stores SampleFormat = 1 makes imfinfo report
+            % 'Unsigned integer', which contains 'signed integer'. It must
+            % still come back uint16, not int16.
+            info = ndr.format.smartspim.readTileInfo(testCase.FixtureDir, ...
+                'Ex_561_Em_561F_Ch2', '100000/100000_200000');
+            writeTiffWithSampleFormat(info.slicePaths{1}, ...
+                repmat(uint16(40000), 8, 10), Tiff.SampleFormat.UInt);
+            info = ndr.format.smartspim.readTileInfo(testCase.FixtureDir, ...
+                'Ex_561_Em_561F_Ch2', '100000/100000_200000');
+            testCase.verifyEqual(info.dtype, 'uint16');
+            vol = ndr.format.smartspim.readTileVolume(testCase.FixtureDir, ...
+                'Ex_561_Em_561F_Ch2', '100000/100000_200000', 'ZRange', [1 1]);
+            testCase.verifyClass(vol, 'uint16');
+            testCase.verifyEqual(vol(1, 1, 1), uint16(40000));
+        end
+
+        function testReadTileInfoInt16WithExplicitSampleFormat(testCase)
+            info = ndr.format.smartspim.readTileInfo(testCase.FixtureDir, ...
+                'Ex_561_Em_561F_Ch2', '100000/100000_200000');
+            for i = 1:numel(info.slicePaths)
+                writeTiffWithSampleFormat(info.slicePaths{i}, ...
+                    repmat(int16(-5), 8, 10), Tiff.SampleFormat.Int);
+            end
+            info = ndr.format.smartspim.readTileInfo(testCase.FixtureDir, ...
+                'Ex_561_Em_561F_Ch2', '100000/100000_200000');
+            testCase.verifyEqual(info.dtype, 'int16');
+        end
+
         function testReadTileInfoSlicePathsSortedLexically(testCase)
             info = ndr.format.smartspim.readTileInfo(testCase.FixtureDir, ...
                 'Ex_561_Em_561F_Ch2', '100000/100000_200000');
@@ -369,4 +398,19 @@ function safeRmdir(d)
     if ~isempty(d) && isfolder(d)
         rmdir(d, 's');
     end
+end
+
+function writeTiffWithSampleFormat(path, data, sampleFormat)
+    % Write a single-page grayscale TIFF that stores the SampleFormat tag.
+    t = Tiff(path, 'w');
+    cleanup = onCleanup(@() t.close());
+    t.setTag('ImageLength', size(data, 1));
+    t.setTag('ImageWidth', size(data, 2));
+    t.setTag('Photometric', Tiff.Photometric.MinIsBlack);
+    t.setTag('BitsPerSample', 8 * numel(typecast(data(1), 'uint8')));
+    t.setTag('SamplesPerPixel', 1);
+    t.setTag('SampleFormat', sampleFormat);
+    t.setTag('PlanarConfiguration', Tiff.PlanarConfiguration.Chunky);
+    t.setTag('Compression', Tiff.Compression.None);
+    t.write(data);
 end
