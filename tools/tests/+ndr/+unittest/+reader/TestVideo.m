@@ -289,6 +289,12 @@ classdef TestVideo < matlab.unittest.TestCase
             %
             % Returns the file written and the VideoWriter profile used, or
             % empty values if no profile could be written.
+            arguments
+                folder (1,:) char
+                basename (1,:) char
+                rgb {mustBeNumeric}
+                frameRate (1,1) double {mustBePositive}
+            end
             candidates = {'MPEG-4', '.mp4'; 'Motion JPEG AVI', '.avi'};
             filename = '';
             profile = '';
@@ -316,6 +322,9 @@ classdef TestVideo < matlab.unittest.TestCase
 
         function m = channelMeans(frames)
             % CHANNELMEANS - C x T matrix of per-frame, per-channel means of a YXCZT array
+            arguments
+                frames {mustBeNumeric}
+            end
             sz = size(frames);
             if numel(sz)<5, sz(end+1:5) = 1; end
             m = reshape(mean(mean(double(frames),1),2), sz(3), sz(5));

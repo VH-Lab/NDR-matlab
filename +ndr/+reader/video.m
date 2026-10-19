@@ -74,9 +74,11 @@ classdef video < ndr.reader.base
 			% companion files such as 'epochprobemap.ndi' do not interfere.
 			% Errors if there is not exactly one video file.
 			%
-				if ~iscell(epochstreams)
-					epochstreams = {epochstreams};
-				end
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+			end
+				epochstreams = cellstr(epochstreams);
 				files = {};
 				for i=1:numel(epochstreams)
 					entry = epochstreams{i};
@@ -118,6 +120,10 @@ classdef video < ndr.reader.base
 			% Returns a new VideoReader object for the single video file of the
 			% epoch (see VIDEOFILE).
 			%
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+			end
 				v = VideoReader(video_obj.videofile(epochstreams));
 		end % videoobject()
 
@@ -132,6 +138,11 @@ classdef video < ndr.reader.base
 			% FRAMETIMES; the result is cached).
 			%
 			% Adapted from nansen.stack.ImageStack NumTimepoints.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				v = video_obj.videoobject(epochstreams);
 				n = ndr.reader.video.videonumframes(v);
 				if isnan(n)
@@ -150,6 +161,11 @@ classdef video < ndr.reader.base
 			% READFRAMES returns.
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameSetSize.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				v = video_obj.videoobject(epochstreams);
 				[C, ~] = ndr.reader.video.channelsanddatatype(v);
 				T = video_obj.numframes(epochstreams, epoch_select);
@@ -160,6 +176,11 @@ classdef video < ndr.reader.base
 			% DIMENSIONORDER - the dimension order of returned frames ('YXCZT')
 			%
 			% Adapted from nansen.stack.ImageStack DataDimensionOrder.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				order = 'YXCZT';
 		end % dimensionorder()
 
@@ -171,6 +192,11 @@ classdef video < ndr.reader.base
 			% Taken from the class of the first decoded frame.
 			%
 			% Adapted from nansen.stack.ImageStack DataType.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				v = video_obj.videoobject(epochstreams);
 				[~, dt] = ndr.reader.video.channelsanddatatype(v);
 		end % datatype()
@@ -187,10 +213,16 @@ classdef video < ndr.reader.base
 			% is omitted, all frames are returned.
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameTimes.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				frameind double = []
+			end
 				filename = video_obj.videofile(epochstreams);
 				[p, nm, e] = fileparts(filename);
 				all_t = ndr.reader.video.scanframetimes(p, [nm e]);
-				if nargin<4 || isempty(frameind)
+				if isempty(frameind)
 					frameind = 1:numel(all_t);
 				end
 				ndr.reader.video.checkframeind(frameind, numel(all_t));
@@ -212,10 +244,10 @@ classdef video < ndr.reader.base
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameSet.
 			arguments
-				video_obj
-				epochstreams
-				epoch_select = 1
-				frameind = []
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				frameind double = []
 				options.SelectC (1,:) double = []
 				options.SelectZ (1,:) double = []
 			end
@@ -254,10 +286,15 @@ classdef video < ndr.reader.base
 			% A video always has real frame times, so this returns
 			% {ndr.time.clocktype('dev_local_time')}.
 			%
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				ec = {ndr.time.clocktype('dev_local_time')};
 		end % epochclock()
 
-		function t0t1 = t0_t1(video_obj, epochstreams, ~)
+		function t0t1 = t0_t1(video_obj, epochstreams, epoch_select)
 			% T0_T1 - return the [t0 t1] begin/end times of a video epoch
 			%
 			% T0T1 = T0_T1(VIDEO_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
@@ -266,7 +303,13 @@ classdef video < ndr.reader.base
 			% are the times of the first and last frames (the same convention
 			% as ndr.reader.tiffstack and ndr.reader.imagestack).
 			%
-			% Measured without decoding the whole file (see ENDTIMES).
+			% Measured without decoding the whole file (see ENDTIMES). EPOCH_SELECT
+			% is accepted for the reader interface and not used: an epoch is one file.
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				filename = video_obj.videofile(epochstreams);
 				[p, nm, e] = fileparts(filename);
 				t0t1 = {ndr.reader.video.endtimes(p, [nm e])};
@@ -279,6 +322,11 @@ classdef video < ndr.reader.base
 			% channels of the video are returned together as the C axis of
 			% READFRAMES rather than as separate NDR channels.
 			%
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				channels = vlt.data.emptystruct('name','type','time_channel');
 				channels(1).name = 'image1';
 				channels(1).type = 'image';
@@ -296,6 +344,11 @@ classdef video < ndr.reader.base
 			% container header.
 			%
 			% See also: ndr.reader.base/metadata
+			arguments
+				video_obj (1,1) ndr.reader.video
+				epochstreams {mustBeText}
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+			end
 				m = ndr.reader.base.emptyimagemetadata();
 				v = video_obj.videoobject(epochstreams);
 				if ~isempty(v.FrameRate) && v.FrameRate > 0
@@ -320,6 +373,9 @@ classdef video < ndr.reader.base
 			%
 			% N = ndr.reader.video.videonumframes(V)
 			%
+			arguments
+				v (1,1) VideoReader
+			end
 				n = NaN;
 				try
 					nf = v.NumFrames;
@@ -340,6 +396,9 @@ classdef video < ndr.reader.base
 			% channels (size along dim 3: 3 for RGB, 1 for greyscale) and its
 			% numeric class.
 			%
+			arguments
+				v (1,1) VideoReader
+			end
 				f = read(v, 1);
 				C = size(f, 3);
 				dt = class(f);
@@ -350,6 +409,10 @@ classdef video < ndr.reader.base
 			%
 			% ndr.reader.video.checkframeind(FRAMEIND, N)
 			%
+			arguments
+				frameind double
+				n (1,1) double
+			end
 				if any(frameind < 1) || any(frameind > n) || any(frameind ~= round(frameind))
 					error('ndr:reader:video:badframeind',...
 						'Frame indices must be integers between 1 and %d.', n);
@@ -372,11 +435,15 @@ classdef video < ndr.reader.base
 			% to the full scan. [NaN NaN] for a file with no frames. The result
 			% is cached for the MATLAB session, keyed as SCANFRAMETIMES keys it.
 			%
+			arguments
+				folder {mustBeText}
+				name {mustBeText}
+			end
 				persistent cache
 				if isempty(cache)
 					cache = containers.Map('KeyType','char','ValueType','any');
 				end
-				filename = fullfile(folder, name);
+				filename = char(fullfile(folder, name));
 				d = dir(filename);
 				if isempty(d)
 					error('ndr:reader:video:nofile','Video file %s not found.', filename);
@@ -431,11 +498,15 @@ classdef video < ndr.reader.base
 			% cached for the MATLAB session, keyed by the full path, byte size
 			% and modification date, so a file changed on disk is re-scanned.
 			%
+			arguments
+				folder {mustBeText}
+				name {mustBeText}
+			end
 				persistent cache
 				if isempty(cache)
 					cache = containers.Map('KeyType','char','ValueType','any');
 				end
-				filename = fullfile(folder, name);
+				filename = char(fullfile(folder, name));
 				d = dir(filename);
 				if isempty(d)
 					error('ndr:reader:video:nofile','Video file %s not found.', filename);
