@@ -257,7 +257,7 @@ classdef video < ndr.reader.base
 				ec = {ndr.time.clocktype('dev_local_time')};
 		end % epochclock()
 
-		function t0t1 = t0_t1(video_obj, epochstreams, epoch_select)
+		function t0t1 = t0_t1(video_obj, epochstreams, ~)
 			% T0_T1 - return the [t0 t1] begin/end times of a video epoch
 			%
 			% T0T1 = T0_T1(VIDEO_OBJ, EPOCHSTREAMS, EPOCH_SELECT)
