@@ -75,7 +75,7 @@ classdef video < ndr.reader.base
 			% Errors if there is not exactly one video file.
 			%
 			arguments
-				video_obj (1,1) ndr.reader.video
+				video_obj (1,1) ndr.reader.video %#ok<INUSA> (reader interface)
 				epochstreams {mustBeText}
 			end
 				epochstreams = cellstr(epochstreams);
@@ -141,7 +141,7 @@ classdef video < ndr.reader.base
 			arguments
 				video_obj (1,1) ndr.reader.video
 				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				v = video_obj.videoobject(epochstreams);
 				n = ndr.reader.video.videonumframes(v);
@@ -177,9 +177,9 @@ classdef video < ndr.reader.base
 			%
 			% Adapted from nansen.stack.ImageStack DataDimensionOrder.
 			arguments
-				video_obj (1,1) ndr.reader.video
-				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				video_obj (1,1) ndr.reader.video %#ok<INUSA> (reader interface)
+				epochstreams {mustBeText} %#ok<INUSA> (reader interface)
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				order = 'YXCZT';
 		end % dimensionorder()
@@ -195,7 +195,7 @@ classdef video < ndr.reader.base
 			arguments
 				video_obj (1,1) ndr.reader.video
 				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				v = video_obj.videoobject(epochstreams);
 				[~, dt] = ndr.reader.video.channelsanddatatype(v);
@@ -216,7 +216,7 @@ classdef video < ndr.reader.base
 			arguments
 				video_obj (1,1) ndr.reader.video
 				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 				frameind double = []
 			end
 				filename = video_obj.videofile(epochstreams);
@@ -287,9 +287,9 @@ classdef video < ndr.reader.base
 			% {ndr.time.clocktype('dev_local_time')}.
 			%
 			arguments
-				video_obj (1,1) ndr.reader.video
-				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				video_obj (1,1) ndr.reader.video %#ok<INUSA> (reader interface)
+				epochstreams {mustBeText} %#ok<INUSA> (reader interface)
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				ec = {ndr.time.clocktype('dev_local_time')};
 		end % epochclock()
@@ -308,7 +308,7 @@ classdef video < ndr.reader.base
 			arguments
 				video_obj (1,1) ndr.reader.video
 				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				filename = video_obj.videofile(epochstreams);
 				[p, nm, e] = fileparts(filename);
@@ -323,9 +323,9 @@ classdef video < ndr.reader.base
 			% READFRAMES rather than as separate NDR channels.
 			%
 			arguments
-				video_obj (1,1) ndr.reader.video
-				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				video_obj (1,1) ndr.reader.video %#ok<INUSA> (reader interface)
+				epochstreams {mustBeText} %#ok<INUSA> (reader interface)
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				channels = vlt.data.emptystruct('name','type','time_channel');
 				channels(1).name = 'image1';
@@ -347,7 +347,7 @@ classdef video < ndr.reader.base
 			arguments
 				video_obj (1,1) ndr.reader.video
 				epochstreams {mustBeText}
-				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1
+				epoch_select (1,1) double {mustBeInteger, mustBePositive} = 1 %#ok<INUSA> (reader interface)
 			end
 				m = ndr.reader.base.emptyimagemetadata();
 				v = video_obj.videoobject(epochstreams);
