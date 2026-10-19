@@ -30,7 +30,13 @@
 % which gives the presentation time of every frame and is correct for
 % variable-frame-rate files, where (k-1)/FrameRate would drift. Because that
 % scan decodes every frame, its result is cached per file (keyed by full path,
-% size and modification date) for the rest of the MATLAB session.
+% size and modification date) for the rest of the MATLAB session, and only
+% FRAMETIMES (and NUMFRAMES, when the container reports no count) runs it.
+% T0_T1 needs only the first and last frame times, so it measures them the
+% same way without the scan: the first before decoding frame 1, the last by
+% seeking to a few frames before the end and decoding those (ENDTIMES). NDI
+% asks every epoch for T0_T1 when it lists a system's epochs, so a full scan
+% there would decode every video of the system.
 %
 % The frame API design is adapted from nansen.stack.ImageStack (VervaekeLab,
 % https://github.com/VervaekeLab/NANSEN), as for ndr.reader.tiffstack; only
@@ -260,12 +266,10 @@ classdef video < ndr.reader.base
 			% are the times of the first and last frames (the same convention
 			% as ndr.reader.tiffstack and ndr.reader.imagestack).
 			%
-				t = video_obj.frametimes(epochstreams, epoch_select);
-				if isempty(t)
-					t0t1 = {[NaN NaN]};
-				else
-					t0t1 = {[t(1) t(end)]};
-				end
+			% Measured without decoding the whole file (see ENDTIMES).
+				filename = video_obj.videofile(epochstreams);
+				[p, nm, e] = fileparts(filename);
+				t0t1 = {ndr.reader.video.endtimes(p, [nm e])};
 		end % t0_t1()
 
 		function channels = getchannelsepoch(video_obj, epochstreams, epoch_select)
@@ -351,6 +355,69 @@ classdef video < ndr.reader.base
 						'Frame indices must be integers between 1 and %d.', n);
 				end
 		end % checkframeind()
+
+		function t0t1 = endtimes(folder, name)
+			% ENDTIMES - times of the first and last frame of a video file, without decoding it all
+			%
+			% T0T1 = ndr.reader.video.endtimes(FOLDER, NAME)
+			%
+			% Returns [FIRST LAST], the presentation times in seconds of the
+			% first and last frames of FULLFILE(FOLDER, NAME), measured as
+			% SCANFRAMETIMES measures them (VideoReader's CurrentTime just
+			% before each readFrame), so they agree with FRAMETIMES. The first
+			% is read before frame 1 is decoded. For the last, the reader seeks
+			% to a few frame periods before Duration and decodes to the end,
+			% widening the margin if the seek lands past the last frame; only
+			% if that fails (no usable FrameRate or Duration) does it fall back
+			% to the full scan. [NaN NaN] for a file with no frames. The result
+			% is cached for the MATLAB session, keyed as SCANFRAMETIMES keys it.
+			%
+				persistent cache
+				if isempty(cache)
+					cache = containers.Map('KeyType','char','ValueType','any');
+				end
+				filename = fullfile(folder, name);
+				d = dir(filename);
+				if isempty(d)
+					error('ndr:reader:video:nofile','Video file %s not found.', filename);
+				end
+				key = sprintf('%s|%d|%.10f', filename, d(1).bytes, d(1).datenum);
+				if isKey(cache, key)
+					t0t1 = cache(key);
+					return;
+				end
+				v = VideoReader(filename);
+				if ~hasFrame(v)
+					t0t1 = [NaN NaN];
+					cache(key) = t0t1;
+					return;
+				end
+				first = v.CurrentTime;
+				last = NaN;
+				fr = double(v.FrameRate);
+				dur = double(v.Duration);
+				if ~isempty(fr) && isfinite(fr) && fr > 0 && ~isempty(dur) && isfinite(dur) && dur > 0
+					margin = 5;
+					while isnan(last)
+						start = max(0, dur - margin/fr);
+						v.CurrentTime = start;
+						while hasFrame(v)
+							last = v.CurrentTime;
+							readFrame(v);
+						end
+						if start == 0
+							break; % read from the start: nothing further back to try
+						end
+						margin = margin * 4;
+					end
+				end
+				if isnan(last)
+					t = ndr.reader.video.scanframetimes(folder, name);
+					last = t(end);
+				end
+				t0t1 = [first last];
+				cache(key) = t0t1;
+		end % endtimes()
 
 		function t = scanframetimes(folder, name)
 			% SCANFRAMETIMES - per-frame times of a video file, measured by decoding it once

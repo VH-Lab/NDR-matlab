@@ -141,7 +141,45 @@ classdef TestVideo < matlab.unittest.TestCase
             testCase.verifyEqual(ftsub, ft([2 5 9]), 'frametimes subset mismatch.');
 
             t0t1 = testCase.Reader.t0_t1(ef,1);
-            testCase.verifyEqual(t0t1{1}, [ft(1) ft(end)], 't0_t1 mismatch.');
+            testCase.verifyEqual(t0t1{1}, [ft(1) ft(end)], 'AbsTol', 1e-9, 't0_t1 mismatch.');
+        end
+
+        function testT0T1WithoutAFullScan(testCase)
+            % t0_t1 measures the first and last frame without decoding the
+            % whole file (ndr.reader.video.endtimes), so NDI listing a
+            % system's epochs does not decode every video. A copy of the
+            % file is used so neither the scan's cache nor endtimes' cache
+            % has seen it; it must agree with the full scan, taken after.
+            for f = {testCase.RGBFile, testCase.GreyFile}
+                [~, nm, e] = fileparts(f{1});
+                copyFile = fullfile(testCase.TempDir, ['fresh_' nm e]);
+                copyfile(f{1}, copyFile);
+                t0t1 = testCase.Reader.t0_t1({copyFile}, 1);
+                testCase.verifyEqual(t0t1{1}, [0 (testCase.T-1)/testCase.FrameRate], ...
+                    'AbsTol', 1e-3, sprintf('%s: t0_t1 should span frame 1 to frame T.', nm));
+                ft = testCase.Reader.frametimes({copyFile}, 1);
+                testCase.verifyEqual(t0t1{1}, [ft(1) ft(end)], 'AbsTol', 1e-9, ...
+                    sprintf('%s: t0_t1 must agree with the full scan.', nm));
+            end
+        end
+
+        function testEndTimesOfALongerVideo(testCase)
+            % a video longer than the seek margin (5 frames): the last frame
+            % is reached by seeking, not by decoding from the start
+            n = 60;
+            rgb = repmat(testCase.RGBTruth(:,:,:,:,1), [1 1 1 1 n]);
+            for i = 1:n
+                rgb(:,:,1,1,i) = uint8(mod(i*4, 250));
+            end
+            [file, profile] = ndr.unittest.reader.TestVideo.writeRGBVideo(testCase.TempDir, ...
+                'longvideo', rgb, testCase.FrameRate);
+            testCase.assumeNotEmpty(file, 'No writable video profile on this platform.');
+            [p, nm, e] = fileparts(file);
+            t0t1 = ndr.reader.video.endtimes(p, [nm e]);
+            ft = ndr.reader.video.scanframetimes(p, [nm e]);
+            testCase.verifyEqual(numel(ft), n, sprintf('frame count (%s).', profile));
+            testCase.verifyEqual(t0t1, [ft(1) ft(end)], 'AbsTol', 1e-9, ...
+                sprintf('endtimes must agree with the full scan (%s).', profile));
         end
 
         function testFramesContent(testCase)
