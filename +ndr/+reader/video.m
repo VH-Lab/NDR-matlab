@@ -1,8 +1,12 @@
-% NDR_READER_VIDEO - Native reader for video files (.mp4/.avi/.mov/...) using MATLAB's VideoReader
+% NDR_READER_VIDEO - Reader for video files (.mp4/.avi/.mov)
 %
-% This class reads video files using ONLY MATLAB's built-in VideoReader,
-% with no external dependencies (in contrast to ndr.reader.imagestack, which
-% delegates to the NANSEN toolbox). It is a native NDR image reader: it
+% The 'video' reader type is defined by the FILE FORMAT, not by a library: it
+% reads the frames of a video container (MPEG-4, AVI, QuickTime) and the time
+% stamped on each frame, so any language can implement it. This MATLAB
+% implementation uses MATLAB's built-in VideoReader and needs no toolbox (in
+% contrast to ndr.reader.imagestack, which delegates to NANSEN); a Python
+% implementation can use any library that reads the same containers and their
+% frame timestamps (e.g. PyAV). It is a native NDR image reader: it
 % implements only the frame API (numframes, framesize, dimensionorder,
 % datatype, frametimes, readframes, epochclock, t0_t1, getchannelsepoch,
 % metadata) and is a sibling of ndr.reader.tiffstack.
@@ -13,7 +17,8 @@
 % directories are expanded to the files they contain. Exactly one video file
 % must remain, otherwise an error is raised.
 %
-% Which containers can be read depends on the platform's VideoReader support
+% In MATLAB, which containers can be read depends on the platform's
+% VideoReader support
 % (see "Supported Video and Audio File Formats" in the MATLAB documentation):
 % Motion JPEG / uncompressed AVI and Motion JPEG 2000 are readable everywhere;
 % MPEG-4 / QuickTime need the platform's media framework (GStreamer on Linux).
@@ -25,10 +30,12 @@
 %
 % Timing: a video has real frame times, so the epoch clock is always
 % 'dev_local_time' and FRAMETIMES are seconds from the start of the file.
-% The times are measured, not assumed: the file is decoded once in order and
-% VideoReader's CurrentTime is recorded immediately before each readFrame,
-% which gives the presentation time of every frame and is correct for
-% variable-frame-rate files, where (k-1)/FrameRate would drift. Because that
+% A frame's time is its PRESENTATION TIME, the timestamp the container stores
+% for that frame, measured from the start of the file. It is read, not
+% assumed, which is correct for variable-frame-rate files, where
+% (k-1)/FrameRate would drift. In MATLAB it is VideoReader's CurrentTime
+% recorded immediately before each readFrame, with the file decoded once in
+% order. Because that
 % scan decodes every frame, its result is cached per file (keyed by full path,
 % size and modification date) for the rest of the MATLAB session, and only
 % FRAMETIMES (and NUMFRAMES, when the container reports no count) runs it.
@@ -54,12 +61,13 @@ classdef video < ndr.reader.base
 	methods
 
 		function video_obj = video()
-			% VIDEO - Create a new native (VideoReader-backed) video reader
+			% VIDEO - Create a new video reader
 			%
 			%  VIDEO_OBJ = VIDEO()
 			%
-			%  Creates a Neuroscience Data Reader object for video files, using
-			%  only MATLAB's built-in VideoReader.
+			%  Creates a Neuroscience Data Reader object for video files
+			%  (.mp4/.avi/.mov). This implementation uses MATLAB's built-in
+			%  VideoReader.
 			%
 		end % ndr.reader.video.video
 
@@ -207,9 +215,9 @@ classdef video < ndr.reader.base
 			% T = FRAMETIMES(VIDEO_OBJ, EPOCHSTREAMS, EPOCH_SELECT, FRAMEIND)
 			%
 			% Returns a numel(FRAMEIND)x1 vector of frame times in seconds on
-			% the 'dev_local_time' clock. The times are VideoReader's
-			% CurrentTime recorded immediately before each frame is decoded
-			% (see the class help); the scan is cached per file. If FRAMEIND
+			% the 'dev_local_time' clock: each frame's presentation time, read
+			% here as VideoReader's CurrentTime immediately before the frame is
+			% decoded (see the class help); the scan is cached per file. If FRAMEIND
 			% is omitted, all frames are returned.
 			%
 			% Adapted from nansen.stack.ImageStack/getFrameTimes.
