@@ -56,7 +56,7 @@
 		"classname": "ndr.reader.vld"
 	},
 	{
-		"type": ["video", "videoreader", "mp4", "avi", "mov"],
+		"type": ["video", "mp4", "avi", "mov"],
 		"classname": "ndr.reader.video"
 	}
 ]
