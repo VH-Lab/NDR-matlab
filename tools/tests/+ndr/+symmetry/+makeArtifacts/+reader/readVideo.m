@@ -1,4 +1,4 @@
-classdef readVideo < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readVideo < matlab.unittest.TestCase
     % READVIDEO - Generate symmetry artifacts for the video reader.
     %
     % Exercises the frame API (numframes, framesize, dimensionorder,

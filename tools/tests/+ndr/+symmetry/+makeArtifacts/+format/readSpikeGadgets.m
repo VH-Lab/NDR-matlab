@@ -1,4 +1,4 @@
-classdef readSpikeGadgets < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readSpikeGadgets < matlab.unittest.TestCase
     % READSPIKEGADGETS - Generate symmetry artifacts for the SpikeGadgets format layer.
     %
     % Compares at the ndr.format.spikegadgets level rather than through

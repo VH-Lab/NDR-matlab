@@ -1,4 +1,4 @@
-classdef readSpikeGadgets < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readSpikeGadgets < matlab.unittest.TestCase
     % READSPIKEGADGETS - Verify SpikeGadgets format-layer symmetry artifacts.
     %
     % Parameterized over both artifact sources, so one class checks parity in

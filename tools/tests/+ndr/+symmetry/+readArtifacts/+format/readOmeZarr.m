@@ -1,4 +1,4 @@
-classdef readOmeZarr < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readOmeZarr < matlab.unittest.TestCase
     % READOMEZARR - verify ndr.format.omezarr.readArray output against
     % the SHA-256 checksums the other language port recorded in its
     % symmetry artifacts.

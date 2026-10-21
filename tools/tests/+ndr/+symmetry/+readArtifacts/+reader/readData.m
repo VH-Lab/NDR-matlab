@@ -1,4 +1,4 @@
-classdef readData < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readData < matlab.unittest.TestCase
     % READDATA - Verify symmetry artifacts for NDR reader tests.
     %
     % This test is parameterized over the two potential sources of
