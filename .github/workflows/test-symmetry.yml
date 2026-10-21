@@ -22,6 +22,9 @@ jobs:
     # limit (60 req/hr), which was intermittently failing dependency install.
     env:
       GITHUB_TOKEN: ${{ github.token }}
+      # Coverage from this job is uploaded to Codecov (flag "symmetry") and
+      # merged with the general test job's (flag "unittests"); see codecov.yml.
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - name: Check out repo
         uses: actions/checkout@v6
@@ -66,6 +69,8 @@ jobs:
 
             import matlab.unittest.TestSuite
             import matlab.unittest.TestRunner
+            import matlab.unittest.plugins.CodeCoveragePlugin
+            import matlab.unittest.plugins.codecoverage.CoberturaFormat
 
             makeSuite = TestSuite.fromPackage("ndr.symmetry.makeArtifacts", "IncludingSubpackages", true);
             readSuite = TestSuite.fromPackage("ndr.symmetry.readArtifacts", "IncludingSubpackages", true);
@@ -90,14 +95,29 @@ jobs:
 
             runner = TestRunner.withTextOutput("Verbosity", "Detailed");
 
+            % Measure coverage of the same +ndr files the general test job
+            % measures (matbox.tasks.testToolbox), so Codecov can merge the two
+            % reports into one figure. The symmetry tests are excluded from the
+            % general job, and they are the only tests that reach some reader
+            % and format code.
+            mfiles = dir(fullfile(pwd, "+ndr", "**", "*.m"));
+            coverageFiles = fullfile({mfiles.folder}, {mfiles.name});
+            runner.addPlugin(CodeCoveragePlugin.forFile(coverageFiles, ...
+                "Producing", CoberturaFormat(fullfile(pwd, "symmetry-coverage.xml"))));
+
             nMake = numel(makeSuite);
             nRead = numel(readSuite);
 
-            makeResults = runner.run(makeSuite);
+            % ONE run, make cases first and then read cases (a suite runs in
+            % order): a coverage plugin writes its report at the end of each
+            % run, so two runs would leave only the second one's coverage.
+            allResults = runner.run(suite);
+            makeResults = allResults(1:nMake);
+            readResults = allResults(nMake+1:end);
+
             fprintf("\n=== makeArtifacts Results: %d passed, %d failed, %d incomplete out of %d ===\n", ...
                 nnz([makeResults.Passed]), nnz([makeResults.Failed]), nnz([makeResults.Incomplete]), nMake);
 
-            readResults = runner.run(readSuite);
             fprintf("\n=== readArtifacts Results: %d passed, %d failed, %d incomplete out of %d ===\n", ...
                 nnz([readResults.Passed]), nnz([readResults.Failed]), nnz([readResults.Incomplete]), nRead);
 
@@ -120,6 +140,14 @@ jobs:
             assert(isempty(incomplete), ...
                 "%d symmetry test(s) were Incomplete: their comparison did not run. See the INCOMPLETE lines above.", ...
                 numel(incomplete))
+
+      - name: Upload symmetry coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: symmetry-coverage.xml
+          flags: symmetry
 
       - name: Restore MATLAB Path
         uses: matlab-actions/run-command@v3
