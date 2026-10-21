@@ -21,10 +21,10 @@ classdef readSpikeGadgets < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', SourceType, ...
                 'format', 'readSpikeGadgets', 'testReadSpikeGadgetsArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             rec_file = fullfile(ndr.fun.ndrpath(), 'example_data', 'example.rec');
             testCase.assumeTrue(isfile(rec_file), ...
@@ -53,10 +53,8 @@ classdef readSpikeGadgets < matlab.unittest.TestCase
 
             % --- sample parity ---
             readFile = fullfile(artifactDir, 'readData.json');
-            if ~isfile(readFile)
-                disp(['readData.json not found in ' SourceType '. Skipping sample check.']);
-                return;
-            end
+            testCase.assumeTrue(isfile(readFile), ...
+                ['readData.json not found in ' SourceType '; the sample comparison did not run.']);
             fid = fopen(readFile, 'r');
             expectedRead = jsondecode(fread(fid, inf, '*char')');
             fclose(fid);

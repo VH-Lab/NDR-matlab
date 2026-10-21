@@ -16,10 +16,10 @@ classdef readTiffstack < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', SourceType, ...
                 'reader', 'readTiffstack', 'testReadTiffstackArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             movie_file = fullfile(ndr.fun.ndrpath(), 'example_data', 'example_movie.tif');
             testCase.assumeTrue(isfile(movie_file), ...
@@ -65,7 +65,7 @@ classdef readTiffstack < matlab.unittest.TestCase
                 testCase.verifyEqual(t0t1{1}(:)', expectedMeta.t0_t1(:)', 'AbsTol', 1e-9, ...
                     ['t0_t1 mismatch against ' SourceType ' artifacts.']);
             else
-                disp(['metadata.json not found in ' SourceType ' artifact directory. Skipping metadata check.']);
+                testCase.assumeFail(['metadata.json not found in ' SourceType ' artifact directory; the metadata comparison did not run.']);
             end
 
             % --- frame parity ---
@@ -82,7 +82,7 @@ classdef readTiffstack < matlab.unittest.TestCase
                 testCase.verifyEqual(double(frames(:,:,1,1,2)), double(expectedRead.frame_5), ...
                     ['frame 5 mismatch against ' SourceType ' artifacts.']);
             else
-                disp(['readFrames.json not found in ' SourceType ' artifact directory. Skipping frame check.']);
+                testCase.assumeFail(['readFrames.json not found in ' SourceType ' artifact directory; the frame comparison did not run.']);
             end
         end
     end

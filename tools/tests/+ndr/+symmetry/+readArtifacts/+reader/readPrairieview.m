@@ -16,10 +16,10 @@ classdef readPrairieview < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', SourceType, ...
                 'reader', 'readPrairieview', 'testReadPrairieviewArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             pv_dir = fullfile(ndr.fun.ndrpath(), 'example_data', 'prairieview');
             testCase.assumeTrue(isfolder(pv_dir), ...
@@ -90,7 +90,7 @@ classdef readPrairieview < matlab.unittest.TestCase
                     end
                 end
             else
-                disp(['metadata.json not found in ' SourceType ' artifact directory. Skipping metadata check.']);
+                testCase.assumeFail(['metadata.json not found in ' SourceType ' artifact directory; the metadata comparison did not run.']);
             end
 
             % --- frame parity ---
@@ -110,7 +110,7 @@ classdef readPrairieview < matlab.unittest.TestCase
                 testCase.verifyEqual(double(sel(:,:,1,1,1)), double(expectedRead.frame_2_selectC_2), ...
                     ['SelectC frame mismatch against ' SourceType ' artifacts.']);
             else
-                disp(['readFrames.json not found in ' SourceType ' artifact directory. Skipping frame check.']);
+                testCase.assumeFail(['readFrames.json not found in ' SourceType ' artifact directory; the frame comparison did not run.']);
             end
         end
     end

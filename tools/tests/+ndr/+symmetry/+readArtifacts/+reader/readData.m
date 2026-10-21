@@ -20,10 +20,10 @@ classdef readData < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', SourceType, ...
                 'reader', 'readData', 'testReadDataArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             rhd_file = fullfile(ndr.fun.ndrpath(), 'example_data', 'example.rhd');
             testCase.assumeTrue(isfile(rhd_file), ...
@@ -50,7 +50,7 @@ classdef readData < matlab.unittest.TestCase
                 testCase.verifyEqual(actualT0T1{1}(:)', expectedMeta.t0_t1(:)', 'AbsTol', 1e-6, ...
                     ['t0_t1 mismatch against ' SourceType ' artifacts.']);
             else
-                disp(['metadata.json not found in ' SourceType ' artifact directory. Skipping metadata check.']);
+                testCase.assumeFail(['metadata.json not found in ' SourceType ' artifact directory; the metadata comparison did not run.']);
             end
 
             % --- raw data parity ---
@@ -67,7 +67,7 @@ classdef readData < matlab.unittest.TestCase
                 testCase.verifyEqual(actualData(:)', expectedSamples, 'AbsTol', 1e-9, ...
                     ['Data mismatch for ai channel 1 samples 1-100 against ' SourceType ' artifacts.']);
             else
-                disp(['readData.json not found in ' SourceType ' artifact directory. Skipping data check.']);
+                testCase.assumeFail(['readData.json not found in ' SourceType ' artifact directory; the data comparison did not run.']);
             end
         end
     end

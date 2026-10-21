@@ -27,10 +27,10 @@ classdef readVideo < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', SourceType, ...
                 'reader', 'readVideo', 'testReadVideoArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             rgbFile = fullfile(ndr.fun.ndrpath(), 'example_data', 'example_video.avi');
             greyFile = fullfile(ndr.fun.ndrpath(), 'example_data', 'example_video_grey.avi');
@@ -52,7 +52,7 @@ classdef readVideo < matlab.unittest.TestCase
                 testCase.verifyMetadata(reader, {greyFile}, epoch_select, ...
                     expectedMeta.grey, [SourceType ' (grey)']);
             else
-                disp(['metadata.json not found in ' SourceType ' artifact directory. Skipping metadata check.']);
+                testCase.assumeFail(['metadata.json not found in ' SourceType ' artifact directory; the metadata comparison did not run.']);
             end
 
             % --- frame parity ---
@@ -83,7 +83,7 @@ classdef readVideo < matlab.unittest.TestCase
                 testCase.verifyEqual(double(greyFrames(:,:,1,1,2)), double(expectedRead.grey_frame_2), ...
                     ['grey frame 2 mismatch against ' SourceType ' artifacts.']);
             else
-                disp(['readFrames.json not found in ' SourceType ' artifact directory. Skipping frame check.']);
+                testCase.assumeFail(['readFrames.json not found in ' SourceType ' artifact directory; the frame comparison did not run.']);
             end
         end
     end

@@ -3,10 +3,11 @@ classdef readOmeZarr < matlab.unittest.TestCase
     % the SHA-256 checksums the other language port recorded in its
     % symmetry artifacts.
     %
-    % Parameterized over both source types; each SourceType is skipped
-    % (silently) when its artifact directory is absent, so the suite
-    % runs on machines with only one language port installed. See
-    % +symmetry/+readArtifacts/INSTRUCTIONS.md.
+    % Parameterized over both source types; a SourceType whose artifact
+    % directory is absent is reported Incomplete (an assumption failure),
+    % never Passed, so the suite still runs on machines with only one
+    % language port installed while CI can tell the comparison did not
+    % run. See +symmetry/+readArtifacts/INSTRUCTIONS.md.
     %
     % The fixture is the SAME on-disk store both ports point their
     % readers at (it lives inside the artifact directory as
@@ -25,11 +26,10 @@ classdef readOmeZarr < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir(), 'NDR', 'symmetryTest', ...
                 SourceType, 'format', 'readOmeZarr', ...
                 'testReadOmeZarrArtifacts');
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ...
-                      ' does not exist. Skipping.']);
-                return;
-            end
+            % Missing artifacts make the test Incomplete, never Passed: the
+            % comparison did not run (VH-Lab/NDR-python#34).
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             checksumsFile = fullfile(artifactDir, 'checksums.json');
             testCase.assumeTrue(isfile(checksumsFile), ...

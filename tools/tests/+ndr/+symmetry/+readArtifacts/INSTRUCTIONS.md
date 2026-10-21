@@ -21,9 +21,20 @@ This folder contains MATLAB unit tests whose purpose is to read standard NDR art
    - Run across both `pythonArtifacts` and `matlabArtifacts` using parameterized testing to
      ensure parity in *both* directions.
 
-4. **Skipping**: When the artifact directory for a given `SourceType` does not exist, the
-   test must skip silently (not fail). This allows the suite to run on machines where only
-   one of the two languages has produced artifacts.
+4. **Missing artifacts are Incomplete, never Passed**: When the artifact directory (or a
+   JSON file inside it) for a given `SourceType` does not exist, the test must end with an
+   **assumption** (`testCase.assumeTrue(isfolder(artifactDir), ...)`, or
+   `testCase.assumeFail(...)` in an `else` branch), never with `disp(...)` + `return`.
+   A `return` makes `matlab.unittest` report the test as **Passed** even though no
+   comparison ran, which is how a missing counterpart used to hide behind a green build
+   (VH-Lab/NDR-python#34). An assumption marks the test **Incomplete** instead: a machine
+   with only one language port still gets no failures, while CI, which expects every
+   comparison to run, fails on any Incomplete result.
+
+   The CI workflows deselect, by name, the cases that cannot run there by design (for
+   example the `pythonArtifacts` cases in NDR-matlab's own workflow, where Python never
+   runs), so an Incomplete result in CI always means a comparison that should have run
+   did not.
 
 ## Example:
 
@@ -41,10 +52,9 @@ classdef readData < matlab.unittest.TestCase
             artifactDir = fullfile(tempdir, 'NDR', 'symmetryTest', SourceType, ...
                 'reader', 'readData', 'testReadDataArtifacts');
 
-            if ~isfolder(artifactDir)
-                disp(['Artifact directory from ' SourceType ' does not exist. Skipping.']);
-                return;
-            end
+            % Incomplete, never Passed, when the other suite produced nothing.
+            testCase.assumeTrue(isfolder(artifactDir), ...
+                ['Artifact directory from ' SourceType ' does not exist; the comparison did not run.']);
 
             % 1. Load the ground-truth metadata JSON that the target suite dumped.
             fid = fopen(fullfile(artifactDir, 'metadata.json'), 'r');

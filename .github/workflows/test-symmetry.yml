@@ -69,6 +69,16 @@ jobs:
 
             makeSuite = TestSuite.fromPackage("ndr.symmetry.makeArtifacts", "IncludingSubpackages", true);
             readSuite = TestSuite.fromPackage("ndr.symmetry.readArtifacts", "IncludingSubpackages", true);
+
+            % Python never runs in this workflow, so the pythonArtifacts cases
+            % cannot run here by design. Deselect them by name rather than let
+            % them come back Incomplete, so that every Incomplete result below
+            % is a comparison that SHOULD have run (VH-Lab/NDR-python#34).
+            % NDR-python's test-symmetry.yml runs them against real Python
+            % artifacts.
+            isPython = contains({readSuite.Name}, "SourceType=pythonArtifacts");
+            fprintf("\nDeselected (no Python in this workflow): %d pythonArtifacts case(s)\n", nnz(isPython));
+            readSuite = readSuite(~isPython);
             suite = [makeSuite, readSuite];
 
             fprintf("\n=== Discovered %d test(s) ===\n", numel(suite));
@@ -98,6 +108,18 @@ jobs:
             disp(table(results));
 
             assert(all(~[results.Failed]), "Some symmetry tests failed")
+
+            % An Incomplete test is one whose comparison did not run: missing
+            % artifacts, a missing example file, a missing tool. Every case
+            % left in this suite is expected to run here, so Incomplete is a
+            % failure, not a courtesy (VH-Lab/NDR-python#34).
+            incomplete = results([results.Incomplete]);
+            for k = 1:numel(incomplete)
+                fprintf(2, "INCOMPLETE: %s\n", incomplete(k).Name);
+            end
+            assert(isempty(incomplete), ...
+                "%d symmetry test(s) were Incomplete: their comparison did not run. See the INCOMPLETE lines above.", ...
+                numel(incomplete))
 
       - name: Restore MATLAB Path
         uses: matlab-actions/run-command@v3
