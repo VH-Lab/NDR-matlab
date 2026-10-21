@@ -363,9 +363,9 @@ Keep in mind Neo designates any channel type to one of the: `'analog_input'`, `'
 
 ---
 
-## Synthetic fixtures for the vld and image readers
+## Synthetic fixtures for the vld, image and video readers
 
-These four fixtures are **generated**, not recorded: they are small,
+These fixtures are **generated**, not recorded: they are small,
 deterministic files created by `tools/make_example_data.py` in NDR-python and
 committed byte-identically to both repositories, so the cross-language
 symmetry tests read exactly the same bytes on both sides.
@@ -376,6 +376,8 @@ symmetry tests read exactly the same bytes on both sides.
 | `example_movie.tif` | `ndr.reader.tiffstack` | 5-page uncompressed baseline TIFF, 16x12 `uint16`. Pixel value is `page*1000 + row*10 + col`, so every page and pixel is distinguishable and a transposed or mis-ordered read shows up immediately. |
 | `example_movie_frametimes.txt` | `ndr.reader.tiffstack` | One frame time per page (0, 0.05, ... 0.2 s), the sidecar that makes the epoch clocked rather than `no_time`. |
 | `prairieview/` | `ndr.reader.prairieview` | 2 channels x 4 frames of 8x6 `uint16` named `example_Cycle001_Ch<c>_<frame>.tif`, plus a legacy `example_Main.pcf`. Pixel value is `chan*1000 + frame*100 + row*10 + col`. |
+| `example_video.avi` | `ndr.reader.video` | 6-frame 12x16 uncompressed 24-bit RGB AVI at 10 frames/s, frames stored bottom-up (positive `biHeight`) as MATLAB's `VideoWriter` writes them. R = `20*frame + col`, G = `10*row + frame`, B = `200 - 10*frame - col` (frame, row, col 0-based), so channel order, orientation and frame order are all checked. Uncompressed so MATLAB's `VideoReader` reads it on every platform and both ports must agree pixel for pixel. |
+| `example_video_grey.avi` | `ndr.reader.video` | The same layout as 8-bit greyscale with a 256-entry grey palette (MATLAB's 'Grayscale AVI' storage), read as C = 1. Pixel value is `30*frame + 4*row + col`. |
 
 The Prairie View config sets `Frame period (us)` = 16000 and
 `ScanLine period (us)` = 1500 — deliberately *not* frame period divided by
