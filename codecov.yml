@@ -1,0 +1,17 @@
+# Codecov configuration.
+#
+# Coverage is measured by the general test job (run_tests.yml), which excludes
+# the cross-language symmetry tests (tagged 'Symmetry'; they run in the
+# symmetry workflows instead). Excluding them dropped measured coverage by
+# 2.73% (262 lines of +ndr reader/format code that only the symmetry tests
+# reached), so the project check allows a drop of up to 3% against the base
+# rather than failing on any drop at all. A drop larger than that still fails.
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 3%
+    patch:
+      default:
+        target: auto
