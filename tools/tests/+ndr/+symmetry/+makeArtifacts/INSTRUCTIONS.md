@@ -24,6 +24,12 @@ This folder contains MATLAB unit tests whose purpose is to generate standard NDR
 5. **Deterministic Input**: Tests should read from the checked-in `example_data/` files
    in the NDR-matlab repository so that both language ports operate on byte-identical inputs.
 
+6. **Tag the class `Symmetry`**: Declare every symmetry test class as
+   `classdef (TestTags = {'Symmetry'}) <name> < matlab.unittest.TestCase`. The general
+   test job (`tools/tasks/testToolbox.m`) excludes that tag, because the symmetry
+   workflows run these tests in order, with the artifacts they need.
+   `+unittest/TestSymmetryTestsAreTagged` fails if a symmetry test lacks the tag.
+
 ## Example:
 For a test class `readData.m` in `tools/tests/+ndr/+symmetry/+makeArtifacts/+reader` with a test method `testReadDataArtifacts`, the artifacts should be saved to:
 `[tempdir(), 'NDR/symmetryTest/matlabArtifacts/reader/readData/testReadDataArtifacts/']`

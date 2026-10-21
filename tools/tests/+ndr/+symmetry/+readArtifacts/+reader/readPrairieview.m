@@ -1,4 +1,4 @@
-classdef readPrairieview < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readPrairieview < matlab.unittest.TestCase
     % READPRAIRIEVIEW - Verify symmetry artifacts for the prairieview reader.
     %
     % Parameterized over the two artifact sources ('matlabArtifacts',

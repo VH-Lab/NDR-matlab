@@ -36,12 +36,18 @@ This folder contains MATLAB unit tests whose purpose is to read standard NDR art
    runs), so an Incomplete result in CI always means a comparison that should have run
    did not.
 
+5. **Tag the class `Symmetry`**: Declare every symmetry test class as
+   `classdef (TestTags = {'Symmetry'}) <name> < matlab.unittest.TestCase`. The general
+   test job (`tools/tasks/testToolbox.m`) excludes that tag, because the symmetry
+   workflows run these tests in order, with the artifacts they need.
+   `+unittest/TestSymmetryTestsAreTagged` fails if a symmetry test lacks the tag.
+
 ## Example:
 
 Use MATLAB's `TestParameter` property block to dynamically pass the `SourceType` to your tests:
 
 ```matlab
-classdef readData < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readData < matlab.unittest.TestCase
     properties (TestParameter)
         % Define the two potential sources of artifacts
         SourceType = {'matlabArtifacts', 'pythonArtifacts'};

@@ -1,4 +1,4 @@
-classdef readOmeZarr < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readOmeZarr < matlab.unittest.TestCase
     % READOMEZARR - generate cross-language symmetry artifacts for
     % ndr.format.omezarr.readArray.
     %

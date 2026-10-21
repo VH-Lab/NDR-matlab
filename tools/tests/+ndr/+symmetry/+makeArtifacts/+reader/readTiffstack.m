@@ -1,4 +1,4 @@
-classdef readTiffstack < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readTiffstack < matlab.unittest.TestCase
     % READTIFFSTACK - Generate symmetry artifacts for the tiffstack reader.
     %
     % Exercises the frame API (numframes, framesize, dimensionorder,

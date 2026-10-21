@@ -1,4 +1,4 @@
-classdef readPrairieview < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readPrairieview < matlab.unittest.TestCase
     % READPRAIRIEVIEW - Generate symmetry artifacts for the prairieview reader.
     %
     % Exercises the frame API plus the raster-scan metadata against the

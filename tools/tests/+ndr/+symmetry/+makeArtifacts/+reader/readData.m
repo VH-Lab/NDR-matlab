@@ -1,4 +1,4 @@
-classdef readData < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readData < matlab.unittest.TestCase
     % READDATA - Generate symmetry artifacts for NDR reader tests.
     %
     % This test reads a small slice of the checked-in Intan RHD example

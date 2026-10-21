@@ -1,4 +1,4 @@
-classdef readVld < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readVld < matlab.unittest.TestCase
     % READVLD - Verify symmetry artifacts for the VH Lab LabView reader.
     %
     % Parameterized over the two artifact sources ('matlabArtifacts',

@@ -1,4 +1,4 @@
-classdef readTiffstack < matlab.unittest.TestCase
+classdef (TestTags = {'Symmetry'}) readTiffstack < matlab.unittest.TestCase
     % READTIFFSTACK - Verify symmetry artifacts for the tiffstack reader.
     %
     % Parameterized over the two artifact sources ('matlabArtifacts',
