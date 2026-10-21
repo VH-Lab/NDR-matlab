@@ -1,11 +1,28 @@
 # Codecov configuration.
 #
-# Coverage is measured by the general test job (run_tests.yml), which excludes
-# the cross-language symmetry tests (tagged 'Symmetry'; they run in the
-# symmetry workflows instead). Excluding them dropped measured coverage by
-# 2.73% (262 lines of +ndr reader/format code that only the symmetry tests
-# reached), so the project check allows a drop of up to 3% against the base
-# rather than failing on any drop at all. A drop larger than that still fails.
+# Coverage comes from TWO uploads per commit, which Codecov merges into one
+# figure:
+#   unittests - the general test job (run_tests.yml). It excludes the
+#               cross-language symmetry tests (tagged 'Symmetry').
+#   symmetry  - the symmetry workflow (test-symmetry.yml), which runs them.
+# The symmetry tests are the only tests that reach some +ndr reader/format
+# code (262 lines when they were first excluded from the general job), so
+# grading either upload alone would undercount.
+#
+# after_n_builds: 2 holds the status checks and the PR comment until both
+# uploads have arrived, so the grade is never computed from one of them. A
+# commit where only one of the two workflows runs (e.g. a docs- or
+# workflow-only change, which run_tests.yml skips) gets no Codecov status.
+codecov:
+  notify:
+    after_n_builds: 2
+
+comment:
+  after_n_builds: 2
+
+# The project check allows a drop of up to 3% against the base. It was added
+# when the symmetry tests left the general job and their coverage was not yet
+# uploaded; with both uploads merged it is no longer needed for that reason.
 coverage:
   status:
     project:

@@ -72,3 +72,6 @@ jobs:
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: docs/reports/codecoverage.xml
+          # Merged with the symmetry workflow's upload (flag "symmetry");
+          # see codecov.yml.
+          flags: unittests
