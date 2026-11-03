@@ -17,7 +17,7 @@ function info = ensureMex(force)
 %   Returns a struct with:
 %     available - logical; true if blosc.encode is resolvable after
 %                 this call.
-%     version   - char; release tag installed, e.g. 'v0.1.0'.
+%     version   - char; release tag installed, e.g. 'v0.2.1'.
 %     path      - char; folder added to the MATLAB path.
 %     mex       - char; full path to the installed MEX file.
 %     reason    - char; empty on success, otherwise a diagnostic
@@ -38,7 +38,11 @@ function info = ensureMex(force)
     end
 
     BLOSC_MATLAB_REPO    = 'Waltham-Data-Science/blosc-matlab';
-    BLOSC_MATLAB_VERSION = 'v0.2.0';
+    % v0.2.1: Linux MEX is linked with a non-executable stack. The
+    % v0.2.0 mexa64 requests an executable stack and fails to load on
+    % glibc >= 2.41 (Ubuntu 26.04+) with MATLAB:mex:ErrInvalidMEXFile
+    % "cannot enable executable stack as shared object requires".
+    BLOSC_MATLAB_VERSION = 'v0.2.1';
 
     persistent cached
     if ~force && ~isempty(cached) && cached.available
@@ -47,7 +51,7 @@ function info = ensureMex(force)
     end
 
     if ~force
-        existingMex = discoverExistingMex();
+        existingMex = discoverExistingMex(BLOSC_MATLAB_VERSION);
         if ~isempty(existingMex)
             info = struct( ...
                 'available', true, ...
@@ -125,20 +129,36 @@ function info = ensureMex(force)
     cached = info;
 end
 
-function mexPath = discoverExistingMex()
-%DISCOVEREXISTINGMEX - path to a working v0.2.0 blosc_mex on the path.
-%   Returns '' unless (a) the +blosc package is on the path, (b) its
-%   private/blosc_mex.<ext> exists, AND (c) the v0.2.0-introduced
-%   wrapper blosc.encodeChunk is resolvable. The last check is what
-%   forces a re-download when a user has a stale v0.1.0 install
-%   already on the path -- v0.1.0's MEX has no encode_chunk verb, so
-%   calling blosc.encodeChunk would error.
+function mexPath = discoverExistingMex(pinnedVersion)
+%DISCOVEREXISTINGMEX - path to a usable blosc_mex already on the path.
+%   Returns '' unless (a) the +blosc package is on the path, (b) it is
+%   not a stale copy from an older version's cache folder under
+%   prefdir()/blosc-matlab/, (c) its private/blosc_mex.<ext> exists,
+%   AND (d) the v0.2.0-introduced wrapper blosc.encodeChunk is
+%   resolvable. Check (d) forces a re-download when a user has a v0.1.0
+%   install already on the path -- v0.1.0's MEX has no encode_chunk
+%   verb. Check (b) does the same for an earlier ensureMex install of
+%   a different pinned version (e.g. v0.2.0, whose Linux MEX cannot be
+%   loaded on newer glibc): that folder is removed from the path so
+%   the pinned version's folder, added later, is the one that
+%   resolves.
     mexPath = '';
     encWrapper = which('blosc.encode');
     if isempty(encWrapper)
         return;
     end
     encFolder = fileparts(encWrapper);
+    pkgRoot = fileparts(encFolder);
+    cacheRoot = fullfile(prefdir(), 'blosc-matlab');
+    % fileparts splits 'v0.2.0' into name 'v0' + ext '.2.0'; rejoin.
+    [cacheParent, verName, verExt] = fileparts(pkgRoot);
+    cacheVersion = [verName verExt];
+    if strcmp(cacheParent, cacheRoot) && ~strcmp(cacheVersion, pinnedVersion)
+        rmpath(pkgRoot);
+        % Another stale copy could still be on the path; look again.
+        mexPath = discoverExistingMex(pinnedVersion);
+        return;
+    end
     candidate = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
     if ~isfile(candidate)
         return;
