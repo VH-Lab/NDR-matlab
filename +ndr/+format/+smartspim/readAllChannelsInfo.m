@@ -175,6 +175,24 @@ function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
     chOfFile = chOfFile(keep);
     zOfFile = zOfFile(keep);
     pathOfFile = pathOfFile(keep);
+    % A folder cannot hold one name twice, but a network share's listing
+    % can return it twice (and leave others out): macOS SMB directory
+    % caching does, on large folders. A volume built from such a listing
+    % would repeat some planes and lack others, so refuse it.
+    if numel(unique(pathOfFile)) < numel(pathOfFile)
+        error('ndr:format:smartspim:readAllChannelsInfo:DuplicateListing', ...
+            ['The listing of %s names some files more than once, so it ' ...
+             'cannot be trusted (on a macOS SMB share, turn off directory ' ...
+             'caching: dir_cache_off=yes in /etc/nsmb.conf, then remount).'], folder);
+    end
+    if ~isempty(chOfFile)
+        [~, ia] = unique([chOfFile(:) zOfFile(:)], 'rows');
+        if numel(ia) < numel(chOfFile)
+            error('ndr:format:smartspim:readAllChannelsInfo:DuplicateSlice', ...
+                ['%s holds more than one file for the same channel and z ' ...
+                 '(tiles rather than stitched slices?).'], folder);
+        end
+    end
 end
 
 function k = channelIndex(rootDir, channelName, acqChannels)

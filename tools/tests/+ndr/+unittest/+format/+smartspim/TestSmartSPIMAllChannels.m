@@ -122,6 +122,17 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
                 'ch1''s slices, in z order');
         end
 
+        function testTwoFilesForOneSliceAreRefused(testCase)
+            % Same channel and z under two names: tiles, not stitched
+            % slices, and no single plane to read.
+            allDir = fullfile(testCase.FixtureDir, 'All_Channels');
+            copyfile(fullfile(allDir, '200000_100000_000000_ch0.tiff'), ...
+                fullfile(allDir, '000000_ch0.tiff'));
+            testCase.verifyError(@() ndr.format.smartspim.readAllChannelsInfo( ...
+                testCase.FixtureDir), 'ndr:format:smartspim:readAllChannelsInfo:DuplicateSlice');
+            testCase.verifyFalse(ndr.format.smartspim.hasAllChannels(testCase.FixtureDir));
+        end
+
         function testMipStitchedOverridesRank(testCase)
             % SmartSPIM may assign _ch<k> in a different order; the
             % _MIP_stitched suffix is authoritative.
