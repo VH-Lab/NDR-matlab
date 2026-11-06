@@ -100,6 +100,28 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
             testCase.verifyEqual(secondName, '200000_100000_5_ch0');
         end
 
+        function testSlicesNamedWithoutOrigins(testCase)
+            % Some versions of the pipeline name the slices
+            % <z*10>_ch<k>.tiff, without the <Y>_<X>_ origins.
+            allDir = fullfile(testCase.FixtureDir, 'All_Channels');
+            before = ndr.format.smartspim.readAllChannelsInfo(testCase.FixtureDir);
+            d = dir(fullfile(allDir, '*_ch*.tiff'));
+            for i = 1:numel(d)
+                tok = regexp(d(i).name, '^\d+_\d+_(\d+_ch\d+\.tiff)$', 'tokens', 'once');
+                movefile(fullfile(allDir, d(i).name), fullfile(allDir, tok{1}));
+            end
+            testCase.verifyTrue(ndr.format.smartspim.hasAllChannels(testCase.FixtureDir));
+            info = ndr.format.smartspim.readAllChannelsInfo(testCase.FixtureDir);
+            testCase.verifyEqual(info.channelNames, before.channelNames);
+            testCase.verifyEqual([info.channels.numSlices], [before.channels.numSlices]);
+            [~, lastName, ext] = fileparts(info.channels(2).slicePaths{end});
+            testCase.verifyEqual([lastName ext], '000030_ch1.tiff');
+            vol = ndr.format.smartspim.readAllChannelsVolume( ...
+                testCase.FixtureDir, 'Ex_640_Em_640F_Ch3');
+            testCase.verifyEqual(squeeze(vol(1, 1, :)).', uint16(2000:2003), ...
+                'ch1''s slices, in z order');
+        end
+
         function testMipStitchedOverridesRank(testCase)
             % SmartSPIM may assign _ch<k> in a different order; the
             % _MIP_stitched suffix is authoritative.

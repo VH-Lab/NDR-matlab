@@ -14,7 +14,10 @@ function info = readAllChannelsInfo(rootDir, options)
 %   All_Channels is a flat folder of 2-D TIFFs, one per (z, channel),
 %   named
 %       <Y origin>_<X origin>_<z*10>_ch<k>.tiff
-%   e.g. 675050_455000_000110_ch1.tiff, plus an ImageList.txt for
+%   e.g. 675050_455000_000110_ch1.tiff, or, by other versions of the
+%   pipeline, without the origins:
+%       <z*10>_ch<k>.tiff
+%   e.g. 000110_ch1.tiff; plus an ImageList.txt for
 %   Imaris. Every slice spans the whole stitched canvas (image height =
 %   Y, width = X), so there are no tiles. The ch<k> index follows the
 %   filter-channel number, NOT the acquisition order. It is taken from
@@ -147,7 +150,8 @@ function info = readAllChannelsInfo(rootDir, options)
 end
 
 function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
-    % Parse every "<Y>_<X>_<z*10>_ch<k>.tif(f)" file name in FOLDER.
+    % Parse every "<Y>_<X>_<z*10>_ch<k>.tif(f)" or "<z*10>_ch<k>.tif(f)"
+    % file name in FOLDER: z is the number just before _ch<k>.
     entries = dir(folder);
     n = numel(entries);
     chOfFile = zeros(1, n);
@@ -158,14 +162,14 @@ function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
         if entries(i).isdir
             continue;
         end
-        tok = regexp(entries(i).name, '^(\d+)_(\d+)_(\d+)_ch(\d+)\.tiff?$', ...
+        tok = regexp(entries(i).name, '^(?:\d+_\d+_)?(\d+)_ch(\d+)\.tiff?$', ...
             'tokens', 'once', 'ignorecase');
         if isempty(tok)
             continue;
         end
         keep(i) = true;
-        zOfFile(i) = str2double(tok{3});
-        chOfFile(i) = str2double(tok{4});
+        zOfFile(i) = str2double(tok{1});
+        chOfFile(i) = str2double(tok{2});
         pathOfFile{i} = fullfile(folder, entries(i).name);
     end
     chOfFile = chOfFile(keep);
