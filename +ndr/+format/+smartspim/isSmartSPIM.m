@@ -10,7 +10,9 @@ function tf = isSmartSPIM(rootDir)
 %     * ROOTDIR is a folder
 %     * ROOTDIR/metadata.json exists and parses as JSON
 %     * ROOTDIR contains at least one channel directory whose name
-%       matches "Ex_<digits>_Em_<chars>_Ch<digits>"
+%       matches "Ex_<digits>_Em_<chars>_Ch<digits>", or
+%       "Ex_<digits>_Em_<letters/digits>" (a single-channel acquisition
+%       from SmartSPIM software that omits the filter-channel number)
 %
 %   Any read/parse failure returns FALSE rather than raising, so callers
 %   can use this to decide whether to attempt the SmartSPIM code path at
@@ -47,7 +49,7 @@ function tf = isSmartSPIM(rootDir)
         if ~e.isdir
             continue;
         end
-        if ~isempty(regexp(e.name, '^Ex_\d+_Em_\w+_Ch\d+$', 'once'))
+        if ~isempty(regexp(e.name, '^Ex_\d+_Em_(\w+_Ch\d+|[A-Za-z0-9]+)$', 'once'))
             tf = true;
             return;
         end
