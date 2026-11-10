@@ -17,14 +17,17 @@ function info = readAllChannelsInfo(rootDir, options)
 %   e.g. 675050_455000_000110_ch1.tiff, or, by other versions of the
 %   pipeline, without the origins:
 %       <z*10>_ch<k>.tiff
-%   e.g. 000110_ch1.tiff; plus an ImageList.txt for
-%   Imaris. Every slice spans the whole stitched canvas (image height =
+%   e.g. 000110_ch1.tiff, or Z<z*10>_Ch<k>.tif, e.g. Z000110_Ch0.tif
+%   (case does not matter); plus an ImageList.txt for Imaris. Every slice spans the whole stitched canvas (image height =
 %   Y, width = X), so there are no tiles. The ch<k> index follows the
 %   filter-channel number, NOT the acquisition order. It is taken from
 %   the <channel>_MIP_stitched folder, whose files carry the same
 %   _ch<k> suffix; when that folder is absent (e.g. a partial restore),
 %   k is the rank of the channel's filter-channel number among all
-%   channels (Ch1 -> ch0, Ch2 -> ch1, ...).
+%   channels (Ch1 -> ch0, Ch2 -> ch1, ...). A single channel whose folder
+%   has no "_Ch<n>" (Ex_<laser>_Em_<filter>; see
+%   ndr.format.smartspim.listChannels) takes whichever one _ch<k> the
+%   slices carry.
 %
 %   Returned fields:
 %
@@ -84,8 +87,15 @@ function info = readAllChannelsInfo(rootDir, options)
     acqChannels = ndr.format.smartspim.listChannels(rootDir);
     names = {acqChannels.name};
     chIndices = zeros(1, numel(names));
-    for i = 1:numel(names)
-        chIndices(i) = channelIndex(rootDir, names{i}, acqChannels);
+    if isscalar(acqChannels) && isnan(acqChannels.filterChannel) && ...
+            isscalar(unique(chOfFile))
+        % A single channel folder without "_Ch<n>" (listChannels refuses
+        % several): its slices are the only _ch<k> there is.
+        chIndices = unique(chOfFile);
+    else
+        for i = 1:numel(names)
+            chIndices(i) = channelIndex(rootDir, names{i}, acqChannels);
+        end
     end
     if numel(unique(chIndices)) ~= numel(chIndices)
         error('ndr:format:smartspim:readAllChannelsInfo:DuplicateChannelIndex', ...
@@ -150,8 +160,9 @@ function info = readAllChannelsInfo(rootDir, options)
 end
 
 function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
-    % Parse every "<Y>_<X>_<z*10>_ch<k>.tif(f)" or "<z*10>_ch<k>.tif(f)"
-    % file name in FOLDER: z is the number just before _ch<k>.
+    % Parse every "<Y>_<X>_<z*10>_ch<k>.tif(f)", "<z*10>_ch<k>.tif(f)" or
+    % "Z<z*10>_Ch<k>.tif(f)" file name in FOLDER (case-insensitive): z is
+    % the number just before _ch<k>.
     entries = dir(folder);
     n = numel(entries);
     chOfFile = zeros(1, n);
@@ -162,7 +173,7 @@ function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
         if entries(i).isdir
             continue;
         end
-        tok = regexp(entries(i).name, '^(?:\d+_\d+_)?(\d+)_ch(\d+)\.tiff?$', ...
+        tok = regexp(entries(i).name, '^(?:\d+_\d+_|Z)?(\d+)_ch(\d+)\.tiff?$', ...
             'tokens', 'once', 'ignorecase');
         if isempty(tok)
             continue;

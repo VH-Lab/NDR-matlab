@@ -150,6 +150,57 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
             testCase.verifyEqual(vol(1, 1, 1), uint16(2000));
         end
 
+        function testSingleChannelWithoutChNumber(testCase)
+            % Some SmartSPIM software versions name a single channel's
+            % folder Ex_<laser>_Em_<filter> (no _Ch<n>) and its stitched
+            % slices Z<z*10>_Ch<k>.tif. Working folders (_MIP, _stitched,
+            % _MIDDLE) beside it are not channels.
+            root = testCase.FixtureDir;
+            allDir = fullfile(root, 'All_Channels');
+            rmdir(fullfile(root, 'Ex_640_Em_640F_Ch3'), 's');
+            delete(fullfile(allDir, '*_ch1.tiff'));
+            movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
+            for w = {'_MIP', '_MIP_stitched', '_stitched', '_MIDDLE'}
+                mkdir(fullfile(root, ['Ex_561_Em_561F' w{1}]));
+            end
+            d = dir(fullfile(allDir, '*_ch0.tiff'));
+            for i = 1:numel(d)
+                tok = regexp(d(i).name, '^\d+_\d+_(\d+)_ch0\.tiff$', 'tokens', 'once');
+                movefile(fullfile(allDir, d(i).name), fullfile(allDir, ['Z' tok{1} '_Ch0.tif']));
+            end
+            testCase.verifyTrue(ndr.format.smartspim.isSmartSPIM(root));
+            ch = ndr.format.smartspim.listChannels(root);
+            testCase.verifyEqual({ch.name}, {'Ex_561_Em_561F'});
+            testCase.verifyEqual(ch.wavelength, 561);
+            testCase.verifyEqual(ch.filterName, '561F');
+            testCase.verifyTrue(isnan(ch.filterChannel));
+            testCase.verifyEqual(ch.numTiles, 2, 'tiles of its laser and filter');
+            testCase.verifyTrue(ndr.format.smartspim.hasAllChannels(root));
+            info = ndr.format.smartspim.readAllChannelsInfo(root);
+            testCase.verifyEqual(info.channelNames, {'Ex_561_Em_561F'});
+            testCase.verifyEqual(info.channels.chIndex, 0);
+            testCase.verifyEqual(info.channels.numSlices, 4);
+            vol = ndr.format.smartspim.readAllChannelsVolume(root, 'Ex_561_Em_561F');
+            testCase.verifyEqual(vol(:, 1, 1).', uint16(1000:1003), 'in z order');
+        end
+
+        function testSeveralChannelsWithoutChNumberAreRefused(testCase)
+            % Nothing would say which _ch<k> slices are whose: refuse
+            % rather than guess.
+            root = testCase.FixtureDir;
+            movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
+            movefile(fullfile(root, 'Ex_640_Em_640F_Ch3'), fullfile(root, 'Ex_640_Em_640F'));
+            testCase.verifyError(@() ndr.format.smartspim.listChannels(root), ...
+                'ndr:format:smartspim:listChannels:UnnumberedChannels');
+            testCase.verifyError(@() ndr.format.smartspim.readAllChannelsInfo(root), ...
+                'ndr:format:smartspim:listChannels:UnnumberedChannels');
+            testCase.verifyFalse(ndr.format.smartspim.hasAllChannels(root));
+            % One numbered and one not is refused too.
+            movefile(fullfile(root, 'Ex_561_Em_561F'), fullfile(root, 'Ex_561_Em_561F_Ch2'));
+            testCase.verifyError(@() ndr.format.smartspim.listChannels(root), ...
+                'ndr:format:smartspim:listChannels:UnnumberedChannels');
+        end
+
         function testInfoErrorsWithoutFolder(testCase)
             rmdir(fullfile(testCase.FixtureDir, 'All_Channels'), 's');
             testCase.verifyError( ...
