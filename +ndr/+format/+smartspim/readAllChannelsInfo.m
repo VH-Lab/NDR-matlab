@@ -24,10 +24,17 @@ function info = readAllChannelsInfo(rootDir, options)
 %   the <channel>_MIP_stitched folder, whose files carry the same
 %   _ch<k> suffix; when that folder is absent (e.g. a partial restore),
 %   k is the rank of the channel's filter-channel number among all
-%   channels (Ch1 -> ch0, Ch2 -> ch1, ...). A single channel whose folder
-%   has no "_Ch<n>" (Ex_<laser>_Em_<filter>; see
-%   ndr.format.smartspim.listChannels) takes whichever one _ch<k> the
-%   slices carry.
+%   channels (Ch1 -> ch0, Ch2 -> ch1, ...). Between the two, IMS_Notes.txt
+%   ("The folder <channel>_stitched is represented as Ch<k>", written when
+%   SmartSPIM converts All_Channels to Imaris) is used when it names the
+%   channel; SmartSPIM 6.0 writes no _ch suffix in _MIP_stitched. A channel
+%   folder without "_Ch<n>" (Ex_<laser>_Em_<filter>) gets its filter-channel
+%   number from metadata.json (see ndr.format.smartspim.listChannels); a
+%   single one with none takes whichever one _ch<k> the slices carry. When
+%   such folders are mapped by filter-channel rank, that rank must match
+%   the order the channels first appear in metadata.json's tiles, or the
+%   call errors (ndr:format:smartspim:readAllChannelsInfo:ChannelOrderDisagrees):
+%   which order the stitcher follows for them is not yet known.
 %
 %   Returned fields:
 %
@@ -87,14 +94,20 @@ function info = readAllChannelsInfo(rootDir, options)
     acqChannels = ndr.format.smartspim.listChannels(rootDir);
     names = {acqChannels.name};
     chIndices = zeros(1, numel(names));
-    if isscalar(acqChannels) && isnan(acqChannels.filterChannel) && ...
+    if isscalar(acqChannels) && isempty(regexp(acqChannels.name, '_Ch\d+$', 'once')) && ...
             isscalar(unique(chOfFile))
-        % A single channel folder without "_Ch<n>" (listChannels refuses
-        % several): its slices are the only _ch<k> there is.
+        % A single channel folder without "_Ch<n>": its slices are the only
+        % _ch<k> there is, whatever number metadata.json gives it.
         chIndices = unique(chOfFile);
     else
+        notes = ndr.format.smartspim.readImsNotes(rootDir);
+        byRank = false(1, numel(names));
         for i = 1:numel(names)
-            chIndices(i) = channelIndex(rootDir, names{i}, acqChannels);
+            [chIndices(i), byRank(i)] = channelIndex(rootDir, names{i}, acqChannels, notes);
+        end
+        unnumbered = cellfun(@isempty, regexp(names, '_Ch\d+$', 'once'));
+        if numel(names) > 1 && any(byRank) && any(unnumbered)
+            checkRankMatchesMetadataOrder(rootDir, acqChannels);
         end
     end
     if numel(unique(chIndices)) ~= numel(chIndices)
@@ -206,20 +219,61 @@ function [chOfFile, zOfFile, pathOfFile] = indexSlices(folder)
     end
 end
 
-function k = channelIndex(rootDir, channelName, acqChannels)
+function checkRankMatchesMetadataOrder(rootDir, acqChannels)
+    % Channel folders without "_Ch<n>" (SmartSPIM 6.0) and no direct record
+    % of which _Ch<k> is whose: the filter-channel rank decides, as for
+    % numbered folders. Until an acquisition shows which of the two the
+    % stitcher follows there, refuse when that rank and the order the
+    % channels first appear in metadata.json's tiles disagree.
+    firstSeen = inf(1, numel(acqChannels));
+    try
+        meta = ndr.format.smartspim.readAcquisitionMetadata(rootDir);
+        t = meta.tiles;
+    catch
+        t = struct('laser', {}, 'filter', {});
+    end
+    for i = 1:numel(acqChannels)
+        j = find([t.laser] == acqChannels(i).wavelength & ...
+            strcmp({t.filter}, acqChannels(i).filterName), 1);
+        if ~isempty(j), firstSeen(i) = j; end
+    end
+    [~, byFilter] = sort([acqChannels.filterChannel]);
+    [~, byMetadata] = sort(firstSeen);
+    if any(isinf(firstSeen)) || ~isequal(byFilter, byMetadata)
+        error('ndr:format:smartspim:readAllChannelsInfo:ChannelOrderDisagrees', ...
+            ['In %s the channel folders have no "_Ch<n>" and nothing records ' ...
+             'which All_Channels "_ch<k>" is which channel, and the channels'' ' ...
+             'filter-channel order (%s) differs from the order they appear in ' ...
+             'metadata.json (%s), so it is not known which order the stitcher ' ...
+             'used.'], rootDir, strjoin({acqChannels(byFilter).name}, ', '), ...
+            strjoin({acqChannels(byMetadata).name}, ', '));
+    end
+end
+
+function [k, byRank] = channelIndex(rootDir, channelName, acqChannels, notes)
     % Preferred: the single _ch<k> suffix used in <channel>_MIP_stitched.
     mipDir = fullfile(rootDir, [channelName '_MIP_stitched']);
     if isfolder(mipDir)
         ks = unique(indexSlices(mipDir));
         if isscalar(ks)
             k = ks;
+            byRank = false;
             return;
         end
+    end
+    % Next: SmartSPIM's own statement in IMS_Notes.txt ("The folder
+    % <channel>_stitched is represented as Ch<k>").
+    j = find(strcmp({notes.channelName}, channelName), 1);
+    if ~isempty(j)
+        k = notes(j).chIndex;
+        byRank = false;
+        return;
     end
     % Fallback: rank of the filter-channel number (stable on ties).
     [~, order] = sort([acqChannels.filterChannel]);
     rankedNames = {acqChannels(order).name};
     k = find(strcmp(rankedNames, channelName), 1) - 1;
+    byRank = true;
 end
 
 function dt = tiffDtype(fi)

@@ -173,7 +173,8 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
             testCase.verifyEqual({ch.name}, {'Ex_561_Em_561F'});
             testCase.verifyEqual(ch.wavelength, 561);
             testCase.verifyEqual(ch.filterName, '561F');
-            testCase.verifyTrue(isnan(ch.filterChannel));
+            testCase.verifyEqual(ch.filterChannel, 2, ...
+                'from metadata.json''s tiles of its laser and filter');
             testCase.verifyEqual(ch.numTiles, 2, 'tiles of its laser and filter');
             testCase.verifyTrue(ndr.format.smartspim.hasAllChannels(root));
             info = ndr.format.smartspim.readAllChannelsInfo(root);
@@ -184,21 +185,88 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
             testCase.verifyEqual(vol(:, 1, 1).', uint16(1000:1003), 'in z order');
         end
 
-        function testSeveralChannelsWithoutChNumberAreRefused(testCase)
-            % Nothing would say which _ch<k> slices are whose: refuse
-            % rather than guess.
+        function testSeveralChannelsNumberedByMetadata(testCase)
+            % SmartSPIM 6.0 names channel folders Ex_<laser>_Em_<filter>
+            % (no _Ch<n>); metadata.json's tiles still give each laser and
+            % filter its FilterChannel (561F -> 2, 640F -> 3), and the
+            % filter-channel rank gives _ch<k> as for numbered folders.
             root = testCase.FixtureDir;
             movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
             movefile(fullfile(root, 'Ex_640_Em_640F_Ch3'), fullfile(root, 'Ex_640_Em_640F'));
+            ch = ndr.format.smartspim.listChannels(root);
+            testCase.verifyEqual({ch.name}, {'Ex_561_Em_561F', 'Ex_640_Em_640F'});
+            testCase.verifyEqual([ch.filterChannel], [2 3]);
+            testCase.verifyEqual([ch.numTiles], [2 2]);
+            info = ndr.format.smartspim.readAllChannelsInfo(root);
+            testCase.verifyEqual(info.channelNames, {'Ex_561_Em_561F', 'Ex_640_Em_640F'});
+            vol = ndr.format.smartspim.readAllChannelsVolume(root, 'Ex_640_Em_640F');
+            testCase.verifyEqual(vol(:, 1, 1).', uint16(2000:2003), '640 is _ch1');
+            % One numbered and one not works the same way.
+            movefile(fullfile(root, 'Ex_561_Em_561F'), fullfile(root, 'Ex_561_Em_561F_Ch2'));
+            info = ndr.format.smartspim.readAllChannelsInfo(root);
+            testCase.verifyEqual(info.channelNames, {'Ex_561_Em_561F_Ch2', 'Ex_640_Em_640F'});
+        end
+
+        function testFilterOrderAndMetadataOrderMustAgree(testCase)
+            % Unnumbered folders mapped by filter-channel rank: refused when
+            % metadata.json lists the channels in the other order, until an
+            % acquisition shows which order the stitcher follows.
+            root = testCase.FixtureDir;
+            movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
+            movefile(fullfile(root, 'Ex_640_Em_640F_Ch3'), fullfile(root, 'Ex_640_Em_640F'));
+            metaPath = fullfile(root, 'metadata.json');
+            meta = jsondecode(fileread(metaPath));
+            lasers = arrayfun(@(t) str2double(t.Laser), meta.tiles);
+            meta.tiles = [meta.tiles(lasers == 640); meta.tiles(lasers ~= 640)];
+            fid = fopen(metaPath, 'w'); fprintf(fid, '%s', jsonencode(meta)); fclose(fid);
+            testCase.verifyError(@() ndr.format.smartspim.readAllChannelsInfo(root), ...
+                'ndr:format:smartspim:readAllChannelsInfo:ChannelOrderDisagrees');
+            testCase.verifyFalse(ndr.format.smartspim.hasAllChannels(root));
+            % A direct record settles it.
+            writeImsNotes(root, {'Ex_561_Em_561F', 0; 'Ex_640_Em_640F', 1});
+            info = ndr.format.smartspim.readAllChannelsInfo(root);
+            testCase.verifyEqual(info.channelNames, {'Ex_561_Em_561F', 'Ex_640_Em_640F'});
+        end
+
+        function testSeveralUnnumberedChannelsWithoutEvidenceAreRefused(testCase)
+            % No _Ch<n>, no metadata.json numbers, no IMS_Notes.txt: which
+            % _ch<k> slices are whose would be a guess, so refuse.
+            root = testCase.FixtureDir;
+            movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
+            movefile(fullfile(root, 'Ex_640_Em_640F_Ch3'), fullfile(root, 'Ex_640_Em_640F'));
+            delete(fullfile(root, 'metadata.json'));
             testCase.verifyError(@() ndr.format.smartspim.listChannels(root), ...
                 'ndr:format:smartspim:listChannels:UnnumberedChannels');
             testCase.verifyError(@() ndr.format.smartspim.readAllChannelsInfo(root), ...
                 'ndr:format:smartspim:listChannels:UnnumberedChannels');
             testCase.verifyFalse(ndr.format.smartspim.hasAllChannels(root));
-            % One numbered and one not is refused too.
-            movefile(fullfile(root, 'Ex_561_Em_561F'), fullfile(root, 'Ex_561_Em_561F_Ch2'));
+            % IMS_Notes.txt naming only one of them is not enough.
+            writeImsNotes(root, {'Ex_561_Em_561F', 0});
             testCase.verifyError(@() ndr.format.smartspim.listChannels(root), ...
                 'ndr:format:smartspim:listChannels:UnnumberedChannels');
+        end
+
+        function testImsNotesNameEachChannelsSlices(testCase)
+            % IMS_Notes.txt is SmartSPIM's own record of which folder is
+            % which Ch<k>; it settles unnumbered folders, and outranks the
+            % filter-channel rank (here it says the opposite of the rank).
+            root = testCase.FixtureDir;
+            movefile(fullfile(root, 'Ex_561_Em_561F_Ch2'), fullfile(root, 'Ex_561_Em_561F'));
+            movefile(fullfile(root, 'Ex_640_Em_640F_Ch3'), fullfile(root, 'Ex_640_Em_640F'));
+            delete(fullfile(root, 'metadata.json'));
+            writeImsNotes(root, {'Ex_561_Em_561F', 1; 'Ex_640_Em_640F', 0});
+            notes = ndr.format.smartspim.readImsNotes(root);
+            testCase.verifyEqual({notes.channelName}, {'Ex_561_Em_561F', 'Ex_640_Em_640F'});
+            testCase.verifyEqual([notes.chIndex], [1 0]);
+            info = ndr.format.smartspim.readAllChannelsInfo(root);
+            testCase.verifyEqual(info.channelNames, {'Ex_640_Em_640F', 'Ex_561_Em_561F'});
+            vol = ndr.format.smartspim.readAllChannelsVolume(root, 'Ex_561_Em_561F');
+            testCase.verifyEqual(vol(:, 1, 1).', uint16(2000:2003), '561 is _ch1 here');
+        end
+
+        function testReadImsNotesWithoutAFile(testCase)
+            testCase.verifyEmpty(ndr.format.smartspim.readImsNotes(testCase.FixtureDir));
+            testCase.verifyEmpty(ndr.format.smartspim.readImsNotes(''));
         end
 
         function testInfoErrorsWithoutFolder(testCase)
@@ -249,6 +317,18 @@ classdef TestSmartSPIMAllChannels < matlab.unittest.TestCase
         end
 
     end
+end
+
+function writeImsNotes(root, rows)
+    % IMS_Notes.txt as SmartSPIM writes it: rows are {channel folder, k}.
+    lines = cell(1, size(rows, 1));
+    for r = 1:size(rows, 1)
+        lines{r} = sprintf(['The folder %s_stitched is represented as Ch%d with a ' ...
+            'Hex color value of #ff0000'], rows{r, 1}, rows{r, 2});
+    end
+    fid = fopen(fullfile(root, 'IMS_Notes.txt'), 'w');
+    fprintf(fid, '%s\n\n', lines{:});
+    fclose(fid);
 end
 
 function safeRmdir(d)

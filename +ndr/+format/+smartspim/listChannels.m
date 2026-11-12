@@ -5,14 +5,17 @@ function channels = listChannels(rootDir)
 %
 %   Enumerates the channel directories under ROOTDIR whose names match
 %   "Ex_<laser>_Em_<filter>_Ch<channel>" and returns a struct array with
-%   one entry per channel. Some versions of the SmartSPIM software name a
-%   single-channel acquisition's folder "Ex_<laser>_Em_<filter>", with no
-%   "_Ch<channel>"; that is accepted when it is the only channel folder
-%   (filterChannel is then NaN). Several channel folders without
-%   "_Ch<channel>" are refused (error
+%   one entry per channel. Some versions of the SmartSPIM software (6.0)
+%   name channel folders "Ex_<laser>_Em_<filter>", with no "_Ch<channel>"
+%   (metadata.json's subfolder_format_string says so). Such a folder's
+%   filterChannel is then taken from metadata.json's tiles of its laser
+%   and filter, when they all give one number, and is NaN otherwise.
+%   Several channel folders of which one has no filter-channel number from
+%   either source, and is not named in IMS_Notes.txt
+%   (ndr.format.smartspim.readImsNotes), are refused (error
 %   ndr:format:smartspim:listChannels:UnnumberedChannels): nothing then
 %   says which All_Channels "_ch<k>" slices are whose, and a guess could
-%   swap two channels unnoticed.
+%   swap two channels unnoticed. A single channel folder may lack one.
 %
 %     name             char, directory name (e.g. "Ex_561_Em_561F_Ch2")
 %     wavelength       double, excitation wavelength (nm)
@@ -65,15 +68,6 @@ function channels = listChannels(rootDir)
             'No channel directories (Ex_*_Em_*_Ch*) found in %s', rootDir);
     end
     names = sort(names);
-    unnumbered = cellfun(@isempty, regexp(names, '_Ch\d+$', 'once'));
-    if any(unnumbered) && numel(names) > 1
-        error('ndr:format:smartspim:listChannels:UnnumberedChannels', ...
-            ['%s has %d channel folders (%s), and %s no "_Ch<n>" filter-channel ' ...
-             'number, so which All_Channels "_ch<k>" slices belong to which ' ...
-             'channel is not known. Only a single channel folder may omit ' ...
-             '"_Ch<n>".'], rootDir, numel(names), strjoin(names, ', '), ...
-            pluralNot(sum(unnumbered)));
-    end
 
     laserByWavelength = struct();
     numTilesByName = struct();
@@ -128,9 +122,10 @@ function channels = listChannels(rootDir)
         if isfield(numTilesByName, tileKey)
             n = numTilesByName.(tileKey);
         elseif isnan(filterChannel)
-            % An unnumbered (single) channel folder: count the tiles of its
-            % laser and filter, whatever filter channel metadata.json gives.
-            n = countTiles(rootDir, wavelength, filterName);
+            % A folder without "_Ch<n>": metadata.json's tiles of its laser
+            % and filter give its filter-channel number (when they agree on
+            % one) and its tile count.
+            [filterChannel, n] = fromTiles(rootDir, wavelength, filterName);
         else
             n = NaN;
         end
@@ -143,6 +138,24 @@ function channels = listChannels(rootDir)
             'laserPowerLeft',  leftPct, ...
             'laserPowerRight', rightPct, ...
             'numTiles',        n);
+    end
+
+    unresolved = isnan([channels.filterChannel]);
+    if numel(channels) > 1 && any(unresolved)
+        % Which All_Channels _Ch<k> is whose would be a guess -- unless
+        % SmartSPIM's IMS_Notes.txt names every such folder's Ch<k>.
+        notes = ndr.format.smartspim.readImsNotes(rootDir);
+        noted = {notes.channelName};
+        missing = names(unresolved & ~ismember(names, noted));
+        if ~isempty(missing)
+            error('ndr:format:smartspim:listChannels:UnnumberedChannels', ...
+                ['%s has %d channel folders (%s), and %s no "_Ch<n>" ' ...
+                 'filter-channel number that metadata.json or IMS_Notes.txt ' ...
+                 'supplies, so which All_Channels "_ch<k>" slices belong to ' ...
+                 'which channel is not known. Only a single channel folder may ' ...
+                 'omit "_Ch<n>" without one.'], rootDir, numel(names), ...
+                strjoin(names, ', '), pluralNot(numel(missing)));
+        end
     end
 end
 
@@ -165,14 +178,24 @@ function [wavelength, filterName, filterChannel] = parseChannelName(name)
     filterChannel = NaN;
 end
 
-function n = countTiles(rootDir, wavelength, filterName)
+function [filterChannel, n] = fromTiles(rootDir, wavelength, filterName)
+% The filter-channel number metadata.json gives the tiles of this laser and
+% filter (NaN if none, or if they disagree), and how many tiles there are.
+    filterChannel = NaN;
     n = NaN;
     try
         meta = ndr.format.smartspim.readAcquisitionMetadata(rootDir);
         t = meta.tiles;
         if ~isempty(t)
-            n = sum([t.laser] == wavelength & strcmp({t.filter}, filterName));
-            if n == 0, n = NaN; end
+            mine = [t.laser] == wavelength & strcmp({t.filter}, filterName);
+            if any(mine)
+                n = sum(mine);
+                fch = unique([t(mine).filterChannel]);
+                fch = fch(~isnan(fch));
+                if isscalar(fch)
+                    filterChannel = fch;
+                end
+            end
         end
     catch
     end
