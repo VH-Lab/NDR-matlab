@@ -9,14 +9,23 @@ function info = ensureMex(force)
 %   downloads the pinned prebuilt tarball from the blosc-matlab
 %   GitHub release for this platform, extracts it to a per-user cache
 %   directory under prefdir(), and addpath's the extracted folder.
-%   Subsequent calls in the same process are a no-op.
+%   Subsequent calls in the same process only re-check (cheaply, with
+%   ndr.util.blosc.checkMexResolution) that blosc.encode still resolves
+%   to a +blosc folder with its compiled MEX. If something removed the
+%   install from the path since (a path reset, restoredefaultpath, a
+%   test fixture restoring the path) or a +blosc copy without the MEX
+%   (e.g. a source checkout) now shadows it, the install folder is
+%   addpath'd again to the top. If that still does not win (e.g. the
+%   stray copy is in the current folder), INFO.available is false and
+%   INFO.reason names the shadowing folder.
 %
 %   Passing TRUE re-runs the install path even if +blosc is already
 %   resolvable; useful for debugging.
 %
 %   Returns a struct with:
-%     available - logical; true if blosc.encode is resolvable after
-%                 this call.
+%     available - logical; true if blosc.encode (and encodeChunk,
+%                 decode) resolve after this call to a +blosc folder
+%                 that has private/blosc_mex.<mexext>.
 %     version   - char; release tag installed, e.g. 'v0.2.1'.
 %     path      - char; folder added to the MATLAB path.
 %     mex       - char; full path to the installed MEX file.
@@ -46,8 +55,33 @@ function info = ensureMex(force)
 
     persistent cached
     if ~force && ~isempty(cached) && cached.available
-        info = cached;
-        return;
+        % Hot path (called per batch/chunk): re-check the resolution
+        % rather than trusting the cache; the path can change between
+        % calls.
+        resolution = ndr.util.blosc.checkMexResolution();
+        if resolution.ok
+            info = cached;
+            return;
+        end
+        if isfolder(cached.path) && isfile(cached.mex)
+            % The install is still on disk but no longer resolves:
+            % put it back in front of whatever shadows it.
+            moveToTopOfPath(cached.path);
+            resolution = ndr.util.blosc.checkMexResolution();
+            if resolution.ok
+                info = cached;
+                return;
+            end
+            % Keep CACHED as is so the next call retries cheaply.
+            info = cached;
+            info.available = false;
+            info.reason = sprintf(['blosc-matlab is installed at %s ' ...
+                'but is shadowed even after addpath: %s Falling back ' ...
+                'to the Python one-shot tool.'], ...
+                cached.path, resolution.reason);
+            return;
+        end
+        % The cached install vanished from disk; reinstall below.
     end
 
     if ~force
@@ -114,17 +148,20 @@ function info = ensureMex(force)
         return;
     end
 
-    addpath(cacheDir);
+    moveToTopOfPath(cacheDir);
+    resolution = ndr.util.blosc.checkMexResolution();
 
     info = struct( ...
-        'available', exist('blosc.encode', 'file') == 2, ...
+        'available', resolution.ok, ...
         'version',   BLOSC_MATLAB_VERSION, ...
         'path',      cacheDir, ...
         'mex',       mexPath, ...
         'reason',    '');
     if ~info.available
-        info.reason = sprintf(['addpath(%s) succeeded but ' ...
-            'blosc.encode still does not resolve.'], cacheDir);
+        info.reason = sprintf(['addpath(%s) succeeded but blosc-matlab ' ...
+            'still does not resolve to a copy with its MEX: %s ' ...
+            'Falling back to the Python one-shot tool.'], ...
+            cacheDir, resolution.reason);
     end
     cached = info;
 end
@@ -159,15 +196,23 @@ function mexPath = discoverExistingMex(pinnedVersion)
         mexPath = discoverExistingMex(pinnedVersion);
         return;
     end
-    candidate = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
-    if ~isfile(candidate)
+    % Every wrapper NDR calls (including the v0.2.0 marker
+    % encodeChunk, which v0.1.0 lacks) must resolve next to the MEX.
+    resolution = ndr.util.blosc.checkMexResolution();
+    if ~resolution.ok
         return;
     end
-    % v0.2.0 marker: encodeChunk wrapper. Older installs lack it.
-    if isempty(which('blosc.encodeChunk'))
-        return;
+    mexPath = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
+end
+
+function moveToTopOfPath(folder)
+%MOVETOTOPOFPATH - put FOLDER first on the MATLAB path.
+%   addpath does not move a folder that is already on the path, so a
+%   +blosc copy added later would keep shadowing it. Remove it first.
+    if any(strcmp(folder, strsplit(path(), pathsep)))
+        rmpath(folder);
     end
-    mexPath = candidate;
+    addpath(folder, '-begin');
 end
 
 function name = pickAssetName()
