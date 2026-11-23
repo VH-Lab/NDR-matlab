@@ -66,7 +66,7 @@ function info = ensureMex(force)
         if isfolder(cached.path) && isfile(cached.mex)
             % The install is still on disk but no longer resolves:
             % put it back in front of whatever shadows it.
-            addpath(cached.path);
+            moveToTopOfPath(cached.path);
             resolution = ndr.util.blosc.checkMexResolution();
             if resolution.ok
                 info = cached;
@@ -148,7 +148,7 @@ function info = ensureMex(force)
         return;
     end
 
-    addpath(cacheDir);
+    moveToTopOfPath(cacheDir);
     resolution = ndr.util.blosc.checkMexResolution();
 
     info = struct( ...
@@ -203,6 +203,16 @@ function mexPath = discoverExistingMex(pinnedVersion)
         return;
     end
     mexPath = fullfile(encFolder, 'private', ['blosc_mex.' mexext]);
+end
+
+function moveToTopOfPath(folder)
+%MOVETOTOPOFPATH - put FOLDER first on the MATLAB path.
+%   addpath does not move a folder that is already on the path, so a
+%   +blosc copy added later would keep shadowing it. Remove it first.
+    if any(strcmp(folder, strsplit(path(), pathsep)))
+        rmpath(folder);
+    end
+    addpath(folder, '-begin');
 end
 
 function name = pickAssetName()
